@@ -79,5 +79,36 @@ class LookupController
 
         return response()->json($items);
     }
+
+    public function users(Request $request)
+    {
+        $q = trim((string) $request->get('q', ''));
+        if (mb_strlen($q) < 3) {
+            return response()->json([]);
+        }
+
+        $qLike = '%' . str_replace('%', '', $q) . '%';
+        $qId = ctype_digit($q) ? (int) $q : null;
+
+        // Usuários do sistema (pmieducar.usuario) vinculados a uma pessoa (cadastro.pessoa).
+        $rows = DB::table('pmieducar.usuario as u')
+            ->join('cadastro.pessoa as p', 'p.idpes', '=', 'u.cod_usuario')
+            ->selectRaw('u.cod_usuario as id')
+            ->selectRaw('p.nome as nome')
+            ->when($qId, fn ($qq) => $qq->where('u.cod_usuario', $qId))
+            ->when(!$qId, fn ($qq) => $qq->where('p.nome', 'ILIKE', $qLike))
+            ->orderBy('p.nome')
+            ->limit(20)
+            ->get();
+
+        $items = $rows->map(static function ($r) {
+            return [
+                'id' => (int) $r->id,
+                'label' => Str::squish(((int) $r->id) . ' - ' . (string) $r->nome),
+            ];
+        })->values();
+
+        return response()->json($items);
+    }
 }
 

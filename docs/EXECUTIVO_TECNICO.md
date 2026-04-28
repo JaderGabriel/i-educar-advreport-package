@@ -1,6 +1,6 @@
 # Advanced Reports (i-Educar) — Executivo/Técnico
 
-Este documento consolida **o que foi implementado** no pacote `serventec/i-educar-advanced-reports-package`, **como funciona**, e como isso se conecta à proposta de **menus temáticos** do `docs/DOC-EXECUTIVO-PACOTE-RELATORIOS-PORTABILIS.md`.
+Este documento consolida **o que foi implementado** no pacote `buriti/i-educar-advanced-reports-package`, **como funciona**, e como isso se conecta à proposta de **menus temáticos** do `docs/DOC-EXECUTIVO-PACOTE-RELATORIOS-PORTABILIS.md`.
 
 ## 1) O que o pacote resolve (escopo)
 
@@ -42,7 +42,8 @@ Fonte: `docs/DOC-EXECUTIVO-PACOTE-RELATORIOS-PORTABILIS.md` seção **8.4**.
 - **Movimentações e gestão de matrículas** (8.4.4)
   - **Implementado (parcial)**: Movimentações (Geral) com PDF/Excel.
   - **Implementado (inicial)**: Vagas por turma (capacidade/ocupação/vagas) com PDF/Excel.
-  - **Faltando**: Movimento mensal; alunos por situação; refinamentos por regra/situação.
+  - **Implementado**: Alunos por situação (resumo + listagem, com PDF/Excel).
+  - **Faltando**: Movimento mensal; refinamentos por regra/situação.
 
 ### 3.2 Indicadores (Socioeconômicos e Inclusão) (8.4.8)
 
@@ -76,6 +77,7 @@ Implementados (com PDF/Excel e opção de gráficos):
 
 - `/relatorios-avancados/movimentacoes` (+ PDF/Excel)
 - `/relatorios-avancados/vagas-turmas` (+ PDF/Excel)
+- `/relatorios-avancados/alunos-por-situacao` (+ PDF/Excel)
 
 ### 4.3 Modelos de documentos (com validação)
 

@@ -12,6 +12,15 @@
 - [x] PDF
 - [x] Excel
 
+### Auditoria
+
+- [x] Menu criado
+- [x] Rota `/relatorios-avancados/auditoria/acessos-acoes`
+- [x] View com filtros + resumo + listagens (acessos + alterações)
+- [x] PDF
+- [x] Excel
+- [x] Autocomplete de usuário (lookup)
+
 ### Avaliação e frequência (Pedagógico)
 
 - [x] Menu criado (grupo)
@@ -60,6 +69,14 @@
 - [x] PDF
 - [x] Excel
 - [ ] Refinar regras de “matriculados” por situação (quando necessário por rede)
+
+### Alunos por situação
+
+- [x] Menu criado (item sob Movimentações)
+- [x] Rota `/relatorios-avancados/alunos-por-situacao`
+- [x] View com filtros + resumo + listagem
+- [x] PDF
+- [x] Excel
 
 #### Inclusão (NEE)
 

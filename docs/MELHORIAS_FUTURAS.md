@@ -31,6 +31,11 @@ Este backlog complementa o `docs/RELATORIOS_AVANCADOS_STATUS.md` com itens estru
 - Relatório de alunos por situação
 - Vagas/turmas (capacidade/ocupação) (**implementado: vagas por turma**; evoluções: regras por situação/considerar transferências/remanejamentos)
 
+## 4.1) Auditoria (Prioridade 1/2)
+
+- Relatório de acessos e ações de usuários (**implementado**)
+- Evoluções: “top rotinas/origens por usuário”, trilha por entidade (ex.: aluno/matrícula), paginação e exportação em grandes volumes.
+
 ## 5) Validação/autenticidade (evolução)
 
 - Gerar **código com assinatura criptográfica** (ex.: HMAC com chave da aplicação) e armazenar assinatura/versão.

@@ -15,6 +15,8 @@ use iEducar\Packages\AdvancedReports\Http\Controllers\VacanciesBySchoolClassCont
 use iEducar\Packages\AdvancedReports\Http\Controllers\MinutesController;
 use iEducar\Packages\AdvancedReports\Http\Controllers\PedagogicalController;
 use iEducar\Packages\AdvancedReports\Http\Controllers\PendingEntriesController;
+use iEducar\Packages\AdvancedReports\Http\Controllers\StudentsBySituationController;
+use iEducar\Packages\AdvancedReports\Http\Controllers\AuditUsersReportController;
 use Illuminate\Support\Facades\Route;
 
 // Validação pública (sem login)
@@ -37,6 +39,8 @@ Route::middleware([
         ->name('advanced-reports.lookup.matriculas');
     Route::get('/relatorios-avancados/api/alunos', [LookupController::class, 'alunos'])
         ->name('advanced-reports.lookup.alunos');
+    Route::get('/relatorios-avancados/api/usuarios', [LookupController::class, 'users'])
+        ->name('advanced-reports.lookup.users');
 
     Route::get('/relatorios-avancados/socioeconomicos', [SocioeconomicReportController::class, 'index'])
         ->name('advanced-reports.socioeconomic.index');
@@ -117,5 +121,19 @@ Route::middleware([
         ->name('advanced-reports.pending-entries.pdf');
     Route::get('/relatorios-avancados/pendencias-lancamento/excel', [PendingEntriesController::class, 'excel'])
         ->name('advanced-reports.pending-entries.excel');
+
+    Route::get('/relatorios-avancados/alunos-por-situacao', [StudentsBySituationController::class, 'index'])
+        ->name('advanced-reports.students-by-situation.index');
+    Route::get('/relatorios-avancados/alunos-por-situacao/pdf', [StudentsBySituationController::class, 'pdf'])
+        ->name('advanced-reports.students-by-situation.pdf');
+    Route::get('/relatorios-avancados/alunos-por-situacao/excel', [StudentsBySituationController::class, 'excel'])
+        ->name('advanced-reports.students-by-situation.excel');
+
+    Route::get('/relatorios-avancados/auditoria/acessos-acoes', [AuditUsersReportController::class, 'index'])
+        ->name('advanced-reports.audit.users.index');
+    Route::get('/relatorios-avancados/auditoria/acessos-acoes/pdf', [AuditUsersReportController::class, 'pdf'])
+        ->name('advanced-reports.audit.users.pdf');
+    Route::get('/relatorios-avancados/auditoria/acessos-acoes/excel', [AuditUsersReportController::class, 'excel'])
+        ->name('advanced-reports.audit.users.excel');
 });
 

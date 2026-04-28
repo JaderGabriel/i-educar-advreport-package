@@ -13,7 +13,7 @@ Pacote de **Relatórios e Documentos** para o i-Educar, com emissão em **PDF** 
 
 ## Instalação (plug-and-play)
 
-1. Garanta o pacote em `packages/serventec/i-educar-advanced-reports-package`.
+1. Garanta o pacote em `packages/buriti/i-educar-advanced-reports-package`.
 1. Ative via plug-and-play:
 
 ```bash
@@ -25,6 +25,12 @@ php artisan package:discover --ansi
 
 ```bash
 php artisan migrate --force
+```
+
+1. (Opcional) Rode o checklist de deploy do pacote (testes + dicas):
+
+```bash
+php artisan advanced-reports:deploy-check
 ```
 
 1. Limpe caches (importante para o menu aparecer):
@@ -44,7 +50,7 @@ php artisan advanced-reports:flush-menus
 
 Para ambientes onde o pacote **já está instalado** e você está apenas **atualizando a versão**:
 
-1. Atualize o código do pacote no diretório `packages/serventec/i-educar-advanced-reports-package`.
+1. Atualize o código do pacote no diretório `packages/buriti/i-educar-advanced-reports-package`.
 1. Refaça o plug-and-play e descubra providers (se necessário):
 
 ```bash
@@ -55,7 +61,13 @@ php artisan package:discover --ansi
 1. Rode **apenas as migrations do pacote** (recomendado em updates):
 
 ```bash
-php artisan migrate --path=packages/serventec/i-educar-advanced-reports-package/database/migrations --force
+php artisan migrate --path=packages/buriti/i-educar-advanced-reports-package/database/migrations --force
+```
+
+1. (Opcional) Rode o checklist de deploy do pacote (testes + dicas):
+
+```bash
+php artisan advanced-reports:deploy-check
 ```
 
 1. Limpe caches e o cache de menus:
@@ -187,6 +199,20 @@ Ao emitir PDF, o pacote retorna o arquivo com `Content-Disposition: inline`, abr
 - **PDF**: `/relatorios-avancados/pendencias-lancamento/pdf`
 - **Excel**: `/relatorios-avancados/pendencias-lancamento/excel`
 - **Objetivo**: gestão pedagógica/conformidade — identificar ausências de lançamento por matrícula/componente/etapa.
+
+### 10) Alunos por situação (Movimentações)
+
+- **Rota (UI)**: `/relatorios-avancados/alunos-por-situacao`
+- **PDF**: `/relatorios-avancados/alunos-por-situacao/pdf`
+- **Excel**: `/relatorios-avancados/alunos-por-situacao/excel`
+- **Objetivo**: listagem e consolidação de matrículas por situação (cursando, transferido, reclassificado, abandono, falecido, etc.), com filtros por escola/curso/série/turma.
+
+### 11) Auditoria — acessos e ações de usuários (Relatórios)
+
+- **Rota (UI)**: `/relatorios-avancados/auditoria/acessos-acoes`
+- **PDF**: `/relatorios-avancados/auditoria/acessos-acoes/pdf`
+- **Excel**: `/relatorios-avancados/auditoria/acessos-acoes/excel`
+- **Objetivo**: consolidar acessos (login) e alterações de dados (triggers) com origem (URL), IP e operação (INSERT/UPDATE/DELETE), focado em auditoria/controle interno.
 
 ## Compatibilidade e migração (remoção de Jasper/Portabilis)
 

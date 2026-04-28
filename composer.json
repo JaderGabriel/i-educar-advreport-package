@@ -1,7 +1,7 @@
 {
     "name": "serventec/i-educar-advanced-reports-package",
     "description": "Relatórios Avançados para o i-Educar (camadas de consulta e visualização modernas)",
-    "homepage": "https://github.com/serventecieducar/i-educar-advanced-reports-package",
+    "homepage": "https://github.com/JaderGabriel/i-educar-advreport-package",
     "keywords": [
         "ieducar",
         "relatorios",
@@ -23,8 +23,8 @@
         }
     ],
     "support": {
-        "source": "https://github.com/serventecieducar/i-educar-advanced-reports-package",
-        "issues": "https://github.com/serventecieducar/i-educar-advanced-reports-package/issues"
+        "source": "https://github.com/JaderGabriel/i-educar-advreport-package",
+        "issues": "https://github.com/JaderGabriel/i-educar-advreport-package/issues"
     },
     "license": "GPL-2.0-or-later",
     "require": {
