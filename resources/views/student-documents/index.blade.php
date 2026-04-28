@@ -42,19 +42,19 @@
       <tr>
         <td class="formmdtd"><span class="form">Emissor</span></td>
         <td class="formmdtd">
-          <input class="geral" name="issuer_name" value="{{ request('issuer_name') }}" style="width: 320px;" placeholder="Nome do responsável">
+          <input class="geral" value="{{ auth()->user()?->name }}" style="width: 320px;" disabled>
         </td>
       </tr>
       <tr>
         <td class="formlttd"><span class="form">Cargo</span></td>
         <td class="formlttd">
-          <input class="geral" name="issuer_role" value="{{ request('issuer_role') }}" style="width: 320px;" placeholder="Ex.: Secretaria Escolar">
+          <input class="geral" value="(automático)" style="width: 320px;" disabled>
         </td>
       </tr>
       <tr>
         <td class="formmdtd"><span class="form">Cidade/UF</span></td>
         <td class="formmdtd">
-          <input class="geral" name="city_uf" value="{{ request('city_uf') }}" style="width: 160px;" placeholder="Ex.: Saubara/BA">
+          <input class="geral" value="(automático)" style="width: 160px;" disabled>
         </td>
       </tr>
       <tr>

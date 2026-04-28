@@ -38,12 +38,16 @@ class StudentDocumentsController extends Controller
             ->leftJoin('pmieducar.instituicao as i', 'i.cod_instituicao', '=', 'e.ref_cod_instituicao')
             ->leftJoin('pmieducar.curso as c', 'c.cod_curso', '=', 'm.ref_cod_curso')
             ->leftJoin('pmieducar.serie as s', 's.cod_serie', '=', 'm.ref_ref_cod_serie')
-            ->leftJoin('pmieducar.turma as t', 't.cod_turma', '=', 'm.ref_cod_turma')
+            ->leftJoin('pmieducar.matricula_turma as mt', function ($join) {
+                $join->on('mt.ref_cod_matricula', '=', 'm.cod_matricula');
+                $join->where('mt.ativo', 1);
+            })
+            ->leftJoin('pmieducar.turma as t', 't.cod_turma', '=', 'mt.ref_cod_turma')
             ->selectRaw('m.cod_matricula as matricula_id')
             ->selectRaw('m.ano as ano_letivo')
             ->selectRaw('p.nome as aluno_nome')
             ->selectRaw('i.nm_instituicao as instituicao')
-            ->selectRaw('e.nome as escola')
+            ->selectRaw('COALESCE(e.fantasia, \'\') as escola')
             ->selectRaw('c.nm_curso as curso')
             ->selectRaw('s.nm_serie as serie')
             ->selectRaw('t.nm_turma as turma')
@@ -54,9 +58,9 @@ class StudentDocumentsController extends Controller
             abort(404, 'Matrícula não encontrada.');
         }
 
-        $issuerName = $request->get('issuer_name');
-        $issuerRole = $request->get('issuer_role');
-        $cityUf = $request->get('city_uf');
+        $issuerName = auth()->user()?->name;
+        $issuerRole = null;
+        $cityUf = null;
 
         $issuedAt = now();
         $issuedAtHuman = $issuedAt->format('d/m/Y H:i');
