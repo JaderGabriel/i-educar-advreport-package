@@ -3,6 +3,7 @@
 @section('doc_title', 'Ata de resultados finais')
 @section('doc_subtitle', 'Ata e quadro de situação por turma')
 @section('doc_year', (string) (($data['class']->ano_letivo ?? '') ?: ''))
+@section('formal_header', '1')
 
 @section('content')
   @php($class = $data['class'])

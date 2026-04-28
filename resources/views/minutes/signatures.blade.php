@@ -3,6 +3,7 @@
 @section('doc_title', 'Lista de assinaturas')
 @section('doc_subtitle', 'Responsáveis — lista para assinatura')
 @section('doc_year', (string) (($data['class']->ano_letivo ?? '') ?: ''))
+@section('formal_header', '1')
 
 @section('content')
   @php($class = $data['class'])

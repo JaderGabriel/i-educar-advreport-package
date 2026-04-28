@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use iEducar\Packages\AdvancedReports\Models\AdvancedReportsDocument;
 use iEducar\Packages\AdvancedReports\Services\DocumentSigningService;
 use iEducar\Packages\AdvancedReports\Services\MinutesService;
+use iEducar\Packages\AdvancedReports\Services\OfficialHeaderService;
 use iEducar\Packages\AdvancedReports\Services\PdfRenderService;
 use iEducar\Packages\AdvancedReports\Services\QrCodeService;
 use Illuminate\Http\Request;
@@ -26,15 +27,20 @@ class MinutesController extends Controller
         $document = (string) $request->get('document', 'final_results'); // final_results|signatures
         $schoolClassId = (int) $request->get('ref_cod_turma');
         $withDetails = $request->boolean('with_details');
-        $issuerName = $request->get('issuer_name');
-        $issuerRole = $request->get('issuer_role');
-        $cityUf = $request->get('city_uf');
+        $issuerName = auth()->user()?->name;
+        $issuerRole = null;
+        $cityUf = null;
 
         if (!$schoolClassId) {
             abort(422, 'Informe a turma.');
         }
 
         $data = $service->buildFinalResults($schoolClassId, $withDetails);
+        $class = $data['class'] ?? null;
+        $header = app(OfficialHeaderService::class)->forSchool(
+            !empty($class?->instituicao_id) ? (int) $class->instituicao_id : null,
+            !empty($class?->escola_id) ? (int) $class->escola_id : null,
+        );
 
         $issuedAt = now();
         $issuedAtHuman = $issuedAt->format('d/m/Y H:i');
@@ -92,6 +98,9 @@ class MinutesController extends Controller
             'issuerName' => $issuerName,
             'issuerRole' => $issuerRole,
             'cityUf' => $cityUf,
+            'municipality' => $header['municipality'] ?? null,
+            'schoolName' => $header['schoolName'] ?? null,
+            'contact' => $header['contact'] ?? null,
         ], 'ata-' . $document . '-turma-' . $schoolClassId . '.pdf', 'a4', 'portrait', $disposition);
     }
 }
