@@ -13,9 +13,14 @@
   <div class="advanced-report-card">
     <strong class="advanced-report-card-title">{{ $title }}</strong>
     <p class="advanced-report-card-text">{{ $text }}</p>
-    <p class="advanced-report-card-text">
-      Esta tela existe para orientar o usuário leigo e manter a árvore de menus consistente com o roadmap do pacote.
-    </p>
+    @if(!empty($status))
+      <div style="margin-top: 10px; display:flex; align-items:center; gap: 10px; flex-wrap: wrap;">
+        <span style="color:#b91c1c; font-weight: 700;">{{ $status }}</span>
+        @if(!empty($issuesUrl))
+          <a class="btn" href="{{ $issuesUrl }}" target="_blank" rel="noopener noreferrer">Enviar sugestão (issues)</a>
+        @endif
+      </div>
+    @endif
   </div>
 @endsection
 
