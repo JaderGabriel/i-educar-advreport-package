@@ -17,6 +17,7 @@ use iEducar\Packages\AdvancedReports\Http\Controllers\PedagogicalController;
 use iEducar\Packages\AdvancedReports\Http\Controllers\PendingEntriesController;
 use iEducar\Packages\AdvancedReports\Http\Controllers\StudentsBySituationController;
 use iEducar\Packages\AdvancedReports\Http\Controllers\AuditUsersReportController;
+use iEducar\Packages\AdvancedReports\Http\Controllers\IndicatorsPlaceholderController;
 use Illuminate\Support\Facades\Route;
 
 // Validação pública (sem login)
@@ -71,6 +72,11 @@ Route::middleware([
         ->name('advanced-reports.social-vulnerability.pdf');
     Route::get('/relatorios-avancados/vulnerabilidade/excel', [SocialVulnerabilityController::class, 'excel'])
         ->name('advanced-reports.social-vulnerability.excel');
+
+    // Indicadores (desempenho/resultado) — entradas iniciais
+    Route::get('/relatorios-avancados/indicadores/{slug}', [IndicatorsPlaceholderController::class, 'show'])
+        ->where('slug', '(avaliacao-frequencia|baixo-desempenho|alto-desempenho|sem-nota|nao-enturmados|comparativo-turma)')
+        ->name('advanced-reports.indicators.placeholder');
 
     Route::get('/relatorios-avancados/movimentacoes', [MovementsReportController::class, 'index'])
         ->name('advanced-reports.movements.index');
