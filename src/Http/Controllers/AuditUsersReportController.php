@@ -7,6 +7,7 @@ use iEducar\Packages\AdvancedReports\Exports\AuditUsersReportExport;
 use iEducar\Packages\AdvancedReports\Services\AuditUsersReportService;
 use iEducar\Packages\AdvancedReports\Services\PdfRenderService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\Response;
@@ -29,8 +30,16 @@ class AuditUsersReportController extends Controller
             $data = $service->build($dateStart, $dateEnd, $userId, $origin, $table, $ip, $success, $operation);
         }
 
+        $users = DB::table('pmieducar.usuario as u')
+            ->join('cadastro.pessoa as p', 'p.idpes', '=', 'u.cod_usuario')
+            ->selectRaw('u.cod_usuario as id')
+            ->selectRaw('p.nome as nome')
+            ->orderBy('p.nome')
+            ->get();
+
         return view('advanced-reports::audit/users-accesses-actions.index', [
             'operationOptions' => $service->operationOptions(),
+            'users' => $users,
             'data' => $data,
         ]);
     }

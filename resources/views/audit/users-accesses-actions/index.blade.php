@@ -9,7 +9,7 @@
         </p>
 
         <form action="{{ route('advanced-reports.audit.users.index') }}" method="get">
-            <table cellspacing="0" cellpadding="0" border="0">
+            <table cellspacing="0" cellpadding="0" border="0" width="100%">
                 <tr>
                     <td class="formmdtd" valign="top"><span class="form">Período</span></td>
                     <td class="formmdtd" valign="top">
@@ -22,13 +22,14 @@
                 <tr>
                     <td class="formmdtd" valign="top"><span class="form">Usuário</span></td>
                     <td class="formmdtd" valign="top">
-                        <input class="geral js-user-search" type="text" placeholder="Digite 3+ caracteres (nome) ou ID"
-                               style="width: 360px;" list="auditUsersList" autocomplete="off">
-                        <input type="hidden" name="user_id" class="js-user-id" value="{{ request('user_id') }}">
-                        <datalist id="auditUsersList"></datalist>
-                        <small style="display:block;color:#666;margin-top:4px;">
-                            Dica: selecione no autocomplete para preencher o <strong>ID</strong>.
-                        </small>
+                        <select class="geral" name="user_id" style="width: 520px;">
+                            <option value="">Todos</option>
+                            @foreach(($users ?? []) as $u)
+                                <option value="{{ data_get($u, 'id') }}" @selected((string) request('user_id') === (string) data_get($u, 'id'))>
+                                    {{ data_get($u, 'nome') }} ({{ data_get($u, 'id') }})
+                                </option>
+                            @endforeach
+                        </select>
                     </td>
                 </tr>
 
@@ -187,45 +188,7 @@
                 });
             }
 
-            const userSearch = document.querySelector('.js-user-search');
-            const userIdInput = document.querySelector('.js-user-id');
-            const datalist = document.getElementById('auditUsersList');
-            if (!userSearch || !userIdInput || !datalist) return;
-
-            let t = null;
-            let lastItems = [];
-
-            function setOptions(items) {
-                datalist.innerHTML = '';
-                lastItems = items || [];
-                (items || []).forEach(it => {
-                    const opt = document.createElement('option');
-                    opt.value = it.label;
-                    opt.dataset.id = it.id;
-                    datalist.appendChild(opt);
-                });
-            }
-
-            userSearch.addEventListener('input', function () {
-                const q = (userSearch.value || '').trim();
-                if (q.length < 3) return;
-                if (t) clearTimeout(t);
-                t = setTimeout(async function () {
-                    const url = "{{ route('advanced-reports.lookup.users') }}" + "?q=" + encodeURIComponent(q);
-                    const resp = await fetch(url, {headers: {'Accept': 'application/json'}});
-                    if (!resp.ok) return;
-                    const items = await resp.json();
-                    setOptions(items);
-                }, 220);
-            });
-
-            userSearch.addEventListener('change', function () {
-                const v = (userSearch.value || '').trim();
-                const hit = lastItems.find(it => it.label === v);
-                if (hit) {
-                    userIdInput.value = hit.id;
-                }
-            });
+            // A seleção de usuário é feita via <select> (lista completa).
         })();
     </script>
 @endsection
