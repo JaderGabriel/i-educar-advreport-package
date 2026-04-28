@@ -151,6 +151,7 @@ Ao emitir PDF, o pacote retorna o arquivo com `Content-Disposition: inline`, abr
   - Declaração de matrícula
   - Declaração de frequência
   - Guia/Declaração de transferência
+  - Declaração de escolaridade / Nada consta
 
 ### 5) Boletim do aluno (PDF)
 

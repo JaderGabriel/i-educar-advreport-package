@@ -27,6 +27,7 @@
             <option value="declaration_enrollment" @selected(($document ?? '') === 'declaration_enrollment')>Declaração de matrícula</option>
             <option value="declaration_frequency" @selected(($document ?? '') === 'declaration_frequency')>Declaração de frequência</option>
             <option value="transfer_guide" @selected(($document ?? '') === 'transfer_guide')>Guia/Declaração de transferência</option>
+            <option value="declaration_nada_consta" @selected(($document ?? '') === 'declaration_nada_consta')>Declaração de escolaridade / Nada consta</option>
           </select>
         </td>
       </tr>

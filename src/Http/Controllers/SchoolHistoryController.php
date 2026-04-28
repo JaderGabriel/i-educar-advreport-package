@@ -77,6 +77,9 @@ class SchoolHistoryController extends Controller
             'code' => $code,
             'type' => 'historico',
             'issued_at' => $issuedAt,
+            'issued_by_user_id' => auth()->id(),
+            'issued_ip' => $request->ip(),
+            'issued_user_agent' => substr((string) $request->userAgent(), 0, 255),
             'version' => DocumentSigningService::VERSION,
             'mac' => $mac,
             'payload' => array_merge($payload, [

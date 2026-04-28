@@ -88,6 +88,9 @@ class StudentDocumentsController extends Controller
             'code' => $code,
             'type' => $document,
             'issued_at' => $issuedAt,
+            'issued_by_user_id' => auth()->id(),
+            'issued_ip' => $request->ip(),
+            'issued_user_agent' => substr((string) $request->userAgent(), 0, 255),
             'version' => DocumentSigningService::VERSION,
             'mac' => $mac,
             'payload' => array_merge($payload, [
@@ -98,12 +101,14 @@ class StudentDocumentsController extends Controller
         $view = match ($document) {
             'declaration_frequency' => 'advanced-reports::student-documents.declaration-frequency',
             'transfer_guide' => 'advanced-reports::student-documents.transfer-guide',
+            'declaration_nada_consta' => 'advanced-reports::student-documents.declaration-nada-consta',
             default => 'advanced-reports::student-documents.declaration-enrollment',
         };
 
         $title = match ($document) {
             'declaration_frequency' => 'Declaração de frequência',
             'transfer_guide' => 'Guia/Declaração de transferência',
+            'declaration_nada_consta' => 'Declaração de escolaridade / Nada consta',
             default => 'Declaração de matrícula',
         };
 
