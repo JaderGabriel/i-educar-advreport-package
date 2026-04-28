@@ -106,6 +106,9 @@
                 </td>
             </tr>
         @endif
+        @if(!empty($extraRowsView))
+            @include($extraRowsView)
+        @endif
         <tr>
             <td class="formdktd" colspan="2"></td>
         </tr>

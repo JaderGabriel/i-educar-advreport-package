@@ -60,13 +60,13 @@ class VacanciesBySchoolClassService
                 't.ano',
                 't.max_aluno',
                 'e.cod_escola',
-                'e.nome',
+                'e.fantasia',
                 'i.nm_instituicao',
                 'c.nm_curso',
                 's.nm_serie',
                 'tt.nome',
             ])
-            ->orderBy('e.nome')
+            ->orderBy('e.fantasia')
             ->orderBy('c.nm_curso')
             ->orderBy('s.nm_serie')
             ->orderBy('t.nm_turma')
@@ -74,7 +74,7 @@ class VacanciesBySchoolClassService
             ->selectRaw('t.nm_turma as turma')
             ->selectRaw('t.ano as ano_letivo')
             ->selectRaw('COALESCE(t.max_aluno, 0) as capacidade')
-            ->selectRaw('e.nome as escola')
+            ->selectRaw('COALESCE(e.fantasia, \'\') as escola')
             ->selectRaw('COALESCE(i.nm_instituicao, \'\') as instituicao')
             ->selectRaw('COALESCE(c.nm_curso, \'\') as curso')
             ->selectRaw('COALESCE(s.nm_serie, \'\') as serie')

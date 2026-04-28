@@ -17,50 +17,11 @@
       'withCharts' => false,
       'withGrade' => true,
       'withSchoolClass' => true,
+      'extraRowsView' => 'advanced-reports::pending-entries._extra-filters-rows',
       'explainTitle' => 'Pendências de lançamento (notas/frequência)',
       'explainText' => 'Use este relatório para identificar, por turma, quais matrículas ainda possuem pendências de lançamento de notas e/ou frequência por componente e etapa.',
       'explainDictionary' => 'Pendência de nota = ausência de nota lançada; Pendência de frequência = ausência de faltas lançadas conforme regra de presença.'
   ])
-
-  <div class="advanced-report-card" style="margin-top: 12px;">
-    <strong class="advanced-report-card-title">Filtros adicionais</strong>
-    <p class="advanced-report-card-text">Opcionalmente restrinja por etapa e pelo tipo de pendência.</p>
-
-    <form action="{{ route('advanced-reports.pending-entries.index') }}" method="get">
-      @foreach(request()->except(['etapa','check_grades','check_frequency']) as $k => $v)
-        <input type="hidden" name="{{ $k }}" value="{{ $v }}">
-      @endforeach
-
-      <table class="tablecadastro" width="100%" border="0" cellpadding="2" cellspacing="0" role="presentation">
-        <tbody>
-        <tr>
-          <td class="formmdtd"><span class="form">Etapa</span></td>
-          <td class="formmdtd">
-            <input class="geral" name="etapa" value="{{ request('etapa') }}" style="width: 80px;" placeholder="Ex.: 1">
-            <span class="form" style="margin-left: 8px; font-size: 11px;">(vazio = todas as etapas)</span>
-          </td>
-        </tr>
-        <tr>
-          <td class="formlttd"><span class="form">Verificar</span></td>
-          <td class="formlttd">
-            <label style="display:inline-flex;gap:6px;align-items:center;margin-right:12px;">
-              <input type="checkbox" name="check_grades" value="1" {{ request()->boolean('check_grades', true) ? 'checked' : '' }}>
-              Notas
-            </label>
-            <label style="display:inline-flex;gap:6px;align-items:center;">
-              <input type="checkbox" name="check_frequency" value="1" {{ request()->boolean('check_frequency', true) ? 'checked' : '' }}>
-              Frequência (faltas)
-            </label>
-          </td>
-        </tr>
-        </tbody>
-      </table>
-
-      <div style="text-align: center; margin-top: 12px;">
-        <button type="submit" class="btn-green">Aplicar</button>
-      </div>
-    </form>
-  </div>
 
   @if(request('ref_cod_turma'))
     <div class="advanced-report-card" style="margin-top: 12px;">
