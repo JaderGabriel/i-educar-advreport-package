@@ -1,0 +1,67 @@
+{
+    "name": "serventec/i-educar-advanced-reports-package",
+    "description": "Relatórios Avançados para o i-Educar (camadas de consulta e visualização modernas)",
+    "homepage": "https://github.com/serventecieducar/i-educar-advanced-reports-package",
+    "keywords": [
+        "ieducar",
+        "relatorios",
+        "advanced-reports",
+        "dashboards",
+        "educacao"
+    ],
+    "type": "library",
+    "authors": [
+        {
+            "name": "Serventec",
+            "email": "contato@serventecassessoria.com.br",
+            "homepage": "https://serventecassessoria.com.br"
+        },
+        {
+            "name": "Jader Gabriel",
+            "email": "jadergabriel8@gmail.com",
+            "homepage": "https://t.me/JaderGabriel"
+        }
+    ],
+    "support": {
+        "source": "https://github.com/serventecieducar/i-educar-advanced-reports-package",
+        "issues": "https://github.com/serventecieducar/i-educar-advanced-reports-package/issues"
+    },
+    "license": "GPL-2.0-or-later",
+    "require": {
+        "php": ">=8.3",
+        "illuminate/support": "^11.0|^12.0",
+        "chillerlan/php-qrcode": "^5.0",
+        "dompdf/dompdf": "^3.1",
+        "maatwebsite/excel": "^3.1"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.16"
+    },
+    "autoload": {
+        "psr-4": {
+            "iEducar\\Packages\\AdvancedReports\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "iEducar\\Packages\\AdvancedReports\\Providers\\AdvancedReportsProvider"
+            ]
+        },
+        "ieducar": {
+            "compatible": [
+                "2.10",
+                "2.11"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "dex/composer-plug-and-play": true
+        }
+    },
+    "scripts": {
+        "format": "vendor/bin/pint"
+    }
+}

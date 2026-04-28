@@ -1,0 +1,20 @@
++ .advanced-report-card {
++     margin-bottom: 16px;
++     padding: 16px;
++     border-radius: 6px;
++     border: 1px solid #e2e8f0;
++     background: #f9fafb;
++ }
++
++ .advanced-report-card-title {
++     display: block;
++     margin-bottom: 4px;
++     font-size: 14px;
++ }
++
++ .advanced-report-card-text {
++     margin: 4px 0;
++     font-size: 12px;
++     color: #4b5563;
++ }
+
