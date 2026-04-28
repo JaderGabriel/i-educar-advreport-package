@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use iEducar\Packages\AdvancedReports\Models\AdvancedReportsDocument;
 use iEducar\Packages\AdvancedReports\Services\AdvancedReportsFilterService;
 use iEducar\Packages\AdvancedReports\Services\DocumentSigningService;
+use iEducar\Packages\AdvancedReports\Services\OfficialHeaderService;
 use iEducar\Packages\AdvancedReports\Services\PdfRenderService;
 use iEducar\Packages\AdvancedReports\Services\QrCodeService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -42,16 +44,33 @@ class DiplomaReportController extends Controller
         $template = $request->get('template', 'classic');
         $side = $request->get('side', 'front');
 
-        $year = $request->get('year');
-        $course = $request->get('course');
-        $class = $request->get('class');
-        $enrollment = $request->get('enrollment');
-        $issuerName = $request->get('issuer_name');
-        $issuerRole = $request->get('issuer_role');
-        $cityUf = $request->get('city_uf');
-        $municipality = $request->get('municipality');
-        $schoolName = $request->get('school_name');
-        $contact = $request->get('contact');
+        // Para este módulo de “modelos”, o usuário escolhe apenas tipo/template/lado.
+        // Demais dados devem vir do sistema (quando possível) ou serem fictícios na prévia.
+        $ano = $request->get('ano') ? (int) $request->get('ano') : null;
+        $escolaId = $request->get('ref_cod_escola') ? (int) $request->get('ref_cod_escola') : null;
+        $instituicaoId = $request->get('ref_cod_instituicao') ? (int) $request->get('ref_cod_instituicao') : null;
+
+        $issuerName = auth()->user()?->name;
+        $issuerRole = null;
+        $cityUf = null;
+
+        $header = null;
+        if ($escolaId) {
+            if (!$instituicaoId) {
+                $instituicaoId = (int) (DB::table('pmieducar.escola')->where('cod_escola', $escolaId)->value('ref_cod_instituicao') ?: 0) ?: null;
+            }
+            $header = app(OfficialHeaderService::class)->forSchool($instituicaoId, $escolaId);
+        }
+
+        $municipality = $header['municipality'] ?? null;
+        $schoolName = $header['schoolName'] ?? null;
+        $contact = $header['contact'] ?? null;
+
+        // Campos do “conteúdo” (fictícios por padrão, já que este é um gerador de modelos)
+        $year = $ano ? (string) $ano : null;
+        $course = null;
+        $class = null;
+        $enrollment = null;
 
         $issuedAt = now();
         $issuedAtHuman = $issuedAt->format('d/m/Y H:i');
@@ -61,16 +80,9 @@ class DiplomaReportController extends Controller
             'document' => $document,
             'template' => $template,
             'side' => $side,
-            'year' => $year,
-            'course' => $course,
-            'class' => $class,
-            'enrollment' => $enrollment,
-            'issuer_name' => $issuerName,
-            'issuer_role' => $issuerRole,
-            'city_uf' => $cityUf,
-            'municipality' => $municipality,
-            'school_name' => $schoolName,
-            'contact' => $contact,
+            'ano' => $ano,
+            'instituicao_id' => $instituicaoId,
+            'escola_id' => $escolaId,
         ];
 
         $signing = app(DocumentSigningService::class);
@@ -108,7 +120,7 @@ class DiplomaReportController extends Controller
             ]
         );
 
-        $disposition = $request->boolean('preview') ? 'inline' : 'attachment';
+        $disposition = 'inline';
 
         return app(PdfRenderService::class)->download($view, [
             'document' => $document,
@@ -125,9 +137,9 @@ class DiplomaReportController extends Controller
             'issuerName' => $issuerName,
             'issuerRole' => $issuerRole,
             'cityUf' => $cityUf,
-            'municipality' => $municipality,
-            'schoolName' => $schoolName,
-            'contact' => $contact,
+            'municipality' => $municipality ?: ($request->boolean('preview') ? 'Prefeitura Municipal (Exemplo) • Secretaria de Educação' : null),
+            'schoolName' => $schoolName ?: ($request->boolean('preview') ? 'Unidade Escolar (Exemplo)' : null),
+            'contact' => $contact ?: ($request->boolean('preview') ? 'Endereço (Exemplo) • Tel: (00) 0000-0000 • E-mail: exemplo@rede.gov.br' : null),
         ], $filename, 'a4', 'landscape', $disposition);
     }
 }

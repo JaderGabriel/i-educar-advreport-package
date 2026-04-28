@@ -1,0 +1,77 @@
+@extends('advanced-reports::pdf.layout')
+
+@section('doc_title', $title ?? 'Documento oficial')
+@section('doc_subtitle', 'Emissão em lote • QR Code para validação')
+@section('doc_year', (string) (data_get($items, '0.matricula.ano_letivo') ?? ''))
+@section('formal_header', '1')
+
+@section('content')
+  @foreach(($items ?? []) as $it)
+    @php($m = data_get($it, 'matricula'))
+    @php($extra = data_get($it, 'extra', []))
+
+    @if(($document ?? '') === 'declaration_frequency')
+      <h1>DECLARAÇÃO DE FREQUÊNCIA</h1>
+      <p class="muted">Percentual calculado pela função <code>modules.frequencia_da_matricula</code>.</p>
+      <div class="box">
+        <table>
+          <tr><th>Aluno(a)</th><td>{{ $m->aluno_nome ?? '' }}</td></tr>
+          <tr><th>Matrícula (ID)</th><td>{{ $m->matricula_id ?? '' }}</td></tr>
+          <tr><th>Ano letivo</th><td>{{ $m->ano_letivo ?? '' }}</td></tr>
+          <tr><th>Escola</th><td>{{ $m->escola ?? '' }}</td></tr>
+          <tr><th>Curso/Série/Turma</th><td>{{ ($m->curso ?? '') . ' — ' . ($m->serie ?? '') . ' — ' . ($m->turma ?? '') }}</td></tr>
+          <tr><th>% Frequência</th><td><strong>{{ $extra['frequencia_percentual'] ?? '-' }}%</strong></td></tr>
+        </table>
+      </div>
+      <p>Declaramos, para os devidos fins, que o(a) aluno(a) acima identificado(a) possui frequência conforme percentual informado.</p>
+    @elseif(($document ?? '') === 'transfer_guide')
+      <h1>GUIA / DECLARAÇÃO DE TRANSFERÊNCIA</h1>
+      <p class="muted">Modelo inicial. Pode ser ajustado para seguir política local (rede) e incluir campos adicionais.</p>
+      <div class="box">
+        <table>
+          <tr><th>Aluno(a)</th><td>{{ $m->aluno_nome ?? '' }}</td></tr>
+          <tr><th>Matrícula (ID)</th><td>{{ $m->matricula_id ?? '' }}</td></tr>
+          <tr><th>Ano letivo</th><td>{{ $m->ano_letivo ?? '' }}</td></tr>
+          <tr><th>Escola de origem</th><td>{{ $m->escola ?? '' }}</td></tr>
+          <tr><th>Curso/Série/Turma</th><td>{{ ($m->curso ?? '') . ' — ' . ($m->serie ?? '') . ' — ' . ($m->turma ?? '') }}</td></tr>
+        </table>
+      </div>
+      <p>Declaramos que o(a) aluno(a) acima identificado(a) está vinculado(a) à escola de origem indicada, para fins de transferência/continuidade dos estudos, conforme registros no i-Educar.</p>
+      <p class="muted">Recomenda-se incluir: destino, data efetiva, motivo, responsáveis, e eventuais pendências/documentos anexos (por rede).</p>
+    @elseif(($document ?? '') === 'declaration_nada_consta')
+      <h1>DECLARAÇÃO DE ESCOLARIDADE / NADA CONSTA</h1>
+      <p>
+        Declaramos, para os devidos fins, que <strong>{{ $m->aluno_nome ?? '' }}</strong>,
+        matrícula <strong>{{ $m->matricula_id ?? '' }}</strong>, encontra-se vinculada à unidade
+        <strong>{{ $m->escola ?? '' }}</strong> ({{ $m->instituicao ?? '' }}),
+        no ano letivo de <strong>{{ $m->ano_letivo ?? '' }}</strong>.
+      </p>
+      <p class="muted">
+        Observação: esta declaração é um resumo oficial para fins administrativos. Informações sensíveis não são exibidas na validação pública.
+      </p>
+    @else
+      <h1>DECLARAÇÃO DE MATRÍCULA</h1>
+      <p class="muted">Emitida com base nos registros do i-Educar para fins de comprovação.</p>
+      <div class="box">
+        <table>
+          <tr><th>Aluno(a)</th><td>{{ $m->aluno_nome ?? '' }}</td></tr>
+          <tr><th>Matrícula (ID)</th><td>{{ $m->matricula_id ?? '' }}</td></tr>
+          <tr><th>Ano letivo</th><td>{{ $m->ano_letivo ?? '' }}</td></tr>
+          <tr><th>Instituição</th><td>{{ $m->instituicao ?? '' }}</td></tr>
+          <tr><th>Escola</th><td>{{ $m->escola ?? '' }}</td></tr>
+          <tr><th>Curso</th><td>{{ $m->curso ?? '' }}</td></tr>
+          <tr><th>Série</th><td>{{ $m->serie ?? '' }}</td></tr>
+          <tr><th>Turma</th><td>{{ $m->turma ?? '' }}</td></tr>
+        </table>
+      </div>
+      <p>Declaramos, para os devidos fins, que o(a) aluno(a) acima identificado(a) encontra-se regularmente matriculado(a) nesta unidade escolar no ano letivo informado.</p>
+    @endif
+
+    @if(!$loop->last)
+      <div style="page-break-after: always;"></div>
+    @endif
+  @endforeach
+
+  @include('advanced-reports::student-documents._footer')
+@endsection
+

@@ -20,7 +20,7 @@
       'extraRowsView' => 'advanced-reports::student-documents._extra-filters-rows',
       'actionsView' => 'advanced-reports::student-documents._actions',
       'explainTitle' => 'Documentos oficiais do aluno',
-      'explainText' => 'Selecione ano/instituição/escola/série/turma e então escolha o aluno. A matrícula é definida automaticamente. O PDF incluirá QR Code e código para validação pública.',
+      'explainText' => 'Selecione ano/instituição/escola/curso (obrigatórios). Série/turma são opcionais. Se selecionar alunos, emite para os selecionados; se não selecionar, emite em lote pelo filtro (limitado).',
   ])
 @endsection
 
@@ -28,9 +28,9 @@
   <script>
     (function () {
       const turmaSelect = document.getElementById('ref_cod_turma');
-      const studentSelect = document.getElementById('studentDocumentsStudentSelect');
+      const studentsSelect = document.getElementById('studentDocumentsStudentsSelect');
       const matriculaHidden = document.getElementById('studentDocumentsMatriculaId');
-      if (!turmaSelect || !studentSelect || !matriculaHidden) return;
+      if (!turmaSelect || !studentsSelect || !matriculaHidden) return;
 
       async function loadStudentsByClass(turmaId) {
         const url = "{{ route('advanced-reports.lookup.class-enrollments') }}" + "?turma_id=" + encodeURIComponent(turmaId);
@@ -41,53 +41,49 @@
 
       async function refreshStudents() {
         const turmaId = turmaSelect.value;
-        studentSelect.innerHTML = '';
+        studentsSelect.innerHTML = '';
         matriculaHidden.value = '';
 
         if (!turmaId) {
-          studentSelect.disabled = true;
+          studentsSelect.disabled = true;
           const opt = document.createElement('option');
           opt.value = '';
           opt.textContent = 'Selecione a turma para listar alunos';
-          studentSelect.appendChild(opt);
+          studentsSelect.appendChild(opt);
           return;
         }
 
-        studentSelect.disabled = true;
+        studentsSelect.disabled = true;
         const loading = document.createElement('option');
         loading.value = '';
         loading.textContent = 'Carregando alunos...';
-        studentSelect.appendChild(loading);
+        studentsSelect.appendChild(loading);
 
         const items = await loadStudentsByClass(turmaId);
-        studentSelect.innerHTML = '';
-
-        const first = document.createElement('option');
-        first.value = '';
-        first.textContent = 'Selecione o aluno';
-        studentSelect.appendChild(first);
+        studentsSelect.innerHTML = '';
 
         (items || []).forEach(function (it) {
           const opt = document.createElement('option');
           opt.value = String(it.matricula_id);
           opt.textContent = it.label;
-          studentSelect.appendChild(opt);
+          studentsSelect.appendChild(opt);
         });
 
-        studentSelect.disabled = false;
+        studentsSelect.disabled = false;
       }
 
       turmaSelect.addEventListener('change', refreshStudents);
       refreshStudents();
 
-      studentSelect.addEventListener('change', function () {
-        matriculaHidden.value = studentSelect.value || '';
+      studentsSelect.addEventListener('change', function () {
+        const selected = Array.from(studentsSelect.selectedOptions || []).map(o => o.value).filter(Boolean);
+        matriculaHidden.value = selected.length === 1 ? selected[0] : '';
       });
 
       // Ações (prévia/emissão)
       const modal = document.getElementById('advancedReportsStudentDocsPreviewModal');
       const iframe = document.querySelector('.js-student-docs-preview-iframe');
-      const openBtn = document.querySelector('.js-student-docs-preview-open');
+      const helpBtn = document.querySelector('.js-student-docs-help');
       const closeBtn = document.querySelector('.js-student-docs-preview-close');
       const emitBtn = document.querySelector('.js-student-docs-emit');
       const form = document.getElementById('formcadastro');
@@ -95,12 +91,14 @@
       function buildPdfUrl() {
         if (!form) return null;
         const params = new URLSearchParams(new FormData(form));
-        if (!params.get('matricula_id')) return null;
         return "{{ route('advanced-reports.student-documents.pdf') }}" + "?" + params.toString();
       }
 
       function openPreview() {
-        const url = buildPdfUrl();
+        if (!modal || !iframe) return;
+        const params = new URLSearchParams(new FormData(form));
+        params.set('preview', '1');
+        const url = "{{ route('advanced-reports.student-documents.pdf') }}" + "?" + params.toString();
         if (!url || !modal || !iframe) return;
         iframe.src = url;
         modal.style.display = 'block';
@@ -112,7 +110,7 @@
         modal.style.display = 'none';
       }
 
-      if (openBtn) openBtn.addEventListener('click', function (e) { e.preventDefault(); openPreview(); });
+      if (helpBtn) helpBtn.addEventListener('click', function (e) { e.preventDefault(); openPreview(); });
       if (closeBtn) closeBtn.addEventListener('click', function (e) { e.preventDefault(); closePreview(); });
       if (modal) modal.addEventListener('click', function (e) { if (e.target === modal) closePreview(); });
       if (emitBtn) emitBtn.addEventListener('click', function (e) {

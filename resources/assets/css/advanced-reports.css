@@ -65,6 +65,9 @@
     background: #e5e7eb;
 }
 
+.ar-btn__icon--clear { background: #94a3b8; }
+.ar-btn__icon--pdf { background: #16a34a; }
+
 .ar-btn--primary .ar-btn__icon { background: #16a34a; }
 .ar-btn--secondary .ar-btn__icon { background: #2563eb; }
 .ar-btn--ghost .ar-btn__icon { background: #94a3b8; }

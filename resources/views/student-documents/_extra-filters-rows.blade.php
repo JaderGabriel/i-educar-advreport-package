@@ -10,14 +10,14 @@
   </td>
 </tr>
 <tr>
-  <td class="formlttd"><span class="form">Aluno (na turma)</span> <span class="campo_obrigatorio">*</span></td>
+  <td class="formlttd"><span class="form">Alunos (opcional)</span></td>
   <td class="formlttd">
     <input type="hidden" name="matricula_id" id="studentDocumentsMatriculaId" value="{{ request('matricula_id') }}">
-    <select class="geral obrigatorio" id="studentDocumentsStudentSelect" style="width: 520px;" disabled>
+    <select class="geral" id="studentDocumentsStudentsSelect" name="matricula_ids[]" multiple size="8" style="width: 520px;" disabled>
       <option value="">Selecione a turma para listar alunos</option>
     </select>
     <small style="display:block;color:#666;margin-top:4px;">
-      Dica: use Escola → Série → Turma. Depois selecione o aluno para definir a matrícula automaticamente.
+      Dica: use Escola → Série → Turma. Selecione um ou mais alunos. Se não selecionar nenhum, o sistema emite em lote pelo filtro (limitado).
     </small>
   </td>
 </tr>
