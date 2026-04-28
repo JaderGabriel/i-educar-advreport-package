@@ -3,6 +3,7 @@
 @section('doc_title', 'Guia/Declaração de transferência')
 @section('doc_subtitle', 'Documento oficial — guia/declaração')
 @section('doc_year', (string) ($matricula->ano_letivo ?? ''))
+@section('formal_header', '1')
 
 @section('content')
   <h1>GUIA / DECLARAÇÃO DE TRANSFERÊNCIA</h1>

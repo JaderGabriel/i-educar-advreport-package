@@ -3,6 +3,7 @@
 @section('doc_title', 'Declaração de escolaridade')
 @section('doc_subtitle', 'Nada consta / vida escolar (resumo oficial)')
 @section('doc_year', (string) (($matricula->ano_letivo ?? '') ?: ''))
+@section('formal_header', '1')
 
 @section('content')
   <h1>DECLARAÇÃO DE ESCOLARIDADE / NADA CONSTA</h1>

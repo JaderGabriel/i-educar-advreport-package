@@ -5,6 +5,7 @@ namespace iEducar\Packages\AdvancedReports\Http\Controllers;
 use App\Http\Controllers\Controller;
 use iEducar\Packages\AdvancedReports\Models\AdvancedReportsDocument;
 use iEducar\Packages\AdvancedReports\Services\DocumentSigningService;
+use iEducar\Packages\AdvancedReports\Services\OfficialHeaderService;
 use iEducar\Packages\AdvancedReports\Services\PdfRenderService;
 use iEducar\Packages\AdvancedReports\Services\QrCodeService;
 use Illuminate\Http\Request;
@@ -46,6 +47,8 @@ class StudentDocumentsController extends Controller
             ->selectRaw('m.cod_matricula as matricula_id')
             ->selectRaw('m.ano as ano_letivo')
             ->selectRaw('p.nome as aluno_nome')
+            ->selectRaw('e.ref_cod_instituicao as instituicao_id')
+            ->selectRaw('e.cod_escola as escola_id')
             ->selectRaw('i.nm_instituicao as instituicao')
             ->selectRaw('COALESCE(e.fantasia, \'\') as escola')
             ->selectRaw('c.nm_curso as curso')
@@ -61,6 +64,11 @@ class StudentDocumentsController extends Controller
         $issuerName = auth()->user()?->name;
         $issuerRole = null;
         $cityUf = null;
+
+        $header = app(OfficialHeaderService::class)->forSchool(
+            !empty($matricula->instituicao_id) ? (int) $matricula->instituicao_id : null,
+            !empty($matricula->escola_id) ? (int) $matricula->escola_id : null,
+        );
 
         $issuedAt = now();
         $issuedAtHuman = $issuedAt->format('d/m/Y H:i');
@@ -127,6 +135,9 @@ class StudentDocumentsController extends Controller
             'issuerRole' => $issuerRole,
             'cityUf' => $cityUf,
             'extra' => $extra,
+            'municipality' => $header['municipality'] ?? null,
+            'schoolName' => $header['schoolName'] ?? null,
+            'contact' => $header['contact'] ?? null,
         ], str_replace(' ', '-', strtolower($title)) . '-' . $matriculaId . '.pdf');
     }
 }

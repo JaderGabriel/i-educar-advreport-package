@@ -3,6 +3,7 @@
 @section('doc_title', 'Declaração de frequência')
 @section('doc_subtitle', 'Documento oficial — declaração')
 @section('doc_year', (string) ($matricula->ano_letivo ?? ''))
+@section('formal_header', '1')
 
 @section('content')
   <h1>DECLARAÇÃO DE FREQUÊNCIA</h1>
