@@ -27,6 +27,12 @@ php artisan package:discover --ansi
 php artisan migrate --force
 ```
 
+1. Publique os assets (CSS) do pacote:
+
+```bash
+php artisan vendor:publish --tag=advanced-reports-assets
+```
+
 1. (Opcional) Rode o checklist de deploy do pacote (testes + dicas):
 
 ```bash
@@ -62,6 +68,12 @@ php artisan package:discover --ansi
 
 ```bash
 php artisan migrate --path=packages/buriti/i-educar-advanced-reports-package/database/migrations --force
+```
+
+1. Republique os assets (CSS) do pacote com `--force` (recomendado em updates):
+
+```bash
+php artisan vendor:publish --tag=advanced-reports-assets --force
 ```
 
 1. (Opcional) Rode o checklist de deploy do pacote (testes + dicas):
