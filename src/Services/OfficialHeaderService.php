@@ -22,8 +22,10 @@ class OfficialHeaderService
         if ($schoolId) {
             $school = DB::table('pmieducar.escola as e')
                 ->leftJoin('pmieducar.escola_complemento as ec', 'ec.ref_cod_escola', '=', 'e.cod_escola')
+                ->leftJoin('cadastro.pessoa as ep', 'ep.idpes', '=', 'e.ref_idpes')
+                ->leftJoin('cadastro.juridica as ej', 'ej.idpes', '=', 'ep.idpes')
                 ->selectRaw('e.cod_escola as id')
-                ->selectRaw('COALESCE(ec.nm_escola, e.fantasia, \'\') as name')
+                ->selectRaw('COALESCE(ej.fantasia, ec.nm_escola, \'\') as name')
                 ->selectRaw('ec.logradouro as street')
                 ->selectRaw('ec.numero as number')
                 ->selectRaw('ec.bairro as neighborhood')
