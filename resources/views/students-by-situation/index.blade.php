@@ -22,16 +22,13 @@
     <div class="advanced-report-card" style="margin-top: 12px;">
         <strong class="advanced-report-card-title">Filtro adicional</strong>
         <p class="advanced-report-card-text">Opcionalmente restrinja a consulta por situação.</p>
-
         <form action="{{ route('advanced-reports.students-by-situation.index') }}" method="get">
-            <input type="hidden" name="ano" value="{{ request('ano') }}">
-            <input type="hidden" name="ref_cod_instituicao" value="{{ request('ref_cod_instituicao') }}">
-            <input type="hidden" name="ref_cod_escola" value="{{ request('ref_cod_escola') }}">
-            <input type="hidden" name="ref_cod_curso" value="{{ request('ref_cod_curso') }}">
-            <input type="hidden" name="ref_cod_serie" value="{{ request('ref_cod_serie') }}">
-            <input type="hidden" name="ref_cod_turma" value="{{ request('ref_cod_turma') }}">
+            @foreach(request()->except(['situacao']) as $k => $v)
+                <input type="hidden" name="{{ $k }}" value="{{ $v }}">
+            @endforeach
 
-            <table cellspacing="0" cellpadding="0" border="0">
+            <table class="tablecadastro" width="100%" border="0" cellpadding="2" cellspacing="0" role="presentation">
+                <tbody>
                 <tr>
                     <td class="formmdtd" valign="top"><span class="form">Situação</span></td>
                     <td class="formmdtd" valign="top">
@@ -41,10 +38,23 @@
                                 <option value="{{ $id }}" @selected((string) request('situacao') === (string) $id)>{{ $label }}</option>
                             @endforeach
                         </select>
-                        <button type="submit" class="btn-green" style="margin-left: 8px;">Aplicar</button>
                     </td>
                 </tr>
+                </tbody>
             </table>
+
+            <div class="ar-actions">
+                <div class="ar-actions__group">
+                    <a href="{{ route('advanced-reports.students-by-situation.index') }}" class="btn ar-btn ar-btn--ghost">
+                        <span class="ar-btn__icon" aria-hidden="true"></span>
+                        Limpar
+                    </a>
+                    <button type="submit" class="btn-green ar-btn ar-btn--primary">
+                        <span class="ar-btn__icon" aria-hidden="true"></span>
+                        Filtrar
+                    </button>
+                </div>
+            </div>
         </form>
     </div>
 
@@ -52,14 +62,22 @@
         <div class="advanced-report-card" style="margin-top: 12px;">
             <strong class="advanced-report-card-title">Emissão</strong>
             <p class="advanced-report-card-text">Gere o documento em PDF (prévia no navegador) ou exporte em Excel.</p>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-                <select class="geral js-export-type" style="width: 180px;"
-                        data-pdf="{{ route('advanced-reports.students-by-situation.pdf') . '?' . http_build_query(request()->all()) }}"
-                        data-excel="{{ route('advanced-reports.students-by-situation.excel') . '?' . http_build_query(request()->all()) }}">
-                    <option value="pdf">Gerar PDF</option>
-                    <option value="excel">Exportar Excel</option>
-                </select>
-                <button type="button" class="btn-green js-export-run">Executar</button>
+            <div class="ar-actions">
+                <div class="ar-actions__group">
+                    <span class="ar-actions__label">Saída</span>
+                    <select class="geral ar-select js-export-type" style="width: 210px;"
+                            data-pdf="{{ route('advanced-reports.students-by-situation.pdf') . '?' . http_build_query(request()->all()) }}"
+                            data-excel="{{ route('advanced-reports.students-by-situation.excel') . '?' . http_build_query(request()->all()) }}">
+                        <option value="pdf">PDF (prévia)</option>
+                        <option value="excel">Excel</option>
+                    </select>
+                </div>
+                <div class="ar-actions__group">
+                    <button type="button" class="btn-green ar-btn ar-btn--secondary js-export-run">
+                        <span class="ar-btn__icon" aria-hidden="true"></span>
+                        Executar
+                    </button>
+                </div>
             </div>
         </div>
     @endif

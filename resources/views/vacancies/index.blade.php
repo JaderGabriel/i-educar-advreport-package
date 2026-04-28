@@ -26,14 +26,26 @@
     <div class="advanced-report-card" style="margin-top: 12px;">
       <strong class="advanced-report-card-title">Emissão</strong>
       <p class="advanced-report-card-text">Gere o PDF para impressão/arquivo.</p>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-        <select class="geral js-export-type" style="width: 180px;"
-                data-pdf="{{ route('advanced-reports.vacancies.pdf', request()->all()) }}"
-                data-excel="{{ route('advanced-reports.vacancies.excel', request()->all()) }}">
-          <option value="pdf">Gerar PDF</option>
-          <option value="excel">Exportar Excel</option>
-        </select>
-        <button type="button" class="btn-green js-export-run">Executar</button>
+      <div class="ar-actions">
+        <div class="ar-actions__group">
+          <button type="button" class="btn ar-btn ar-btn--secondary js-vacancies-preview-open">
+            <span class="ar-btn__icon" aria-hidden="true"></span>
+            Prévia (PDF)
+          </button>
+        </div>
+        <div class="ar-actions__group">
+          <span class="ar-actions__label">Saída</span>
+          <select class="geral ar-select js-export-type" style="width: 210px;"
+                  data-pdf="{{ route('advanced-reports.vacancies.pdf', request()->all()) }}"
+                  data-excel="{{ route('advanced-reports.vacancies.excel', request()->all()) }}">
+            <option value="pdf">PDF (prévia)</option>
+            <option value="excel">Excel</option>
+          </select>
+          <button type="button" class="btn-green ar-btn ar-btn--secondary js-export-run">
+            <span class="ar-btn__icon" aria-hidden="true"></span>
+            Executar
+          </button>
+        </div>
       </div>
     </div>
 
@@ -91,9 +103,48 @@
       btn.addEventListener('click', function () {
         const key = select.value === 'excel' ? 'excel' : 'pdf';
         const url = key === 'excel' ? select.dataset.excel : select.dataset.pdf;
-        if (url) window.open(url, '_blank');
+        if (!url) return;
+        if (key === 'excel') {
+          window.open(url, '_blank');
+          return;
+        }
+        const modal = document.getElementById('advancedReportsVacanciesPreviewModal');
+        const iframe = document.querySelector('.js-vacancies-preview-iframe');
+        if (!modal || !iframe) return;
+        iframe.src = url;
+        modal.style.display = 'block';
       });
+
+      const previewOpen = document.querySelector('.js-vacancies-preview-open');
+      const previewClose = document.querySelector('.js-vacancies-preview-close');
+      const modal = document.getElementById('advancedReportsVacanciesPreviewModal');
+      const iframe = document.querySelector('.js-vacancies-preview-iframe');
+      if (previewOpen && previewClose && modal && iframe) {
+        function closeModal() {
+          iframe.src = 'about:blank';
+          modal.style.display = 'none';
+        }
+        previewOpen.addEventListener('click', function (e) {
+          e.preventDefault();
+          const url = select ? select.dataset.pdf : null;
+          if (!url) return;
+          iframe.src = url;
+          modal.style.display = 'block';
+        });
+        previewClose.addEventListener('click', function (e) { e.preventDefault(); closeModal(); });
+        modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
+      }
     })();
   </script>
 @endpush
+
+<div id="advancedReportsVacanciesPreviewModal" class="ar-modal">
+  <div class="ar-modal__dialog">
+    <div class="ar-modal__header">
+      <strong>Prévia (PDF)</strong>
+      <button type="button" class="btn js-vacancies-preview-close">Fechar</button>
+    </div>
+    <iframe class="js-vacancies-preview-iframe ar-modal__iframe"></iframe>
+  </div>
+</div>
 

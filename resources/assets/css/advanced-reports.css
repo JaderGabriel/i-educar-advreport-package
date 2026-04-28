@@ -18,6 +18,57 @@
     color: #4b5563;
 }
 
+/* Barra de ações (padrão para Filtrar/Limpar/Prévia/PDF/Excel) */
+.ar-actions {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.ar-actions__group {
+    display: inline-flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.ar-actions__label {
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.ar-select {
+    height: 32px;
+    border-radius: 6px;
+}
+
+.ar-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 6px;
+}
+
+.ar-btn__icon {
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    border-radius: 4px;
+    background: #e5e7eb;
+}
+
+.ar-btn--primary .ar-btn__icon { background: #16a34a; }
+.ar-btn--secondary .ar-btn__icon { background: #2563eb; }
+.ar-btn--ghost .ar-btn__icon { background: #94a3b8; }
+
 /* Modal simples (prévia de PDF) */
 .ar-modal {
     display: none;

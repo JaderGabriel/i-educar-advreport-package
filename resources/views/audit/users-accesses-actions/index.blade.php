@@ -8,8 +8,9 @@
             Use filtros para restringir o período e/ou um usuário.
         </p>
 
-        <form action="{{ route('advanced-reports.audit.users.index') }}" method="get">
-            <table cellspacing="0" cellpadding="0" border="0" width="100%">
+        <form action="{{ route('advanced-reports.audit.users.index') }}" method="get" id="auditUsersForm">
+            <table class="tablecadastro" width="100%" border="0" cellpadding="2" cellspacing="0" role="presentation">
+                <tbody>
                 <tr>
                     <td class="formmdtd" valign="top"><span class="form">Período</span></td>
                     <td class="formmdtd" valign="top">
@@ -66,28 +67,44 @@
                     <td class="formmdtd" valign="top"><span class="form">Origem (URL) contém</span></td>
                     <td class="formmdtd" valign="top">
                         <input class="geral" type="text" name="origin" value="{{ request('origin') }}" style="width: 520px;">
-                        <button type="submit" class="btn-green" style="margin-left: 8px;">Aplicar</button>
                     </td>
                 </tr>
+                </tbody>
             </table>
+
+            <div class="ar-actions">
+                <div class="ar-actions__group">
+                    <a href="{{ route('advanced-reports.audit.users.index') }}" class="btn ar-btn ar-btn--ghost">
+                        <span class="ar-btn__icon" aria-hidden="true"></span>
+                        Limpar
+                    </a>
+                    <button type="submit" class="btn-green ar-btn ar-btn--primary">
+                        <span class="ar-btn__icon" aria-hidden="true"></span>
+                        Filtrar
+                    </button>
+                </div>
+
+                <div class="ar-actions__group">
+                    <button type="button" class="btn ar-btn ar-btn--secondary js-audit-preview-open" {{ !(request('date_start') && request('date_end')) ? 'disabled' : '' }}>
+                        <span class="ar-btn__icon" aria-hidden="true"></span>
+                        Prévia (PDF)
+                    </button>
+
+                    <span class="ar-actions__label">Saída</span>
+                    <select class="geral ar-select js-export-type" style="width: 210px;"
+                            data-pdf="{{ route('advanced-reports.audit.users.pdf') . '?' . http_build_query(request()->all()) }}"
+                            data-excel="{{ route('advanced-reports.audit.users.excel') . '?' . http_build_query(request()->all()) }}">
+                        <option value="pdf">PDF (prévia)</option>
+                        <option value="excel">Excel</option>
+                    </select>
+                    <button type="button" class="btn-green ar-btn ar-btn--secondary js-export-run" {{ !(request('date_start') && request('date_end')) ? 'disabled' : '' }}>
+                        <span class="ar-btn__icon" aria-hidden="true"></span>
+                        Executar
+                    </button>
+                </div>
+            </div>
         </form>
     </div>
-
-    @if(request('date_start') && request('date_end'))
-        <div class="advanced-report-card" style="margin-top: 12px;">
-            <strong class="advanced-report-card-title">Emissão</strong>
-            <p class="advanced-report-card-text">PDF abre como prévia no navegador. Excel exporta 3 abas (Resumo/Acessos/Alterações).</p>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-                <select class="geral js-export-type" style="width: 180px;"
-                        data-pdf="{{ route('advanced-reports.audit.users.pdf') . '?' . http_build_query(request()->all()) }}"
-                        data-excel="{{ route('advanced-reports.audit.users.excel') . '?' . http_build_query(request()->all()) }}">
-                    <option value="pdf">Gerar PDF</option>
-                    <option value="excel">Exportar Excel</option>
-                </select>
-                <button type="button" class="btn-green js-export-run">Executar</button>
-            </div>
-        </div>
-    @endif
 
     @if(!empty($data))
         @php($summary = $data['summary'] ?? [])
@@ -176,6 +193,16 @@
         </div>
     @endif
 
+    <div id="advancedReportsAuditPreviewModal" class="ar-modal">
+        <div class="ar-modal__dialog">
+            <div class="ar-modal__header">
+                <strong>Prévia (PDF)</strong>
+                <button type="button" class="btn js-audit-preview-close">Fechar</button>
+            </div>
+            <iframe class="js-audit-preview-iframe ar-modal__iframe"></iframe>
+        </div>
+    </div>
+
     <script>
         (function () {
             const typeSelect = document.querySelector('.js-export-type');
@@ -184,11 +211,40 @@
                 runBtn.addEventListener('click', function () {
                     const url = (typeSelect.value === 'excel') ? typeSelect.dataset.excel : typeSelect.dataset.pdf;
                     if (!url) return;
-                    window.open(url, '_blank');
+                    if (typeSelect.value === 'excel') {
+                        window.open(url, '_blank');
+                    } else {
+                        // PDF: abre como prévia no modal
+                        const modal = document.getElementById('advancedReportsAuditPreviewModal');
+                        const iframe = document.querySelector('.js-audit-preview-iframe');
+                        if (!modal || !iframe) return;
+                        iframe.src = url;
+                        modal.style.display = 'block';
+                    }
                 });
             }
 
-            // A seleção de usuário é feita via <select> (lista completa).
+            const form = document.getElementById('auditUsersForm');
+            const modal = document.getElementById('advancedReportsAuditPreviewModal');
+            const iframe = document.querySelector('.js-audit-preview-iframe');
+            const openBtn = document.querySelector('.js-audit-preview-open');
+            const closeBtn = document.querySelector('.js-audit-preview-close');
+            if (form && modal && iframe && openBtn && closeBtn) {
+                function openModal() {
+                    const params = new URLSearchParams(new FormData(form));
+                    iframe.src = "{{ route('advanced-reports.audit.users.pdf') }}" + "?" + params.toString();
+                    modal.style.display = 'block';
+                }
+
+                function closeModal() {
+                    iframe.src = 'about:blank';
+                    modal.style.display = 'none';
+                }
+
+                openBtn.addEventListener('click', function (e) { e.preventDefault(); openModal(); });
+                closeBtn.addEventListener('click', function (e) { e.preventDefault(); closeModal(); });
+                modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
+            }
         })();
     </script>
 @endsection
