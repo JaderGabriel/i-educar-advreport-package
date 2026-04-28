@@ -3,6 +3,7 @@
 namespace iEducar\Packages\AdvancedReports\Providers;
 
 use iEducar\Packages\AdvancedReports\Console\Commands\AdvancedReportsTestCommand;
+use iEducar\Packages\AdvancedReports\Console\Commands\AdvancedReportsFlushMenusCommand;
 use iEducar\Packages\AdvancedReports\Http\Middleware\EnsureAdvancedReportsMenu;
 use Illuminate\Support\ServiceProvider;
 
@@ -24,6 +25,7 @@ class AdvancedReportsProvider extends ServiceProvider
             $this->loadMigrationsFrom(__DIR__ . '/../../database/migrations');
             $this->commands([
                 AdvancedReportsTestCommand::class,
+                AdvancedReportsFlushMenusCommand::class,
             ]);
         }
 

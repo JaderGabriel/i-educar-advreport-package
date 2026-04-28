@@ -26,16 +26,14 @@
             <p class="advanced-report-card-text">
                 Use os filtros e em seguida emita em PDF (opcionalmente com gráficos) ou exporte em Excel.
             </p>
-
-            <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                <a class="btn-green" target="_blank"
-                   href="{{ route('advanced-reports.inclusion.pdf', array_merge(request()->all(), ['with_charts' => request('with_charts') ? 1 : 0])) }}">
-                    Emitir PDF
-                </a>
-                <a class="btn" target="_blank"
-                   href="{{ route('advanced-reports.inclusion.excel', request()->all()) }}">
-                    Exportar Excel
-                </a>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                <select class="geral js-export-type" style="width: 180px;"
+                        data-pdf="{{ route('advanced-reports.inclusion.pdf', array_merge(request()->all(), ['with_charts' => request('with_charts') ? 1 : 0])) }}"
+                        data-excel="{{ route('advanced-reports.inclusion.excel', request()->all()) }}">
+                    <option value="pdf">Gerar PDF</option>
+                    <option value="excel">Exportar Excel</option>
+                </select>
+                <button type="button" class="btn-green js-export-run">Executar</button>
             </div>
         </div>
 
@@ -64,4 +62,20 @@
         </table>
     @endif
 @endsection
+
+@push('scripts')
+    <script>
+        (function () {
+            const select = document.querySelector('.js-export-type');
+            const btn = document.querySelector('.js-export-run');
+            if (!select || !btn) return;
+
+            btn.addEventListener('click', function () {
+                const key = select.value === 'excel' ? 'excel' : 'pdf';
+                const url = key === 'excel' ? select.dataset.excel : select.dataset.pdf;
+                if (url) window.open(url, '_blank');
+            });
+        })();
+    </script>
+@endpush
 

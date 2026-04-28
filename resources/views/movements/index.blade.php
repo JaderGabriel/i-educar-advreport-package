@@ -27,15 +27,30 @@
             Use os filtros acima e em seguida emita em PDF ou Excel.
         </p>
 
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <a class="btn-green" target="_blank"
-               href="{{ route('advanced-reports.movements.pdf', array_merge(request()->all(), ['data_inicial' => request('data_inicial'), 'data_final' => request('data_final')])) }}">
-                Emitir PDF
-            </a>
-            <a class="btn" target="_blank"
-               href="{{ route('advanced-reports.movements.excel', array_merge(request()->all(), ['data_inicial' => request('data_inicial'), 'data_final' => request('data_final')])) }}">
-                Exportar Excel
-            </a>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <select class="geral js-export-type" style="width: 180px;"
+                    data-pdf="{{ route('advanced-reports.movements.pdf', array_merge(request()->all(), ['data_inicial' => request('data_inicial'), 'data_final' => request('data_final')])) }}"
+                    data-excel="{{ route('advanced-reports.movements.excel', array_merge(request()->all(), ['data_inicial' => request('data_inicial'), 'data_final' => request('data_final')])) }}">
+                <option value="pdf">Gerar PDF</option>
+                <option value="excel">Exportar Excel</option>
+            </select>
+            <button type="button" class="btn-green js-export-run">Executar</button>
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        (function () {
+            const select = document.querySelector('.js-export-type');
+            const btn = document.querySelector('.js-export-run');
+            if (!select || !btn) return;
+
+            btn.addEventListener('click', function () {
+                const key = select.value === 'excel' ? 'excel' : 'pdf';
+                const url = key === 'excel' ? select.dataset.excel : select.dataset.pdf;
+                if (url) window.open(url, '_blank');
+            });
+        })();
+    </script>
+@endpush

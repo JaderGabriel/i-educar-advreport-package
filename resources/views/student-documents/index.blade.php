@@ -10,10 +10,8 @@
 @endpush
 
 @section('content')
-  <h1>Documentos oficiais do aluno</h1>
-
   <div class="advanced-report-card">
-    <strong class="advanced-report-card-title">Emissão</strong>
+    <strong class="advanced-report-card-title">Documentos oficiais do aluno</strong>
     <p class="advanced-report-card-text">
       Informe a matrícula e selecione o documento. O PDF incluirá QR Code e código para validação pública.
     </p>
@@ -35,7 +33,9 @@
       <tr>
         <td class="formlttd"><span class="form">Matrícula</span> <span class="campo_obrigatorio">*</span></td>
         <td class="formlttd">
-          <input class="geral obrigatorio" name="matricula_id" value="{{ $matriculaId }}" style="width: 120px;" placeholder="ID">
+          <input type="hidden" name="matricula_id" id="matricula_id" value="{{ $matriculaId }}">
+          <input class="geral obrigatorio" id="matricula_search" list="matriculas_suggestions" value="{{ $matriculaId }}" style="width: 520px;" placeholder="Digite o nome do aluno ou o ID da matrícula">
+          <datalist id="matriculas_suggestions"></datalist>
         </td>
       </tr>
       <tr>
@@ -57,13 +57,6 @@
         </td>
       </tr>
       <tr>
-        <td class="formlttd"><span class="form">Livro/Folha/Registro</span></td>
-        <td class="formlttd">
-          <input class="geral" name="book" value="{{ request('book') }}" style="width: 70px;" placeholder="Livro">
-          <input class="geral" name="page" value="{{ request('page') }}" style="width: 70px;" placeholder="Folha">
-          <input class="geral" name="record" value="{{ request('record') }}" style="width: 90px;" placeholder="Registro">
-        </td>
-      </tr>
       </tbody>
     </table>
 
@@ -72,4 +65,51 @@
     </div>
   </form>
 @endsection
+
+@push('scripts')
+  <script>
+    (function () {
+      const input = document.getElementById('matricula_search');
+      const hidden = document.getElementById('matricula_id');
+      const list = document.getElementById('matriculas_suggestions');
+      if (!input || !hidden || !list) return;
+
+      function extractId(value) {
+        const match = String(value || '').match(/^(\d+)\s+-\s+/);
+        return match ? match[1] : (String(value || '').match(/^\d+$/) ? value : '');
+      }
+
+      async function loadSuggestions(q) {
+        const url = "{{ route('advanced-reports.lookup.matriculas') }}" + "?q=" + encodeURIComponent(q);
+        const res = await fetch(url, {headers: {'Accept': 'application/json'}});
+        if (!res.ok) return [];
+        return await res.json();
+      }
+
+      let last = '';
+      input.addEventListener('input', async function () {
+        const raw = input.value || '';
+        const id = extractId(raw);
+        if (id) hidden.value = id;
+
+        const q = raw.trim();
+        if (q.length < 3 || q === last) return;
+        last = q;
+
+        const items = await loadSuggestions(q);
+        list.innerHTML = '';
+        (items || []).forEach(function (it) {
+          const opt = document.createElement('option');
+          opt.value = it.label;
+          list.appendChild(opt);
+        });
+      });
+
+      input.addEventListener('change', function () {
+        const id = extractId(input.value);
+        hidden.value = id || '';
+      });
+    })();
+  </script>
+@endpush
 

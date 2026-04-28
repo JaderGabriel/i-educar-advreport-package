@@ -78,144 +78,107 @@
             'explainDictionary' => 'Ano = ano letivo da matrícula; Escola = unidade em que o aluno está matriculado; Curso = etapa/modalidade concluída.'
         ])
 
-        <div class="row">
-            <div class="col-md-4">
-                <form id="advanced-diplomas-form"
-                      method="GET"
-                      action="{{ route('advanced-reports.diplomas.pdf') }}"
-                      class="form-horizontal">
-                    <div class="advanced-report-card">
-                        <span class="advanced-report-card-title"><strong>Modelo de diploma</strong></span>
-                        <p class="advanced-report-card-text">
-                            Selecione o modelo visual e o lado a ser impresso. A pré-visualização ao lado é atualizada
-                            conforme a escolha.
-                        </p>
+        <div class="advanced-report-card" style="margin-top: 12px;">
+            <span class="advanced-report-card-title"><strong>Modelos (Diploma/Certificado/Declaração)</strong></span>
+            <p class="advanced-report-card-text">
+                Escolha o documento e os parâmetros. Você pode clicar em <strong>Ver prévia</strong> para abrir um modal
+                com o PDF em modo inline (sem download).
+            </p>
 
-                        <div class="form-group">
-                            <label for="document" class="col-md-4 control-label">Documento</label>
-                            <div class="col-md-8">
-                                <select id="document" name="document" class="form-control">
-                                    <option value="diploma" {{ request('document', 'diploma') === 'diploma' ? 'selected' : '' }}>
-                                        Diploma (sem rodapé)
-                                    </option>
-                                    <option value="certificate" {{ request('document') === 'certificate' ? 'selected' : '' }}>
-                                        Certificado (com rodapé)
-                                    </option>
-                                    <option value="declaration" {{ request('document') === 'declaration' ? 'selected' : '' }}>
-                                        Declaração (com rodapé)
-                                    </option>
-                                </select>
-                            </div>
-                        </div>
+            <form id="advanced-diplomas-form" method="GET" action="{{ route('advanced-reports.diplomas.pdf') }}">
+                <table class="tablecadastro" width="100%" border="0" cellpadding="2" cellspacing="0" role="presentation">
+                    <tbody>
+                    <tr>
+                        <td class="formmdtd"><span class="form">Documento</span></td>
+                        <td class="formmdtd">
+                            <select id="document" name="document" class="geral" style="width: 320px;">
+                                <option value="diploma" {{ request('document', 'diploma') === 'diploma' ? 'selected' : '' }}>
+                                    Diploma (sem rodapé)
+                                </option>
+                                <option value="certificate" {{ request('document') === 'certificate' ? 'selected' : '' }}>
+                                    Certificado (com rodapé + QR)
+                                </option>
+                                <option value="declaration" {{ request('document') === 'declaration' ? 'selected' : '' }}>
+                                    Declaração (com rodapé + QR)
+                                </option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="formlttd"><span class="form">Tipo</span></td>
+                        <td class="formlttd">
+                            <select id="template" name="template" class="geral js-diploma-template" style="width: 320px;">
+                                <option value="classic" {{ request('template','classic') === 'classic' ? 'selected' : '' }}>Clássico institucional</option>
+                                <option value="modern" {{ request('template') === 'modern' ? 'selected' : '' }}>Moderno minimalista</option>
+                                <option value="seal" {{ request('template') === 'seal' ? 'selected' : '' }}>Oficial com brasão</option>
+                                <option value="bilingual" {{ request('template') === 'bilingual' ? 'selected' : '' }}>Bilíngue</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="formmdtd"><span class="form">Lado</span></td>
+                        <td class="formmdtd">
+                            <select id="side" name="side" class="geral js-diploma-side" style="width: 320px;">
+                                <option value="front" {{ request('side','front') === 'front' ? 'selected' : '' }}>Frente</option>
+                                <option value="back" {{ request('side') === 'back' ? 'selected' : '' }}>Verso</option>
+                                <option value="both" {{ request('side') === 'both' ? 'selected' : '' }}>Frente e verso</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="formlttd"><span class="form">Município</span></td>
+                        <td class="formlttd">
+                            <input class="geral" name="municipality" value="{{ request('municipality') }}" style="width: 320px;" placeholder="Ex.: Prefeitura Municipal de ... / Secretaria de Educação">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="formmdtd"><span class="form">Escola</span></td>
+                        <td class="formmdtd">
+                            <input class="geral" name="school_name" value="{{ request('school_name') }}" style="width: 320px;" placeholder="Nome da escola/unidade">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="formlttd"><span class="form">Endereço/Contato</span></td>
+                        <td class="formlttd">
+                            <input class="geral" name="contact" value="{{ request('contact') }}" style="width: 520px;" placeholder="Endereço • telefone • e-mail">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="formmdtd"><span class="form">Emissor</span></td>
+                        <td class="formmdtd">
+                            <input name="issuer_name" class="geral" value="{{ request('issuer_name') }}" style="width: 320px;" placeholder="Nome do responsável pela emissão">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="formlttd"><span class="form">Cargo</span></td>
+                        <td class="formlttd">
+                            <input name="issuer_role" class="geral" value="{{ request('issuer_role') }}" style="width: 320px;" placeholder="Ex.: Secretário(a) escolar">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="formmdtd"><span class="form">Cidade/UF</span></td>
+                        <td class="formmdtd">
+                            <input name="city_uf" class="geral" value="{{ request('city_uf') }}" style="width: 160px;" placeholder="Ex.: Saubara/BA">
+                        </td>
+                    </tr>
+                    <tr>
+                    </tbody>
+                </table>
 
-                        <div class="form-group">
-                            <label for="template" class="col-md-4 control-label">Tipo</label>
-                            <div class="col-md-8">
-                                <select id="template" name="template" class="form-control js-diploma-template">
-                                    <option value="classic" {{ request('template') === 'classic' ? 'selected' : '' }}>
-                                        Clássico institucional
-                                    </option>
-                                    <option value="modern" {{ request('template') === 'modern' ? 'selected' : '' }}>
-                                        Moderno minimalista
-                                    </option>
-                                    <option value="seal" {{ request('template') === 'seal' ? 'selected' : '' }}>
-                                        Oficial com brasão
-                                    </option>
-                                    <option value="bilingual" {{ request('template') === 'bilingual' ? 'selected' : '' }}>
-                                        Bilíngue
-                                    </option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="side" class="col-md-4 control-label">Lado</label>
-                            <div class="col-md-8">
-                                <select id="side" name="side" class="form-control js-diploma-side">
-                                    <option value="front" {{ request('side', 'front') === 'front' ? 'selected' : '' }}>
-                                        Frente
-                                    </option>
-                                    <option value="back" {{ request('side') === 'back' ? 'selected' : '' }}>
-                                        Verso
-                                    </option>
-                                    <option value="both" {{ request('side') === 'both' ? 'selected' : '' }}>
-                                        Frente e verso
-                                    </option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <hr style="margin: 12px 0;">
-
-                        <div class="form-group">
-                            <label for="issuer_name" class="col-md-4 control-label">Emissor</label>
-                            <div class="col-md-8">
-                                <input id="issuer_name" name="issuer_name" class="form-control" value="{{ request('issuer_name') }}" placeholder="Nome do responsável pela emissão">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="issuer_role" class="col-md-4 control-label">Cargo</label>
-                            <div class="col-md-8">
-                                <input id="issuer_role" name="issuer_role" class="form-control" value="{{ request('issuer_role') }}" placeholder="Ex.: Secretário(a) escolar">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="city_uf" class="col-md-4 control-label">Cidade/UF</label>
-                            <div class="col-md-8">
-                                <input id="city_uf" name="city_uf" class="form-control" value="{{ request('city_uf') }}" placeholder="Ex.: Saubara/BA">
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="col-md-4 control-label">Livro/Folha/Registro</label>
-                            <div class="col-md-8" style="display:flex;gap:8px;">
-                                <input name="book" class="form-control" value="{{ request('book') }}" placeholder="Livro" style="width: 33%;">
-                                <input name="page" class="form-control" value="{{ request('page') }}" placeholder="Folha" style="width: 33%;">
-                                <input name="record" class="form-control" value="{{ request('record') }}" placeholder="Registro" style="width: 34%;">
-                            </div>
-                        </div>
-
-                        <div class="text-right" style="margin-top: 12px;">
-                            <button type="button" class="btn btn-default js-diploma-refresh">
-                                Atualizar pré-visualização
-                            </button>
-
-                            <button type="submit" class="btn btn-primary" formtarget="_blank" style="margin-left: 8px;">
-                                Gerar PDF
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-
-            <div class="col-md-8">
-                <div class="advanced-report-card">
-                    <span class="advanced-report-card-title"><strong>Pré-visualização do modelo selecionado</strong></span>
-                    <p class="advanced-report-card-text">
-                        Esta prévia é ilustrativa e usa dados fictícios apenas para demonstrar o layout. Na geração do
-                        relatório, serão utilizados os dados reais de aluno, escola, curso e legislação.
-                    </p>
-
-                    <div class="diploma-preview js-diploma-preview" data-template="{{ request('template', 'classic') }}">
-                        <div class="diploma-preview-canvas diploma-preview-canvas--classic">
-                            <div class="diploma-preview-header">
-                                <span class="diploma-preview-entity js-diploma-entity">Instituição de Ensino</span>
-                                <span class="diploma-preview-title js-diploma-title">Diploma de Conclusão</span>
-                            </div>
-                            <div class="diploma-preview-body js-diploma-body">
-                                <p>
-                                    Modelo <strong>Clássico institucional</strong>, com brasão centralizado no topo,
-                                    tipografia tradicional e ênfase na legislação vigente.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <p class="text-center advanced-report-card-text" style="margin-top: 15px;">
-                        Outros modelos (moderno, oficial com brasão, bilíngue) serão aplicados conforme a seleção na
-                        próxima etapa de implementação.
-                    </p>
+                <div style="text-align: center; margin-top: 14px;">
+                    <button type="button" class="btn js-diploma-preview-open">Ver prévia</button>
+                    <button type="submit" class="btn-green" formtarget="_blank" style="margin-left: 8px;">Gerar PDF</button>
                 </div>
+            </form>
+        </div>
+
+        <div id="advancedReportsPreviewModal" class="modal" style="display:none; position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 9999;">
+            <div style="background:#fff; width: min(1100px, 96vw); height: min(85vh, 820px); margin: 6vh auto; border-radius: 8px; overflow: hidden;">
+                <div style="display:flex; justify-content: space-between; align-items:center; padding: 10px 12px; border-bottom: 1px solid #e5e7eb;">
+                    <strong>Prévia do documento</strong>
+                    <button type="button" class="btn js-diploma-preview-close">Fechar</button>
+                </div>
+                <iframe class="js-diploma-preview-iframe" style="width: 100%; height: calc(100% - 48px); border: 0;"></iframe>
             </div>
         </div>
     </div>
@@ -224,66 +187,30 @@
 @push('scripts')
     <script>
         (function () {
-            function updateDiplomaPreview() {
-                var templateSelect = document.getElementById('template');
-                var sideSelect = document.getElementById('side');
-                var canvas = document.querySelector('.js-diploma-preview .diploma-preview-canvas');
-                var body = document.querySelector('.js-diploma-preview .js-diploma-body');
-
-                if (!templateSelect || !sideSelect || !canvas || !body) {
-                    return;
-                }
-
-                var template = templateSelect.value || 'classic';
-                var side = sideSelect.value || 'front';
-
-                canvas.className = 'diploma-preview-canvas diploma-preview-canvas--' + template + ' diploma-preview-canvas--' + side;
-
-                var descriptions = {
-                    'classic': 'Modelo Clássico institucional, com brasão centralizado e tipografia tradicional.',
-                    'modern': 'Modelo Moderno minimalista, com foco em tipografia limpa e áreas em branco.',
-                    'seal': 'Modelo Oficial com brasão em destaque, ideal para diplomas formais.',
-                    'bilingual': 'Modelo Bilíngue, exibindo os textos em português e em um segundo idioma.'
-                };
-
-                var sideSuffix = {
-                    'front': 'Prévia do lado frontal do diploma.',
-                    'back': 'Prévia do verso, com espaço para histórico e registros adicionais.',
-                    'both': 'Representação resumida de frente e verso em um único layout.'
-                };
-
-                var html = ''
-                    + '<p>'
-                    + descriptions[template]
-                    + '</p>'
-                    + '<p style="margin-top: 8px; font-size: 11px; color: #6b7280;">'
-                    + sideSuffix[side]
-                    + '</p>';
-
-                body.innerHTML = html;
-            }
-
             document.addEventListener('DOMContentLoaded', function () {
-                var templateSelect = document.getElementById('template');
-                var sideSelect = document.getElementById('side');
-                var refreshButton = document.querySelector('.js-diploma-refresh');
+                var form = document.getElementById('advanced-diplomas-form');
+                var modal = document.getElementById('advancedReportsPreviewModal');
+                var openBtn = document.querySelector('.js-diploma-preview-open');
+                var closeBtn = document.querySelector('.js-diploma-preview-close');
+                var iframe = document.querySelector('.js-diploma-preview-iframe');
 
-                if (templateSelect) {
-                    templateSelect.addEventListener('change', updateDiplomaPreview);
+                function openModalWithPreview() {
+                    if (!form || !modal || !iframe) return;
+                    var params = new URLSearchParams(new FormData(form));
+                    params.set('preview', '1');
+                    iframe.src = "{{ route('advanced-reports.diplomas.pdf') }}" + "?" + params.toString();
+                    modal.style.display = 'block';
                 }
 
-                if (sideSelect) {
-                    sideSelect.addEventListener('change', updateDiplomaPreview);
+                function closeModal() {
+                    if (!modal || !iframe) return;
+                    iframe.src = 'about:blank';
+                    modal.style.display = 'none';
                 }
 
-                if (refreshButton) {
-                    refreshButton.addEventListener('click', function (event) {
-                        event.preventDefault();
-                        updateDiplomaPreview();
-                    });
-                }
-
-                updateDiplomaPreview();
+                if (openBtn) openBtn.addEventListener('click', function (e) { e.preventDefault(); openModalWithPreview(); });
+                if (closeBtn) closeBtn.addEventListener('click', function (e) { e.preventDefault(); closeModal(); });
+                if (modal) modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
             });
         })();
     </script>

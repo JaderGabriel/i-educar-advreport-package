@@ -18,7 +18,14 @@ class PdfRenderService
      *
      * @param array<string,mixed> $data
      */
-    public function download(string $view, array $data, string $filename, string $paper = 'a4', string $orientation = 'portrait'): Response
+    public function download(
+        string $view,
+        array $data,
+        string $filename,
+        string $paper = 'a4',
+        string $orientation = 'portrait',
+        string $disposition = 'inline'
+    ): Response
     {
         $html = $this->views->make($view, $data)->render();
 
@@ -33,7 +40,7 @@ class PdfRenderService
 
         return response($dompdf->output(), 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Disposition' => $disposition . '; filename="' . $filename . '"',
         ]);
     }
 }

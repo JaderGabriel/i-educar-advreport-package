@@ -49,9 +49,9 @@ class DiplomaReportController extends Controller
         $issuerName = $request->get('issuer_name');
         $issuerRole = $request->get('issuer_role');
         $cityUf = $request->get('city_uf');
-        $book = $request->get('book');
-        $page = $request->get('page');
-        $record = $request->get('record');
+        $municipality = $request->get('municipality');
+        $schoolName = $request->get('school_name');
+        $contact = $request->get('contact');
 
         $issuedAt = now();
         $issuedAtHuman = $issuedAt->format('d/m/Y H:i');
@@ -68,9 +68,9 @@ class DiplomaReportController extends Controller
             'issuer_name' => $issuerName,
             'issuer_role' => $issuerRole,
             'city_uf' => $cityUf,
-            'book' => $book,
-            'page' => $page,
-            'record' => $record,
+            'municipality' => $municipality,
+            'school_name' => $schoolName,
+            'contact' => $contact,
         ];
 
         $signing = app(DocumentSigningService::class);
@@ -105,6 +105,8 @@ class DiplomaReportController extends Controller
             ]
         );
 
+        $disposition = $request->boolean('preview') ? 'inline' : 'attachment';
+
         return app(PdfRenderService::class)->download($view, [
             'document' => $document,
             'template' => $template,
@@ -120,10 +122,10 @@ class DiplomaReportController extends Controller
             'issuerName' => $issuerName,
             'issuerRole' => $issuerRole,
             'cityUf' => $cityUf,
-            'book' => $book,
-            'page' => $page,
-            'record' => $record,
-        ], $filename, 'a4', 'landscape');
+            'municipality' => $municipality,
+            'schoolName' => $schoolName,
+            'contact' => $contact,
+        ], $filename, 'a4', 'landscape', $disposition);
     }
 }
 

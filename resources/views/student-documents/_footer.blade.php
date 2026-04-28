@@ -1,4 +1,4 @@
-<div style="margin-top: 18px; border-top: 1px dashed #cbd5e1; padding-top: 10px; font-size: 10px; color: #374151; display:flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+<div class="ar-official-footer" style="border-top: 1px dashed #cbd5e1; padding-top: 10px; font-size: 10px; color: #374151; display:flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; background: #fff;">
   <div style="flex: 1; min-width: 240px;">
     <div><strong>Emissão</strong>: {{ $issuedAt }}</div>
     @if(!empty($issuerName) || !empty($issuerRole))

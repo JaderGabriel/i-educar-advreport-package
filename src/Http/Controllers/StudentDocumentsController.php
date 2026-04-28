@@ -35,7 +35,7 @@ class StudentDocumentsController extends Controller
             ->join('pmieducar.aluno as a', 'a.cod_aluno', '=', 'm.ref_cod_aluno')
             ->join('cadastro.pessoa as p', 'p.idpes', '=', 'a.ref_idpes')
             ->leftJoin('pmieducar.escola as e', 'e.cod_escola', '=', 'm.ref_ref_cod_escola')
-            ->leftJoin('pmieducar.instituicao as i', 'i.cod_instituicao', '=', 'm.ref_cod_instituicao')
+            ->leftJoin('pmieducar.instituicao as i', 'i.cod_instituicao', '=', 'e.ref_cod_instituicao')
             ->leftJoin('pmieducar.curso as c', 'c.cod_curso', '=', 'm.ref_cod_curso')
             ->leftJoin('pmieducar.serie as s', 's.cod_serie', '=', 'm.ref_ref_cod_serie')
             ->leftJoin('pmieducar.turma as t', 't.cod_turma', '=', 'm.ref_cod_turma')
@@ -57,9 +57,6 @@ class StudentDocumentsController extends Controller
         $issuerName = $request->get('issuer_name');
         $issuerRole = $request->get('issuer_role');
         $cityUf = $request->get('city_uf');
-        $book = $request->get('book');
-        $page = $request->get('page');
-        $record = $request->get('record');
 
         $issuedAt = now();
         $issuedAtHuman = $issuedAt->format('d/m/Y H:i');
@@ -72,9 +69,6 @@ class StudentDocumentsController extends Controller
             'issuer_name' => $issuerName,
             'issuer_role' => $issuerRole,
             'city_uf' => $cityUf,
-            'book' => $book,
-            'page' => $page,
-            'record' => $record,
         ];
 
         $extra = [];
@@ -123,9 +117,6 @@ class StudentDocumentsController extends Controller
             'issuerName' => $issuerName,
             'issuerRole' => $issuerRole,
             'cityUf' => $cityUf,
-            'book' => $book,
-            'page' => $page,
-            'record' => $record,
             'extra' => $extra,
         ], str_replace(' ', '-', strtolower($title)) . '-' . $matriculaId . '.pdf');
     }

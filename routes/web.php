@@ -10,6 +10,9 @@ use iEducar\Packages\AdvancedReports\Http\Controllers\DocumentValidationControll
 use iEducar\Packages\AdvancedReports\Http\Controllers\StudentDocumentsController;
 use iEducar\Packages\AdvancedReports\Http\Controllers\BoletimController;
 use iEducar\Packages\AdvancedReports\Http\Controllers\SchoolHistoryController;
+use iEducar\Packages\AdvancedReports\Http\Controllers\LookupController;
+use iEducar\Packages\AdvancedReports\Http\Controllers\VacanciesBySchoolClassController;
+use iEducar\Packages\AdvancedReports\Http\Controllers\MinutesController;
 use Illuminate\Support\Facades\Route;
 
 // Validação pública (sem login)
@@ -28,6 +31,11 @@ Route::middleware([
     'ieducar.checkresetpassword',
     'ieducar.advanced-reports.menu',
 ])->group(function () {
+    Route::get('/relatorios-avancados/api/matriculas', [LookupController::class, 'matriculas'])
+        ->name('advanced-reports.lookup.matriculas');
+    Route::get('/relatorios-avancados/api/alunos', [LookupController::class, 'alunos'])
+        ->name('advanced-reports.lookup.alunos');
+
     Route::get('/relatorios-avancados/socioeconomicos', [SocioeconomicReportController::class, 'index'])
         ->name('advanced-reports.socioeconomic.index');
     Route::get('/relatorios-avancados/socioeconomicos/pdf', [SocioeconomicReportController::class, 'pdf'])
@@ -82,5 +90,17 @@ Route::middleware([
         ->name('advanced-reports.school-history.index');
     Route::get('/relatorios-avancados/historico/pdf', [SchoolHistoryController::class, 'pdf'])
         ->name('advanced-reports.school-history.pdf');
+
+    Route::get('/relatorios-avancados/vagas-turmas', [VacanciesBySchoolClassController::class, 'index'])
+        ->name('advanced-reports.vacancies.index');
+    Route::get('/relatorios-avancados/vagas-turmas/pdf', [VacanciesBySchoolClassController::class, 'pdf'])
+        ->name('advanced-reports.vacancies.pdf');
+    Route::get('/relatorios-avancados/vagas-turmas/excel', [VacanciesBySchoolClassController::class, 'excel'])
+        ->name('advanced-reports.vacancies.excel');
+
+    Route::get('/relatorios-avancados/atas', [MinutesController::class, 'index'])
+        ->name('advanced-reports.minutes.index');
+    Route::get('/relatorios-avancados/atas/pdf', [MinutesController::class, 'pdf'])
+        ->name('advanced-reports.minutes.pdf');
 });
 

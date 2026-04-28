@@ -9,6 +9,8 @@
 
       .ar-header { position: fixed; top: -92px; left: 0; right: 0; border: 1px solid #ddd; }
       .ar-footer { position: fixed; bottom: -26px; left: 0; right: 0; font-size: 9px; color: #444; }
+      .ar-content { padding-bottom: 96px; }
+      .ar-official-footer { position: fixed; left: 36px; right: 36px; bottom: 36px; }
     </style>
   </head>
   <body>
@@ -16,6 +18,10 @@
       'title' => trim($__env->yieldContent('doc_title')) ?: ($title ?? null),
       'subtitle' => trim($__env->yieldContent('doc_subtitle')) ?: ($subtitle ?? null),
       'year' => trim($__env->yieldContent('doc_year')) ?: ($year ?? null),
+      'formalHeader' => trim($__env->yieldContent('formal_header')) === '1',
+      'municipality' => trim($__env->yieldContent('doc_municipality')) ?: ($municipality ?? null),
+      'schoolName' => trim($__env->yieldContent('doc_school')) ?: ($schoolName ?? null),
+      'contact' => trim($__env->yieldContent('doc_contact')) ?: ($contact ?? null),
     ])
 
     @php($disableFooter = trim($__env->yieldContent('disable_footer')) === '1')
@@ -24,7 +30,9 @@
       @include('advanced-reports::pdf.footer')
     @endunless
 
-    @yield('content')
+    <div class="ar-content">
+      @yield('content')
+    </div>
   </body>
 </html>
 

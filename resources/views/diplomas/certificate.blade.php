@@ -3,6 +3,10 @@
 @section('doc_title', 'Certificado (modelo)')
 @section('doc_subtitle', 'Documento oficial — modelo para impressão')
 @section('doc_year', (string) ($year ?: date('Y')))
+@section('formal_header', '1')
+@section('doc_municipality', (string) ($municipality ?? ''))
+@section('doc_school', (string) ($schoolName ?? ''))
+@section('doc_contact', (string) ($contact ?? ''))
 
 @section('content')
   <style>
@@ -18,7 +22,7 @@
     .title h1 { font-size: 30px; margin: 0; }
     .title p { margin: 6px 0 0; font-size: 14px; color: #4b5563; }
     .body { margin-top: 24px; font-size: 14px; line-height: 1.7; text-align: justify; }
-    .signatures { position: absolute; left: 36px; right: 36px; bottom: 70px; display: flex; justify-content: space-between; gap: 18px; }
+    .signatures { position: absolute; left: 36px; right: 36px; bottom: 120px; display: flex; justify-content: space-between; gap: 18px; }
     .sig { width: 45%; text-align: center; font-size: 12px; }
     .line { border-top: 1px solid #111827; margin-top: 42px; padding-top: 4px; }
     .doc-footer {
@@ -31,6 +35,7 @@
       display: flex;
       justify-content: space-between;
       gap: 12px;
+      background: #fff;
     }
     .code { font-family: DejaVu Sans, Arial, sans-serif; font-size: 10px; }
     .qr { width: 78px; height: 78px; border: 1px solid #e5e7eb; padding: 4px; background: #fff; }
@@ -73,9 +78,6 @@
         @endif
         @if(!empty($cityUf))
           <div><strong>Cidade/UF</strong>: {{ $cityUf }}</div>
-        @endif
-        @if(!empty($book) || !empty($page) || !empty($record))
-          <div><strong>Livro/Folha/Registro</strong>: {{ $book ?: '-' }} / {{ $page ?: '-' }} / {{ $record ?: '-' }}</div>
         @endif
         <div class="code"><strong>Código</strong>: {{ $validationCode ?? '__________' }}</div>
         @if(!empty($validationUrl))

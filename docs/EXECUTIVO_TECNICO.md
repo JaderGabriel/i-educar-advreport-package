@@ -21,6 +21,8 @@ Este documento consolida **o que foi implementado** no pacote `serventec/i-educa
 - **Excel**: `maatwebsite/excel` (múltiplas abas quando faz sentido).
 - **QR Code**: `QrCodeService` (`chillerlan/php-qrcode`), gerando PNG data-uri para uso em PDF.
 
+**Comportamento padrão**: PDFs são emitidos como **prévia no navegador** (header `Content-Disposition: inline`), permitindo imprimir/baixar sem download automático.
+
 ## 3) Menus temáticos (doc executivo) x status de implementação
 
 Fonte: `docs/DOC-EXECUTIVO-PACOTE-RELATORIOS-PORTABILIS.md` seção **8.4**.
@@ -32,10 +34,12 @@ Fonte: `docs/DOC-EXECUTIVO-PACOTE-RELATORIOS-PORTABILIS.md` seção **8.4**.
 - **Avaliação e frequência (Pedagógico)** (8.4.2)
   - **Faltando**: mapas, espelho de diário, pendências, fichas individuais.
 - **Atas e registros formais (Arquivo)** (8.4.3)
-  - **Faltando**: atas (resultados finais, conselho, entrega), livro de chamadas (opcional).
+  - **Implementado (inicial)**: Atas (resultado final / lista de assinaturas), com QR/validação e opção de detalhes.
+  - **Faltando**: atas de conselho, entrega de resultados, reclassificação, etc.
 - **Movimentações e gestão de matrículas** (8.4.4)
   - **Implementado (parcial)**: Movimentações (Geral) com PDF/Excel.
-  - **Faltando**: Movimento mensal; alunos por situação; vagas/turmas.
+  - **Implementado (inicial)**: Vagas por turma (capacidade/ocupação/vagas) com PDF/Excel.
+  - **Faltando**: Movimento mensal; alunos por situação; refinamentos por regra/situação.
 
 ### 3.2 Indicadores (Socioeconômicos e Inclusão) (8.4.8)
 
@@ -68,6 +72,7 @@ Implementados (com PDF/Excel e opção de gráficos):
 ### 4.2 Movimentações
 
 - `/relatorios-avancados/movimentacoes` (+ PDF/Excel)
+- `/relatorios-avancados/vagas-turmas` (+ PDF/Excel)
 
 ### 4.3 Modelos de documentos (com validação)
 
@@ -80,6 +85,22 @@ Validação pública:
 
 - `/documentos/validar/{codigo}`
 
+### 4.4 Documentos oficiais do aluno (com validação)
+
+- `/relatorios-avancados/documentos` (UI)
+- `/relatorios-avancados/documentos/pdf` (PDF: matrícula, frequência, guia/transferência)
+
+### 4.5 Boletim e Histórico (com validação)
+
+- `/relatorios-avancados/boletim` (+ PDF)
+- `/relatorios-avancados/historico` (+ PDF, múltiplos modelos + prévia modal)
+
+### 4.6 Atas (com validação)
+
+- `/relatorios-avancados/atas` (+ PDF)
+  - Ata de resultados finais (opção `with_details=1`: notas por componente/etapa + frequência quando disponível)
+  - Lista de assinaturas (responsáveis)
+
 ## 5) Auditoria/validação de documentos (sem login)
 
 - Tabela: `advanced_reports_documents`
@@ -88,4 +109,3 @@ Validação pública:
   - gera `code`
   - persiste o registro com `payload`
   - imprime no rodapé: **código**, **URL**, **QR Code**
-

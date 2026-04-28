@@ -19,7 +19,8 @@ Este backlog complementa o `docs/RELATORIOS_AVANCADOS_STATUS.md` com itens estru
 
 ## 3) Atas e registros formais (Prioridade 1/2)
 
-- Ata de resultados finais
+- Ata de resultados finais (**implementada versão inicial**; evoluções: mapas por etapa, quadro por componente e assinaturas avançadas)
+- Lista de assinaturas (responsáveis) (**implementada**)
 - Ata de conselho de classe
 - Ata de entrega de resultados (assinaturas)
 - Livro de chamadas (opcional)
@@ -28,7 +29,7 @@ Este backlog complementa o `docs/RELATORIOS_AVANCADOS_STATUS.md` com itens estru
 
 - Movimento mensal
 - Relatório de alunos por situação
-- Vagas/turmas (capacidade/ocupação)
+- Vagas/turmas (capacidade/ocupação) (**implementado: vagas por turma**; evoluções: regras por situação/considerar transferências/remanejamentos)
 
 ## 5) Validação/autenticidade (evolução)
 
@@ -46,9 +47,13 @@ Este backlog complementa o `docs/RELATORIOS_AVANCADOS_STATUS.md` com itens estru
 - Padronizar layout de tabelas PDF e quebras de página (Dompdf).
 - Adicionar “bloco de filtros” no PDF (ex.: Instituição/Escola/Curso selecionados) quando aplicável.
 
+## 8) UX (melhorias)
+
+- Autocomplete/lookup (Aluno/Matrícula) em todas as telas que ainda usam ID manual.
+- Prévia em modal para todos os documentos com modelos (onde aplicável).
+
 ## 7) Performance/robustez
 
 - Paginação para listagens grandes na UI (evitar `limit(5000)` fixo).
 - Excel por streaming/chunks para grandes volumes.
 - Cache de agregações para dashboards (quando necessário).
-

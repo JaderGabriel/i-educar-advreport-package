@@ -31,13 +31,33 @@ class BoletimService
         foreach ($componentes as $componenteId => $componente) {
             $nome = $componente->nome ?? ('Componente ' . $componenteId);
 
+            // Prioriza NOTAS efetivamente lançadas; se não existir, cai para médias calculadas.
             $byStage = [];
+            for ($i = 1; $i <= max($etapas, 0); $i++) {
+                $nota = $boletim->getNotaComponente((int) $componenteId, $i);
+                $value = $nota?->notaArredondada ?? ($nota?->nota ?? null);
+                $byStage[(string) $i] = $value;
+            }
+
+            /** @phpstan-ignore-next-line */
+            // Em runtime, o core aceita 'Rc' como etapa, apesar da assinatura tipada do analisador.
+            // Aqui apenas silenciamos o aviso do analisador estático.
+            $notaRc = $boletim->getNotaComponente((int) $componenteId, 'Rc'); // @phpstan-ignore-line
+            if ($notaRc) {
+                $byStage['Rc'] = $notaRc->notaArredondada ?? ($notaRc->nota ?? null);
+            }
+
+            // Fallback: algumas regras usam médias; preenche o que estiver vazio.
             $list = $mediasComponentes[$componenteId] ?? [];
             foreach ($list as $m) {
-                // Cada item é uma entidade/obj com ->etapa e ->media (ou ->mediaArredondada em alguns casos)
                 $stageKey = (string) ($m->etapa ?? '');
-                $value = $m->mediaArredondada ?? ($m->media ?? null);
-                $byStage[$stageKey] = $value;
+                if ($stageKey === '') {
+                    continue;
+                }
+                if (array_key_exists($stageKey, $byStage) && $byStage[$stageKey] !== null && $byStage[$stageKey] !== '') {
+                    continue;
+                }
+                $byStage[$stageKey] = $m->mediaArredondada ?? ($m->media ?? null);
             }
 
             $row = [

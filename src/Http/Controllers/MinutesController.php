@@ -5,57 +5,65 @@ namespace iEducar\Packages\AdvancedReports\Http\Controllers;
 use App\Http\Controllers\Controller;
 use iEducar\Packages\AdvancedReports\Models\AdvancedReportsDocument;
 use iEducar\Packages\AdvancedReports\Services\DocumentSigningService;
+use iEducar\Packages\AdvancedReports\Services\MinutesService;
 use iEducar\Packages\AdvancedReports\Services\PdfRenderService;
 use iEducar\Packages\AdvancedReports\Services\QrCodeService;
-use iEducar\Packages\AdvancedReports\Services\SchoolHistoryService;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\Response;
 
-class SchoolHistoryController extends Controller
+class MinutesController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): View
     {
-        return view('advanced-reports::school-history.index', [
-            'alunoId' => $request->get('aluno_id'),
-            'template' => $request->get('template', 'classic'),
+        return view('advanced-reports::minutes.index', [
+            'document' => $request->get('document', 'final_results'),
         ]);
     }
 
-    public function pdf(Request $request, SchoolHistoryService $service): Response
+    public function pdf(Request $request, MinutesService $service): Response
     {
-        $alunoId = (int) $request->get('aluno_id');
+        $document = (string) $request->get('document', 'final_results'); // final_results|signatures
+        $schoolClassId = (int) $request->get('ref_cod_turma');
+        $withDetails = $request->boolean('with_details');
+        $issuerName = $request->get('issuer_name');
+        $issuerRole = $request->get('issuer_role');
+        $cityUf = $request->get('city_uf');
         $book = $request->get('book');
         $page = $request->get('page');
         $record = $request->get('record');
-        $template = (string) $request->get('template', 'classic');
 
-        if (!$alunoId) {
-            abort(422, 'Informe o aluno.');
+        if (!$schoolClassId) {
+            abort(422, 'Informe a turma.');
         }
 
-        $data = $service->build($alunoId);
+        $data = $service->buildFinalResults($schoolClassId, $withDetails);
 
         $issuedAt = now();
         $issuedAtHuman = $issuedAt->format('d/m/Y H:i');
         $issuedAtIso = $issuedAt->toISOString();
 
         $payload = [
-            'aluno_id' => $alunoId,
+            'document' => $document,
+            'turma_id' => $schoolClassId,
+            'with_details' => $withDetails ? 1 : 0,
+            'issuer_name' => $issuerName,
+            'issuer_role' => $issuerRole,
+            'city_uf' => $cityUf,
             'book' => $book,
             'page' => $page,
             'record' => $record,
-            'template' => $template,
         ];
 
         $signing = app(DocumentSigningService::class);
         $code = $signing->generateCode(8);
-        $mac = $signing->mac($code, 'historico', $issuedAtIso, $payload);
+        $mac = $signing->mac($code, 'ata', $issuedAtIso, $payload);
         $validationUrl = route('advanced-reports.documents.validate', ['code' => $code]);
         $qrDataUri = app(QrCodeService::class)->pngDataUri($validationUrl, 4);
 
         AdvancedReportsDocument::query()->create([
             'code' => $code,
-            'type' => 'historico',
+            'type' => 'ata',
             'issued_at' => $issuedAt,
             'version' => DocumentSigningService::VERSION,
             'mac' => $mac,
@@ -64,23 +72,33 @@ class SchoolHistoryController extends Controller
             ]),
         ]);
 
-        $view = match ($template) {
-            'modern' => 'advanced-reports::school-history.pdf-modern',
-            default => 'advanced-reports::school-history.pdf',
+        $view = match ($document) {
+            'signatures' => 'advanced-reports::minutes.signatures',
+            default => 'advanced-reports::minutes.final-results',
+        };
+
+        $title = match ($document) {
+            'signatures' => 'Lista de assinaturas (responsáveis)',
+            default => 'Ata de resultados finais',
         };
 
         $disposition = $request->boolean('preview') ? 'inline' : 'attachment';
 
         return app(PdfRenderService::class)->download($view, [
+            'title' => $title,
             'data' => $data,
+            'withDetails' => $withDetails,
             'issuedAt' => $issuedAtHuman,
             'validationCode' => $code,
             'validationUrl' => $validationUrl,
             'qrDataUri' => $qrDataUri,
+            'issuerName' => $issuerName,
+            'issuerRole' => $issuerRole,
+            'cityUf' => $cityUf,
             'book' => $book,
             'page' => $page,
             'record' => $record,
-        ], 'historico-escolar-' . $alunoId . '.pdf', 'a4', 'portrait', $disposition);
+        ], 'ata-' . $document . '-turma-' . $schoolClassId . '.pdf', 'a4', 'portrait', $disposition);
     }
 }
 

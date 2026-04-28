@@ -12,7 +12,6 @@
     config('legacy.config.ieducar_entity_name') ?? config('legacy.app.entity.name') ?? 'i-Educar',
     'UTF-8'
   );
-  $footerHtml = config('legacy.config.ieducar_internal_footer');
 @endphp
 
 <div class="ar-header">
@@ -23,8 +22,21 @@
       </td>
       <td style="padding: 6px 10px; font-size: 9px;">
         <div style="font-weight: 700;">{{ $entityName }}</div>
-        @if(!empty($footerHtml))
-          <div>{!! $footerHtml !!}</div>
+        @if(!empty($formalHeader))
+          @if(!empty($municipality))
+            <div>{{ $municipality }}</div>
+          @endif
+          @if(!empty($schoolName))
+            <div><strong>{{ $schoolName }}</strong></div>
+          @endif
+          @if(!empty($contact))
+            <div>{{ $contact }}</div>
+          @endif
+        @else
+          @php($footerHtml = config('legacy.config.ieducar_internal_footer'))
+          @if(!empty($footerHtml))
+            <div>{!! $footerHtml !!}</div>
+          @endif
         @endif
         @if(!empty($subtitle))
           <div style="margin-top: 2px; color: #444;">{{ $subtitle }}</div>

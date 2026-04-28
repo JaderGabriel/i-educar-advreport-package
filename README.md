@@ -14,20 +14,56 @@ Pacote de **Relatórios e Documentos** para o i-Educar, com emissão em **PDF** 
 ## Instalação (plug-and-play)
 
 1. Garanta o pacote em `packages/serventec/i-educar-advanced-reports-package`.
-2. Ative via plug-and-play:
+1. Ative via plug-and-play:
 
 ```bash
 composer plug-and-play
 php artisan package:discover --ansi
 ```
 
-3. Rode migrations:
+1. Rode migrations:
 
 ```bash
 php artisan migrate --force
 ```
 
+1. Limpe caches (importante para o menu aparecer):
+
+```bash
+php artisan optimize:clear
+php artisan cache:clear
+php artisan route:clear
+php artisan view:clear
+php artisan config:clear
+php artisan advanced-reports:flush-menus
+```
+
 > Este pacote contém migrations que **removem menus de relatórios do pacote Portabilis (Jasper)** antes de criar os menus temáticos (ver “Compatibilidade e migração”).
+
+## Atualização do pacote (upgrade de versão)
+
+Para ambientes onde o pacote **já está instalado** e você está apenas **atualizando a versão**:
+
+1. Atualize o código do pacote no diretório `packages/serventec/i-educar-advanced-reports-package`.
+1. Refaça o plug-and-play e descubra providers (se necessário):
+
+```bash
+composer plug-and-play
+php artisan package:discover --ansi
+```
+
+1. Rode **apenas as migrations do pacote** (recomendado em updates):
+
+```bash
+php artisan migrate --path=packages/serventec/i-educar-advanced-reports-package/database/migrations --force
+```
+
+1. Limpe caches e o cache de menus:
+
+```bash
+php artisan optimize:clear
+php artisan advanced-reports:flush-menus
+```
 
 ## Validação pública (QR Code)
 
@@ -40,6 +76,10 @@ Documentos emitidos pelo módulo de **modelos** (ex.: certificados/declarações
 Rota de validação:
 
 - `/documentos/validar/{codigo}`
+
+## Comportamento do PDF (prévia no navegador)
+
+Ao emitir PDF, o pacote retorna o arquivo com `Content-Disposition: inline`, abrindo no navegador como **prévia** (com opções nativas de imprimir/baixar), sem download automático.
 
 ## Relatórios e documentos disponíveis
 
@@ -103,6 +143,41 @@ Rota de validação:
   - Certificado (**com rodapé + QR Code**)
   - Declaração (**com rodapé + QR Code**)
 
+### 4) Documentos oficiais do aluno (PDF)
+
+- **Rota (UI)**: `/relatorios-avancados/documentos`
+- **PDF**: `/relatorios-avancados/documentos/pdf`
+- **Documentos**:
+  - Declaração de matrícula
+  - Declaração de frequência
+  - Guia/Declaração de transferência
+
+### 5) Boletim do aluno (PDF)
+
+- **Rota (UI)**: `/relatorios-avancados/boletim`
+- **PDF**: `/relatorios-avancados/boletim/pdf`
+
+### 6) Histórico escolar (PDF) — modelos
+
+- **Rota (UI)**: `/relatorios-avancados/historico`
+- **PDF**: `/relatorios-avancados/historico/pdf`
+- **Modelos**: `classic`, `modern` (com prévia em modal na tela)
+
+### 7) Vagas por turma (Secretaria/Gestão)
+
+- **Rota (UI)**: `/relatorios-avancados/vagas-turmas`
+- **PDF**: `/relatorios-avancados/vagas-turmas/pdf`
+- **Excel**: `/relatorios-avancados/vagas-turmas/excel`
+- **Objetivo**: capacidade (`turma.max_aluno`), matriculados (enturmações ativas) e vagas disponíveis.
+
+### 8) Atas (resultado final / assinaturas)
+
+- **Rota (UI)**: `/relatorios-avancados/atas`
+- **PDF**: `/relatorios-avancados/atas/pdf`
+- **Documentos**:
+  - Ata de resultados finais (com opção de detalhes por componente/etapa + frequência)
+  - Lista de assinaturas (responsáveis)
+
 ## Compatibilidade e migração (remoção de Jasper/Portabilis)
 
 Este pacote foi projetado para coexistir com o i-Educar, mas ao ser instalado:
@@ -117,9 +192,15 @@ Este pacote foi projetado para coexistir com o i-Educar, mas ao ser instalado:
 - **Excel**: `maatwebsite/excel`.
 - **QR Code**: `chillerlan/php-qrcode` via `QrCodeService`.
 
+## API (autocomplete/lookup)
+
+Para facilitar o uso nas telas (sem exigir que o usuário saiba IDs):
+
+- `/relatorios-avancados/api/matriculas?q=...`
+- `/relatorios-avancados/api/alunos?q=...`
+
 ## Documentação (executiva/técnica) e roadmap
 
 - **Status do que já foi feito e pendências**: `docs/RELATORIOS_AVANCADOS_STATUS.md`
 - **Resumo executivo/técnico do pacote**: `docs/EXECUTIVO_TECNICO.md`
 - **Backlog e melhorias futuras**: `docs/MELHORIAS_FUTURAS.md`
-

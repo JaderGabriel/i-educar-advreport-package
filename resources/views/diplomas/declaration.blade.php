@@ -3,6 +3,10 @@
 @section('doc_title', 'Declaração (modelo)')
 @section('doc_subtitle', 'Documento oficial — modelo para impressão')
 @section('doc_year', (string) ($year ?: date('Y')))
+@section('formal_header', '1')
+@section('doc_municipality', (string) ($municipality ?? ''))
+@section('doc_school', (string) ($schoolName ?? ''))
+@section('doc_contact', (string) ($contact ?? ''))
 
 @section('content')
   <style>
@@ -11,14 +15,19 @@
       border: 1px solid #e5e7eb;
       padding: 18px 18px;
       box-sizing: border-box;
+      position: relative;
+      min-height: 100%;
     }
     h1 { font-size: 18px; margin: 0 0 10px; text-align: center; }
     .body { font-size: 12px; line-height: 1.6; text-align: justify; }
-    .sign { margin-top: 34px; display: flex; justify-content: space-between; gap: 18px; }
+    .sign { position: absolute; left: 18px; right: 18px; bottom: 130px; display: flex; justify-content: space-between; gap: 18px; }
     .sig { width: 45%; text-align: center; font-size: 11px; }
     .line { border-top: 1px solid #111827; margin-top: 38px; padding-top: 4px; }
     .doc-meta {
-      margin-top: 18px;
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      bottom: 18px;
       border: 1px dashed #cbd5e1;
       padding: 10px;
       font-size: 10px;
@@ -27,6 +36,7 @@
       justify-content: space-between;
       gap: 12px;
       flex-wrap: wrap;
+      background: #fff;
     }
     .code { font-family: DejaVu Sans, Arial, sans-serif; }
     .qr { width: 78px; height: 78px; border: 1px solid #e5e7eb; padding: 4px; background: #fff; }
@@ -66,9 +76,6 @@
         @endif
         @if(!empty($cityUf))
           <div><strong>Cidade/UF</strong>: {{ $cityUf }}</div>
-        @endif
-        @if(!empty($book) || !empty($page) || !empty($record))
-          <div><strong>Livro/Folha/Registro</strong>: {{ $book ?: '-' }} / {{ $page ?: '-' }} / {{ $record ?: '-' }}</div>
         @endif
         <div class="code"><strong>Código</strong>: {{ $validationCode ?? '__________' }}</div>
         @if(!empty($validationUrl))
