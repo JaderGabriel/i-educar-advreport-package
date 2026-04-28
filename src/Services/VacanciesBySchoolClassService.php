@@ -14,6 +14,9 @@ class VacanciesBySchoolClassService
     {
         $query = DB::table('pmieducar.turma as t')
             ->join('pmieducar.escola as e', 'e.cod_escola', '=', 't.ref_ref_cod_escola')
+            ->leftJoin('cadastro.pessoa as ep', 'ep.idpes', '=', 'e.ref_idpes')
+            ->leftJoin('cadastro.juridica as ej', 'ej.idpes', '=', 'ep.idpes')
+            ->leftJoin('pmieducar.escola_complemento as ec', 'ec.ref_cod_escola', '=', 'e.cod_escola')
             ->leftJoin('pmieducar.instituicao as i', 'i.cod_instituicao', '=', 'e.ref_cod_instituicao')
             ->leftJoin('pmieducar.curso as c', 'c.cod_curso', '=', 't.ref_cod_curso')
             ->leftJoin('pmieducar.serie as s', 's.cod_serie', '=', 't.ref_ref_cod_serie')
@@ -60,13 +63,14 @@ class VacanciesBySchoolClassService
                 't.ano',
                 't.max_aluno',
                 'e.cod_escola',
-                'e.fantasia',
+                'ej.fantasia',
+                'ec.nm_escola',
                 'i.nm_instituicao',
                 'c.nm_curso',
                 's.nm_serie',
                 'tt.nome',
             ])
-            ->orderBy('e.fantasia')
+            ->orderByRaw('COALESCE(ej.fantasia, ec.nm_escola, \'\')')
             ->orderBy('c.nm_curso')
             ->orderBy('s.nm_serie')
             ->orderBy('t.nm_turma')
@@ -74,7 +78,7 @@ class VacanciesBySchoolClassService
             ->selectRaw('t.nm_turma as turma')
             ->selectRaw('t.ano as ano_letivo')
             ->selectRaw('COALESCE(t.max_aluno, 0) as capacidade')
-            ->selectRaw('COALESCE(e.fantasia, \'\') as escola')
+            ->selectRaw('COALESCE(ej.fantasia, ec.nm_escola, \'\') as escola')
             ->selectRaw('COALESCE(i.nm_instituicao, \'\') as instituicao')
             ->selectRaw('COALESCE(c.nm_curso, \'\') as curso')
             ->selectRaw('COALESCE(s.nm_serie, \'\') as serie')

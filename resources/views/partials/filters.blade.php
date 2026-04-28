@@ -41,7 +41,15 @@
         <tr id="tr_nm_escola">
             <td class="formmdtd" valign="top"><span class="form">Escola</span></td>
             <td class="formmdtd" valign="top">
-                @include('form.select-school')
+                <select class="geral" name="ref_cod_escola" id="ref_cod_escola" style="width: 308px;">
+                    <option value="">Selecione</option>
+                    @foreach(($escolas ?? []) as $item)
+                        <option value="{{ data_get($item, 'cod_escola') }}"
+                                @selected((string) old('ref_cod_escola', $escolaId ?? request('ref_cod_escola')) === (string) data_get($item, 'cod_escola'))>
+                            {{ data_get($item, 'nome') }}
+                        </option>
+                    @endforeach
+                </select>
             </td>
         </tr>
         <tr id="tr_nm_curso">
@@ -61,7 +69,15 @@
             <tr id="tr_nm_serie">
                 <td class="formmdtd" valign="top"><span class="form">Série</span></td>
                 <td class="formmdtd" valign="top">
-                    @include('form.select-grade')
+                    <select class="geral" name="ref_cod_serie" id="ref_cod_serie" style="width: 308px;">
+                        <option value="">Selecione</option>
+                        @foreach(($series ?? []) as $s)
+                            <option value="{{ data_get($s, 'cod_serie') }}"
+                                    @selected((string) old('ref_cod_serie', request('ref_cod_serie')) === (string) data_get($s, 'cod_serie'))>
+                                {{ data_get($s, 'nm_serie') }}
+                            </option>
+                        @endforeach
+                    </select>
                 </td>
             </tr>
         @endif
@@ -69,7 +85,18 @@
             <tr id="tr_nm_turma">
                 <td class="formlttd" valign="top"><span class="form">Turma</span></td>
                 <td class="formlttd" valign="top">
-                    @include('form.select-school-class')
+                    <select class="geral" name="ref_cod_turma" id="ref_cod_turma" style="width: 308px;">
+                        <option value="">Selecione</option>
+                        @foreach(($turmas ?? []) as $t)
+                            @php($serieOk = empty(request('ref_cod_serie')) || (string) data_get($t, 'ref_ref_cod_serie') === (string) request('ref_cod_serie'))
+                            @if($serieOk)
+                                <option value="{{ data_get($t, 'cod_turma') }}"
+                                        @selected((string) old('ref_cod_turma', request('ref_cod_turma')) === (string) data_get($t, 'cod_turma'))>
+                                    {{ data_get($t, 'nm_turma') }}
+                                </option>
+                            @endif
+                        @endforeach
+                    </select>
                 </td>
             </tr>
         @endif
@@ -129,13 +156,14 @@
     <script>
         (function () {
             const form = document.getElementById('formcadastro');
+            const yearSelect = document.getElementById('ano');
             const instSelect = document.getElementById('ref_cod_instituicao');
             const escolaSelect = document.getElementById('ref_cod_escola');
             const cursoSelect = document.getElementById('ref_cod_curso');
             const serieSelect = document.getElementById('ref_cod_serie');
             const turmaSelect = document.getElementById('ref_cod_turma');
 
-            if (!instSelect || !escolaSelect || !cursoSelect || !form) {
+            if (!instSelect || !escolaSelect || !cursoSelect || !form || !yearSelect) {
                 return;
             }
 
@@ -165,6 +193,16 @@
 
             updateDisabled();
 
+            yearSelect.addEventListener('change', function () {
+                instSelect.value = '';
+                escolaSelect.value = '';
+                cursoSelect.value = '';
+                if (serieSelect) serieSelect.value = '';
+                if (turmaSelect) turmaSelect.value = '';
+                updateDisabled();
+                form.submit();
+            });
+
             instSelect.addEventListener('change', function () {
                 escolaSelect.value = '';
                 cursoSelect.value = '';
@@ -176,6 +214,13 @@
 
             escolaSelect.addEventListener('change', function () {
                 cursoSelect.value = '';
+                if (serieSelect) serieSelect.value = '';
+                if (turmaSelect) turmaSelect.value = '';
+                updateDisabled();
+                form.submit();
+            });
+
+            cursoSelect.addEventListener('change', function () {
                 if (serieSelect) serieSelect.value = '';
                 if (turmaSelect) turmaSelect.value = '';
                 updateDisabled();

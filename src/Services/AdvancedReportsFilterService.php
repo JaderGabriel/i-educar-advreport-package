@@ -52,6 +52,41 @@ class AdvancedReportsFilterService
                 ]);
         }
 
-        return compact('anosLetivos', 'instituicoes', 'escolas', 'cursos');
+        $series = collect();
+        if ($schoolId && $year) {
+            $series = DB::table('pmieducar.escola_serie as es')
+                ->join('pmieducar.serie as s', 's.cod_serie', '=', 'es.ref_cod_serie')
+                ->where('es.ref_cod_escola', $schoolId)
+                ->where('es.ativo', 1)
+                ->where('s.ativo', 1)
+                ->whereRaw('? = ANY (es.anos_letivos)', [$year])
+                ->orderBy('s.nm_serie')
+                ->get([
+                    's.cod_serie',
+                    's.nm_serie',
+                ]);
+        }
+
+        $turmas = collect();
+        if ($schoolId && $year) {
+            $turmaQuery = DB::table('pmieducar.turma as t')
+                ->where('t.ativo', 1)
+                ->where('t.ano', $year)
+                ->where('t.ref_ref_cod_escola', $schoolId);
+
+            if ($courseId) {
+                $turmaQuery->where('t.ref_cod_curso', $courseId);
+            }
+
+            $turmas = $turmaQuery
+                ->orderBy('t.nm_turma')
+                ->get([
+                    't.cod_turma',
+                    't.nm_turma',
+                    't.ref_ref_cod_serie',
+                ]);
+        }
+
+        return compact('anosLetivos', 'instituicoes', 'escolas', 'cursos', 'series', 'turmas');
     }
 }

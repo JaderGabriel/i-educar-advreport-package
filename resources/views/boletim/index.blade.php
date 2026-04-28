@@ -20,7 +20,7 @@
       'extraRowsView' => 'advanced-reports::boletim._extra-filters-rows',
       'actionsView' => 'advanced-reports::boletim._actions',
       'explainTitle' => 'Boletim do aluno (PDF)',
-      'explainText' => 'Selecione ano/instituição/escola/série/turma e então escolha o aluno. O documento inclui QR Code e código para validação pública.',
+      'explainText' => 'Selecione Ano → Instituição → Escola → Curso (obrigatórios). Série/turma são opcionais. Se selecionar um aluno, emite apenas o boletim dele; se não selecionar, emite em lote para as matrículas do filtro.',
   ])
 @endsection
 
@@ -89,17 +89,18 @@
       const openBtn = document.querySelector('.js-boletim-preview-open');
       const closeBtn = document.querySelector('.js-boletim-preview-close');
       const emitBtn = document.querySelector('.js-boletim-emit');
+      const helpBtn = document.querySelector('.js-boletim-help');
       const form = document.getElementById('formcadastro');
 
       function buildPdfUrl() {
         if (!form) return null;
         const params = new URLSearchParams(new FormData(form));
-        if (!params.get('matricula_id')) return null;
         return "{{ route('advanced-reports.boletim.pdf') }}" + "?" + params.toString();
       }
 
       function openPreview() {
-        const url = buildPdfUrl();
+        if (!modal || !iframe) return;
+        const url = "{{ route('advanced-reports.boletim.pdf') }}" + "?preview=1";
         if (!url || !modal || !iframe) return;
         iframe.src = url;
         modal.style.display = 'block';
@@ -111,7 +112,7 @@
         modal.style.display = 'none';
       }
 
-      if (openBtn) openBtn.addEventListener('click', function (e) { e.preventDefault(); openPreview(); });
+      if (helpBtn) helpBtn.addEventListener('click', function (e) { e.preventDefault(); openPreview(); });
       if (closeBtn) closeBtn.addEventListener('click', function (e) { e.preventDefault(); closePreview(); });
       if (modal) modal.addEventListener('click', function (e) { if (e.target === modal) closePreview(); });
       if (emitBtn) emitBtn.addEventListener('click', function (e) {

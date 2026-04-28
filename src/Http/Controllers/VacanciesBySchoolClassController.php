@@ -22,7 +22,12 @@ class VacanciesBySchoolClassController extends Controller
             : null;
 
         $escola = $escolaId
-            ? DB::table('pmieducar.escola')->where('cod_escola', $escolaId)->value('nome')
+            ? DB::table('pmieducar.escola as e')
+                ->leftJoin('cadastro.pessoa as p', 'p.idpes', '=', 'e.ref_idpes')
+                ->leftJoin('cadastro.juridica as j', 'j.idpes', '=', 'p.idpes')
+                ->leftJoin('pmieducar.escola_complemento as ec', 'ec.ref_cod_escola', '=', 'e.cod_escola')
+                ->where('e.cod_escola', $escolaId)
+                ->value(DB::raw('COALESCE(j.fantasia, ec.nm_escola)'))
             : null;
 
         $curso = $cursoId

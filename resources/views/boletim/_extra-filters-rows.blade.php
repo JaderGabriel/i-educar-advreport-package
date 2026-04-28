@@ -6,10 +6,10 @@
   </td>
 </tr>
 <tr>
-  <td class="formlttd"><span class="form">Aluno (na turma)</span> <span class="campo_obrigatorio">*</span></td>
+  <td class="formlttd"><span class="form">Aluno (opcional)</span></td>
   <td class="formlttd">
     <input type="hidden" name="matricula_id" id="boletimMatriculaId" value="{{ request('matricula_id') }}">
-    <select class="geral obrigatorio" id="boletimStudentSelect" style="width: 520px;" disabled>
+    <select class="geral" id="boletimStudentSelect" style="width: 520px;" disabled>
       <option value="">Selecione a turma para listar alunos</option>
     </select>
   </td>
