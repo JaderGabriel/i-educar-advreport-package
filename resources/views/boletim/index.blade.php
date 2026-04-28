@@ -10,82 +10,115 @@
 @endpush
 
 @section('content')
-  <div class="advanced-report-card">
-    <strong class="advanced-report-card-title">Boletim do aluno (PDF)</strong>
-    <p class="advanced-report-card-text">
-      Informe a matrícula para gerar o boletim. O documento inclui código e QR Code para validação pública.
-    </p>
-  </div>
-
-  <form method="get" action="{{ route('advanced-reports.boletim.pdf') }}" target="_blank" id="formcadastro">
-    <table class="tablecadastro" width="100%" border="0" cellpadding="2" cellspacing="0" role="presentation">
-      <tbody>
-      <tr>
-        <td class="formmdtd"><span class="form">Matrícula</span> <span class="campo_obrigatorio">*</span></td>
-        <td class="formmdtd">
-          <input type="hidden" name="matricula_id" id="matricula_id" value="{{ $matriculaId }}">
-          <input class="geral obrigatorio" id="matricula_search" list="matriculas_suggestions" value="{{ $matriculaId }}" style="width: 520px;" placeholder="Digite o nome do aluno ou o ID da matrícula">
-          <datalist id="matriculas_suggestions"></datalist>
-        </td>
-      </tr>
-      <tr>
-        <td class="formlttd"><span class="form">Etapa</span></td>
-        <td class="formlttd">
-          <input class="geral" name="etapa" value="{{ $etapa }}" style="width: 80px;" placeholder="(opcional)">
-          <span class="helper">Ex.: 1, 2, 3... ou Rc</span>
-        </td>
-      </tr>
-      </tbody>
-    </table>
-
-    <div style="text-align: center; margin-top: 16px;">
-      <button type="submit" class="btn-green">Gerar PDF</button>
-    </div>
-  </form>
+  @include('advanced-reports::partials.filters', [
+      'route' => route('advanced-reports.boletim.index'),
+      'cursos' => $cursos,
+      'cursoId' => $cursoId ?? null,
+      'withGrade' => true,
+      'withSchoolClass' => true,
+      'withCharts' => false,
+      'extraRowsView' => 'advanced-reports::boletim._extra-filters-rows',
+      'actionsView' => 'advanced-reports::boletim._actions',
+      'explainTitle' => 'Boletim do aluno (PDF)',
+      'explainText' => 'Selecione ano/instituição/escola/série/turma e então escolha o aluno. O documento inclui QR Code e código para validação pública.',
+  ])
 @endsection
 
 @push('scripts')
   <script>
     (function () {
-      const input = document.getElementById('matricula_search');
-      const hidden = document.getElementById('matricula_id');
-      const list = document.getElementById('matriculas_suggestions');
-      if (!input || !hidden || !list) return;
+      const turmaSelect = document.getElementById('ref_cod_turma');
+      const studentSelect = document.getElementById('boletimStudentSelect');
+      const matriculaHidden = document.getElementById('boletimMatriculaId');
+      if (!turmaSelect || !studentSelect || !matriculaHidden) return;
 
-      function extractId(value) {
-        const match = String(value || '').match(/^(\d+)\s+-\s+/);
-        return match ? match[1] : (String(value || '').match(/^\d+$/) ? value : '');
-      }
-
-      async function loadSuggestions(q) {
-        const url = "{{ route('advanced-reports.lookup.matriculas') }}" + "?q=" + encodeURIComponent(q);
+      async function loadStudentsByClass(turmaId) {
+        const url = "{{ route('advanced-reports.lookup.class-enrollments') }}" + "?turma_id=" + encodeURIComponent(turmaId);
         const res = await fetch(url, {headers: {'Accept': 'application/json'}});
         if (!res.ok) return [];
         return await res.json();
       }
 
-      let last = '';
-      input.addEventListener('input', async function () {
-        const raw = input.value || '';
-        const id = extractId(raw);
-        if (id) hidden.value = id;
+      async function refreshStudents() {
+        const turmaId = turmaSelect.value;
+        studentSelect.innerHTML = '';
+        matriculaHidden.value = '';
 
-        const q = raw.trim();
-        if (q.length < 3 || q === last) return;
-        last = q;
+        if (!turmaId) {
+          studentSelect.disabled = true;
+          const opt = document.createElement('option');
+          opt.value = '';
+          opt.textContent = 'Selecione a turma para listar alunos';
+          studentSelect.appendChild(opt);
+          return;
+        }
 
-        const items = await loadSuggestions(q);
-        list.innerHTML = '';
+        studentSelect.disabled = true;
+        const loading = document.createElement('option');
+        loading.value = '';
+        loading.textContent = 'Carregando alunos...';
+        studentSelect.appendChild(loading);
+
+        const items = await loadStudentsByClass(turmaId);
+        studentSelect.innerHTML = '';
+
+        const first = document.createElement('option');
+        first.value = '';
+        first.textContent = 'Selecione o aluno';
+        studentSelect.appendChild(first);
+
         (items || []).forEach(function (it) {
           const opt = document.createElement('option');
-          opt.value = it.label;
-          list.appendChild(opt);
+          opt.value = String(it.matricula_id);
+          opt.textContent = it.label;
+          studentSelect.appendChild(opt);
         });
+
+        studentSelect.disabled = false;
+      }
+
+      turmaSelect.addEventListener('change', refreshStudents);
+      refreshStudents();
+
+      studentSelect.addEventListener('change', function () {
+        matriculaHidden.value = studentSelect.value || '';
       });
 
-      input.addEventListener('change', function () {
-        const id = extractId(input.value);
-        hidden.value = id || '';
+      const modal = document.getElementById('advancedReportsBoletimPreviewModal');
+      const iframe = document.querySelector('.js-boletim-preview-iframe');
+      const openBtn = document.querySelector('.js-boletim-preview-open');
+      const closeBtn = document.querySelector('.js-boletim-preview-close');
+      const emitBtn = document.querySelector('.js-boletim-emit');
+      const form = document.getElementById('formcadastro');
+
+      function buildPdfUrl() {
+        if (!form) return null;
+        const params = new URLSearchParams(new FormData(form));
+        if (!params.get('matricula_id')) return null;
+        return "{{ route('advanced-reports.boletim.pdf') }}" + "?" + params.toString();
+      }
+
+      function openPreview() {
+        const url = buildPdfUrl();
+        if (!url || !modal || !iframe) return;
+        iframe.src = url;
+        modal.style.display = 'block';
+      }
+
+      function closePreview() {
+        if (!modal || !iframe) return;
+        iframe.src = 'about:blank';
+        modal.style.display = 'none';
+      }
+
+      if (openBtn) openBtn.addEventListener('click', function (e) { e.preventDefault(); openPreview(); });
+      if (closeBtn) closeBtn.addEventListener('click', function (e) { e.preventDefault(); closePreview(); });
+      if (modal) modal.addEventListener('click', function (e) { if (e.target === modal) closePreview(); });
+      if (emitBtn) emitBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        const url = buildPdfUrl();
+        if (!url) return;
+        window.open(url, '_blank');
       });
     })();
   </script>

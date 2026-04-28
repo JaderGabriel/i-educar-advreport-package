@@ -6,18 +6,37 @@ use App\Http\Controllers\Controller;
 use iEducar\Packages\AdvancedReports\Models\AdvancedReportsDocument;
 use iEducar\Packages\AdvancedReports\Services\BoletimService;
 use iEducar\Packages\AdvancedReports\Services\DocumentSigningService;
+use iEducar\Packages\AdvancedReports\Services\OfficialHeaderService;
 use iEducar\Packages\AdvancedReports\Services\PdfRenderService;
 use iEducar\Packages\AdvancedReports\Services\QrCodeService;
+use iEducar\Packages\AdvancedReports\Services\AdvancedReportsFilterService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
 
 class BoletimController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, AdvancedReportsFilterService $filters)
     {
+        $ano = $request->get('ano');
+        $instituicaoId = $request->get('ref_cod_instituicao');
+        $escolaId = $request->get('ref_cod_escola');
+        $cursoId = $request->get('ref_cod_curso');
+
+        $filterData = $filters->getFilters(
+            $ano ? (int) $ano : null,
+            $instituicaoId ? (int) $instituicaoId : null,
+            $escolaId ? (int) $escolaId : null,
+            $cursoId ? (int) $cursoId : null
+        );
+
         return view('advanced-reports::boletim.index', [
-            'matriculaId' => $request->get('matricula_id'),
+            'ano' => $ano,
+            'instituicaoId' => $instituicaoId,
+            'escolaId' => $escolaId,
+            'cursoId' => $cursoId,
             'etapa' => $request->get('etapa'),
+            ...$filterData,
         ]);
     }
 
@@ -31,6 +50,18 @@ class BoletimController extends Controller
         }
 
         $data = $service->build($matriculaId, $etapa ? (string) $etapa : null);
+
+        $headerMeta = DB::table('pmieducar.matricula as m')
+            ->leftJoin('pmieducar.escola as e', 'e.cod_escola', '=', 'm.ref_ref_cod_escola')
+            ->selectRaw('e.ref_cod_instituicao as instituicao_id')
+            ->selectRaw('e.cod_escola as escola_id')
+            ->where('m.cod_matricula', $matriculaId)
+            ->first();
+
+        $header = app(OfficialHeaderService::class)->forSchool(
+            !empty($headerMeta?->instituicao_id) ? (int) $headerMeta->instituicao_id : null,
+            !empty($headerMeta?->escola_id) ? (int) $headerMeta->escola_id : null,
+        );
 
         $issuedAt = now();
         $issuedAtHuman = $issuedAt->format('d/m/Y H:i');
@@ -69,6 +100,9 @@ class BoletimController extends Controller
             'validationCode' => $code,
             'validationUrl' => $validationUrl,
             'qrDataUri' => $qrDataUri,
+            'municipality' => $header['municipality'] ?? null,
+            'schoolName' => $header['schoolName'] ?? null,
+            'contact' => $header['contact'] ?? null,
         ], 'boletim-' . $matriculaId . '.pdf');
     }
 }

@@ -10,8 +10,6 @@
 @endpush
 
 @section('content')
-  <h1>Histórico escolar (PDF)</h1>
-
   <div class="advanced-report-card">
     <strong class="advanced-report-card-title">Emissão</strong>
     <p class="advanced-report-card-text">
@@ -20,7 +18,7 @@
     </p>
   </div>
 
-  <form method="get" action="{{ route('advanced-reports.school-history.pdf') }}" target="_blank" id="formcadastro">
+  <form method="get" action="{{ route('advanced-reports.school-history.pdf') }}" id="formcadastro">
     <table class="tablecadastro" width="100%" border="0" cellpadding="2" cellspacing="0" role="presentation">
       <tbody>
       <tr>
@@ -52,9 +50,15 @@
       </tbody>
     </table>
 
-    <div style="text-align: center; margin-top: 16px;">
-      <button type="button" class="btn js-history-preview-open">Ver prévia</button>
-      <button type="submit" class="btn-green">Gerar PDF</button>
+    <div class="ar-actions">
+      <div class="ar-actions__group">
+        <a href="{{ route('advanced-reports.school-history.index') }}" class="btn ar-btn ar-btn--ghost">Limpar</a>
+        <button type="submit" class="btn-green ar-btn ar-btn--primary" style="margin-left: 8px;">Filtrar</button>
+      </div>
+      <div class="ar-actions__group">
+        <button type="button" class="btn ar-btn ar-btn--secondary js-history-preview-open">Prévia (PDF)</button>
+        <button type="button" class="btn-green ar-btn ar-btn--secondary js-history-emit">Emitir PDF (final)</button>
+      </div>
     </div>
   </form>
 
@@ -136,9 +140,23 @@
         modal.style.display = 'none';
       }
 
+      const emitBtn = document.querySelector('.js-history-emit');
+
+      function buildUrl() {
+        const params = new URLSearchParams(new FormData(form));
+        return "{{ route('advanced-reports.school-history.pdf') }}" + "?" + params.toString();
+      }
+
       openBtn.addEventListener('click', function (e) { e.preventDefault(); openModal(); });
       closeBtn.addEventListener('click', function (e) { e.preventDefault(); closeModal(); });
       modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
+
+      if (emitBtn) {
+        emitBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          window.open(buildUrl(), '_blank');
+        });
+      }
     })();
   </script>
 @endpush

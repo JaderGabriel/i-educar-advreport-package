@@ -3,6 +3,7 @@
 @section('doc_title', 'Boletim do aluno')
 @section('doc_subtitle', 'Emissão em PDF (sem Jasper) • QR Code para validação')
 @section('doc_year', (string) ($ano ?? ''))
+@section('formal_header', '1')
 
 @section('content')
   @php($m = $data['matricula'] ?? [])

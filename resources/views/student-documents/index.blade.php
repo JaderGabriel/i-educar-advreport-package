@@ -10,105 +10,116 @@
 @endpush
 
 @section('content')
-  <div class="advanced-report-card">
-    <strong class="advanced-report-card-title">Documentos oficiais do aluno</strong>
-    <p class="advanced-report-card-text">
-      Informe a matrícula e selecione o documento. O PDF incluirá QR Code e código para validação pública.
-    </p>
-  </div>
-
-  <form method="get" action="{{ route('advanced-reports.student-documents.pdf') }}" target="_blank" id="formcadastro">
-    <table class="tablecadastro" width="100%" border="0" cellpadding="2" cellspacing="0" role="presentation">
-      <tbody>
-      <tr>
-        <td class="formmdtd"><span class="form">Documento</span> <span class="campo_obrigatorio">*</span></td>
-        <td class="formmdtd">
-          <select class="geral obrigatorio" name="document" style="width: 320px;">
-            <option value="declaration_enrollment" @selected(($document ?? '') === 'declaration_enrollment')>Declaração de matrícula</option>
-            <option value="declaration_frequency" @selected(($document ?? '') === 'declaration_frequency')>Declaração de frequência</option>
-            <option value="transfer_guide" @selected(($document ?? '') === 'transfer_guide')>Guia/Declaração de transferência</option>
-            <option value="declaration_nada_consta" @selected(($document ?? '') === 'declaration_nada_consta')>Declaração de escolaridade / Nada consta</option>
-          </select>
-        </td>
-      </tr>
-      <tr>
-        <td class="formlttd"><span class="form">Matrícula</span> <span class="campo_obrigatorio">*</span></td>
-        <td class="formlttd">
-          <input type="hidden" name="matricula_id" id="matricula_id" value="{{ $matriculaId }}">
-          <input class="geral obrigatorio" id="matricula_search" list="matriculas_suggestions" value="{{ $matriculaId }}" style="width: 520px;" placeholder="Digite o nome do aluno ou o ID da matrícula">
-          <datalist id="matriculas_suggestions"></datalist>
-        </td>
-      </tr>
-      <tr>
-        <td class="formmdtd"><span class="form">Emissor</span></td>
-        <td class="formmdtd">
-          <input class="geral" value="{{ auth()->user()?->name }}" style="width: 320px;" disabled>
-        </td>
-      </tr>
-      <tr>
-        <td class="formlttd"><span class="form">Cargo</span></td>
-        <td class="formlttd">
-          <input class="geral" value="(automático)" style="width: 320px;" disabled>
-        </td>
-      </tr>
-      <tr>
-        <td class="formmdtd"><span class="form">Cidade/UF</span></td>
-        <td class="formmdtd">
-          <input class="geral" value="(automático)" style="width: 160px;" disabled>
-        </td>
-      </tr>
-      <tr>
-      </tbody>
-    </table>
-
-    <div style="text-align: center; margin-top: 16px;">
-      <button type="submit" class="btn-green">Gerar PDF</button>
-    </div>
-  </form>
+  @include('advanced-reports::partials.filters', [
+      'route' => route('advanced-reports.student-documents.index'),
+      'cursos' => $cursos,
+      'cursoId' => $cursoId ?? null,
+      'withGrade' => true,
+      'withSchoolClass' => true,
+      'withCharts' => false,
+      'extraRowsView' => 'advanced-reports::student-documents._extra-filters-rows',
+      'actionsView' => 'advanced-reports::student-documents._actions',
+      'explainTitle' => 'Documentos oficiais do aluno',
+      'explainText' => 'Selecione ano/instituição/escola/série/turma e então escolha o aluno. A matrícula é definida automaticamente. O PDF incluirá QR Code e código para validação pública.',
+  ])
 @endsection
 
 @push('scripts')
   <script>
     (function () {
-      const input = document.getElementById('matricula_search');
-      const hidden = document.getElementById('matricula_id');
-      const list = document.getElementById('matriculas_suggestions');
-      if (!input || !hidden || !list) return;
+      const turmaSelect = document.getElementById('ref_cod_turma');
+      const studentSelect = document.getElementById('studentDocumentsStudentSelect');
+      const matriculaHidden = document.getElementById('studentDocumentsMatriculaId');
+      if (!turmaSelect || !studentSelect || !matriculaHidden) return;
 
-      function extractId(value) {
-        const match = String(value || '').match(/^(\d+)\s+-\s+/);
-        return match ? match[1] : (String(value || '').match(/^\d+$/) ? value : '');
-      }
-
-      async function loadSuggestions(q) {
-        const url = "{{ route('advanced-reports.lookup.matriculas') }}" + "?q=" + encodeURIComponent(q);
+      async function loadStudentsByClass(turmaId) {
+        const url = "{{ route('advanced-reports.lookup.class-enrollments') }}" + "?turma_id=" + encodeURIComponent(turmaId);
         const res = await fetch(url, {headers: {'Accept': 'application/json'}});
         if (!res.ok) return [];
         return await res.json();
       }
 
-      let last = '';
-      input.addEventListener('input', async function () {
-        const raw = input.value || '';
-        const id = extractId(raw);
-        if (id) hidden.value = id;
+      async function refreshStudents() {
+        const turmaId = turmaSelect.value;
+        studentSelect.innerHTML = '';
+        matriculaHidden.value = '';
 
-        const q = raw.trim();
-        if (q.length < 3 || q === last) return;
-        last = q;
+        if (!turmaId) {
+          studentSelect.disabled = true;
+          const opt = document.createElement('option');
+          opt.value = '';
+          opt.textContent = 'Selecione a turma para listar alunos';
+          studentSelect.appendChild(opt);
+          return;
+        }
 
-        const items = await loadSuggestions(q);
-        list.innerHTML = '';
+        studentSelect.disabled = true;
+        const loading = document.createElement('option');
+        loading.value = '';
+        loading.textContent = 'Carregando alunos...';
+        studentSelect.appendChild(loading);
+
+        const items = await loadStudentsByClass(turmaId);
+        studentSelect.innerHTML = '';
+
+        const first = document.createElement('option');
+        first.value = '';
+        first.textContent = 'Selecione o aluno';
+        studentSelect.appendChild(first);
+
         (items || []).forEach(function (it) {
           const opt = document.createElement('option');
-          opt.value = it.label;
-          list.appendChild(opt);
+          opt.value = String(it.matricula_id);
+          opt.textContent = it.label;
+          studentSelect.appendChild(opt);
         });
+
+        studentSelect.disabled = false;
+      }
+
+      turmaSelect.addEventListener('change', refreshStudents);
+      refreshStudents();
+
+      studentSelect.addEventListener('change', function () {
+        matriculaHidden.value = studentSelect.value || '';
       });
 
-      input.addEventListener('change', function () {
-        const id = extractId(input.value);
-        hidden.value = id || '';
+      // Ações (prévia/emissão)
+      const modal = document.getElementById('advancedReportsStudentDocsPreviewModal');
+      const iframe = document.querySelector('.js-student-docs-preview-iframe');
+      const openBtn = document.querySelector('.js-student-docs-preview-open');
+      const closeBtn = document.querySelector('.js-student-docs-preview-close');
+      const emitBtn = document.querySelector('.js-student-docs-emit');
+      const form = document.getElementById('formcadastro');
+
+      function buildPdfUrl() {
+        if (!form) return null;
+        const params = new URLSearchParams(new FormData(form));
+        if (!params.get('matricula_id')) return null;
+        return "{{ route('advanced-reports.student-documents.pdf') }}" + "?" + params.toString();
+      }
+
+      function openPreview() {
+        const url = buildPdfUrl();
+        if (!url || !modal || !iframe) return;
+        iframe.src = url;
+        modal.style.display = 'block';
+      }
+
+      function closePreview() {
+        if (!modal || !iframe) return;
+        iframe.src = 'about:blank';
+        modal.style.display = 'none';
+      }
+
+      if (openBtn) openBtn.addEventListener('click', function (e) { e.preventDefault(); openPreview(); });
+      if (closeBtn) closeBtn.addEventListener('click', function (e) { e.preventDefault(); closePreview(); });
+      if (modal) modal.addEventListener('click', function (e) { if (e.target === modal) closePreview(); });
+      if (emitBtn) emitBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        const url = buildPdfUrl();
+        if (!url) return;
+        window.open(url, '_blank');
       });
     })();
   </script>

@@ -110,5 +110,38 @@ class LookupController
 
         return response()->json($items);
     }
+
+    public function classEnrollments(Request $request)
+    {
+        $turmaId = (int) $request->get('turma_id');
+        if (!$turmaId) {
+            return response()->json([]);
+        }
+
+        $rows = DB::table('pmieducar.matricula_turma as mt')
+            ->join('pmieducar.matricula as m', 'm.cod_matricula', '=', 'mt.ref_cod_matricula')
+            ->join('pmieducar.aluno as a', 'a.cod_aluno', '=', 'm.ref_cod_aluno')
+            ->join('cadastro.pessoa as p', 'p.idpes', '=', 'a.ref_idpes')
+            ->where('mt.ref_cod_turma', $turmaId)
+            ->where('mt.ativo', 1)
+            ->where('m.ativo', 1)
+            ->where('m.dependencia', false)
+            ->selectRaw('m.cod_matricula as matricula_id')
+            ->selectRaw('a.cod_aluno as aluno_id')
+            ->selectRaw('p.nome as aluno_nome')
+            ->orderBy('p.nome')
+            ->limit(400)
+            ->get();
+
+        $items = $rows->map(static function ($r) {
+            return [
+                'matricula_id' => (int) $r->matricula_id,
+                'aluno_id' => (int) $r->aluno_id,
+                'label' => Str::squish((string) $r->aluno_nome . ' — matrícula ' . (int) $r->matricula_id),
+            ];
+        })->values();
+
+        return response()->json($items);
+    }
 }
 

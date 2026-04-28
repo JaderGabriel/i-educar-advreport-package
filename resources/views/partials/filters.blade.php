@@ -115,10 +115,14 @@
         </tbody>
     </table>
 
-    <div style="text-align: center; margin-top: 16px;">
-        <a href="{{ $route }}" class="btn">Limpar filtros</a>
-        <button type="submit" class="btn-green" style="margin-left: 8px;">Filtrar</button>
-    </div>
+    @if(!empty($actionsView))
+        @include($actionsView)
+    @else
+        <div style="text-align: center; margin-top: 16px;">
+            <a href="{{ $route }}" class="btn">Limpar filtros</a>
+            <button type="submit" class="btn-green" style="margin-left: 8px;">Filtrar</button>
+        </div>
+    @endif
 </form>
 
 @push('scripts')

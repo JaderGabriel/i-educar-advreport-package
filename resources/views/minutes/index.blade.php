@@ -20,7 +20,7 @@
     </p>
   </div>
 
-  <form method="get" action="{{ route('advanced-reports.minutes.pdf') }}" target="_blank" id="minutesForm">
+  <form method="get" action="{{ route('advanced-reports.minutes.pdf') }}" id="minutesForm">
     <table class="tablecadastro" width="100%" border="0" cellpadding="2" cellspacing="0" role="presentation">
       <tbody>
       <tr>
@@ -76,9 +76,15 @@
       </tbody>
     </table>
 
-    <div style="text-align:center;margin-top: 16px;">
-      <button type="button" class="btn js-minutes-preview-open">Ver prévia</button>
-      <button type="submit" class="btn-green">Gerar PDF</button>
+    <div class="ar-actions">
+      <div class="ar-actions__group">
+        <a href="{{ route('advanced-reports.minutes.index') }}" class="btn ar-btn ar-btn--ghost">Limpar</a>
+        <button type="submit" class="btn-green ar-btn ar-btn--primary" style="margin-left: 8px;">Filtrar</button>
+      </div>
+      <div class="ar-actions__group">
+        <button type="button" class="btn ar-btn ar-btn--secondary js-minutes-preview-open">Prévia (PDF)</button>
+        <button type="button" class="btn-green ar-btn ar-btn--secondary js-minutes-emit">Emitir PDF (final)</button>
+      </div>
     </div>
   </form>
 
@@ -103,10 +109,13 @@
       const closeBtn = document.querySelector('.js-minutes-preview-close');
       if (!form || !modal || !iframe || !openBtn || !closeBtn) return;
 
-      function openModal() {
+      function buildUrl() {
         const params = new URLSearchParams(new FormData(form));
-        params.set('preview', '1');
-        iframe.src = "{{ route('advanced-reports.minutes.pdf') }}" + "?" + params.toString();
+        return "{{ route('advanced-reports.minutes.pdf') }}" + "?" + params.toString();
+      }
+
+      function openModal() {
+        iframe.src = buildUrl() + "&preview=1";
         modal.style.display = 'block';
       }
 
@@ -115,9 +124,18 @@
         modal.style.display = 'none';
       }
 
+      const emitBtn = document.querySelector('.js-minutes-emit');
+
       openBtn.addEventListener('click', function (e) { e.preventDefault(); openModal(); });
       closeBtn.addEventListener('click', function (e) { e.preventDefault(); closeModal(); });
       modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
+
+      if (emitBtn) {
+        emitBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          window.open(buildUrl(), '_blank');
+        });
+      }
     })();
   </script>
 @endpush

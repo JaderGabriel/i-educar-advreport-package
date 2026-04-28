@@ -41,6 +41,8 @@ Route::middleware([
         ->name('advanced-reports.lookup.alunos');
     Route::get('/relatorios-avancados/api/usuarios', [LookupController::class, 'users'])
         ->name('advanced-reports.lookup.users');
+    Route::get('/relatorios-avancados/api/turma-matriculas', [LookupController::class, 'classEnrollments'])
+        ->name('advanced-reports.lookup.class-enrollments');
 
     Route::get('/relatorios-avancados/socioeconomicos', [SocioeconomicReportController::class, 'index'])
         ->name('advanced-reports.socioeconomic.index');
