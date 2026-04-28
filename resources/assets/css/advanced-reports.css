@@ -1,20 +1,52 @@
-+ .advanced-report-card {
-+     margin-bottom: 16px;
-+     padding: 16px;
-+     border-radius: 6px;
-+     border: 1px solid #e2e8f0;
-+     background: #f9fafb;
-+ }
-+
-+ .advanced-report-card-title {
-+     display: block;
-+     margin-bottom: 4px;
-+     font-size: 14px;
-+ }
-+
-+ .advanced-report-card-text {
-+     margin: 4px 0;
-+     font-size: 12px;
-+     color: #4b5563;
-+ }
+.advanced-report-card {
+    margin-bottom: 16px;
+    padding: 16px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    background: #f9fafb;
+}
+
+.advanced-report-card-title {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 14px;
+}
+
+.advanced-report-card-text {
+    margin: 4px 0;
+    font-size: 12px;
+    color: #4b5563;
+}
+
+/* Modal simples (prévia de PDF) */
+.ar-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 9999;
+}
+
+.ar-modal__dialog {
+    background: #fff;
+    width: min(1100px, 96vw);
+    height: min(85vh, 820px);
+    margin: 6vh auto;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.ar-modal__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.ar-modal__iframe {
+    width: 100%;
+    height: calc(100% - 48px);
+    border: 0;
+}
 

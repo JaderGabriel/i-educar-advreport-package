@@ -29,9 +29,6 @@ class MinutesController extends Controller
         $issuerName = $request->get('issuer_name');
         $issuerRole = $request->get('issuer_role');
         $cityUf = $request->get('city_uf');
-        $book = $request->get('book');
-        $page = $request->get('page');
-        $record = $request->get('record');
 
         if (!$schoolClassId) {
             abort(422, 'Informe a turma.');
@@ -50,9 +47,6 @@ class MinutesController extends Controller
             'issuer_name' => $issuerName,
             'issuer_role' => $issuerRole,
             'city_uf' => $cityUf,
-            'book' => $book,
-            'page' => $page,
-            'record' => $record,
         ];
 
         $signing = app(DocumentSigningService::class);
@@ -95,9 +89,6 @@ class MinutesController extends Controller
             'issuerName' => $issuerName,
             'issuerRole' => $issuerRole,
             'cityUf' => $cityUf,
-            'book' => $book,
-            'page' => $page,
-            'record' => $record,
         ], 'ata-' . $document . '-turma-' . $schoolClassId . '.pdf', 'a4', 'portrait', $disposition);
     }
 }

@@ -1,7 +1,7 @@
 @extends('advanced-reports::pdf.layout')
 
 @section('doc_title', 'Histórico escolar')
-@section('doc_subtitle', 'Documento oficial — histórico consolidado')
+@section('doc_subtitle', ($templateLabel ?? 'Documento oficial — histórico consolidado'))
 @section('doc_year', '')
 
 @section('content')

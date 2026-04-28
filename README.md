@@ -161,7 +161,9 @@ Ao emitir PDF, o pacote retorna o arquivo com `Content-Disposition: inline`, abr
 
 - **Rota (UI)**: `/relatorios-avancados/historico`
 - **PDF**: `/relatorios-avancados/historico/pdf`
-- **Modelos**: `classic`, `modern` (com prévia em modal na tela)
+- **Modelos**:
+  - `classic`, `modern` (padrões do pacote)
+  - `simade_model_1`, `simade_model_32`, `simade_magisterio` (adaptações inspiradas em modelos do SIMADE)
 
 ### 7) Vagas por turma (Secretaria/Gestão)
 

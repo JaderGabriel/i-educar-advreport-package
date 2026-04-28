@@ -49,9 +49,6 @@
     'issuerName' => $issuerName ?? null,
     'issuerRole' => $issuerRole ?? null,
     'cityUf' => $cityUf ?? null,
-    'book' => $book ?? null,
-    'page' => $page ?? null,
-    'record' => $record ?? null,
   ])
 @endsection
 

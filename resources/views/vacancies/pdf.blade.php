@@ -7,11 +7,29 @@
 @section('content')
   @php($items = $data['items'] ?? collect())
   @php($s = $data['summary'] ?? [])
+  @php($labels = $filterLabels ?? [])
 
   <h1>VAGAS POR TURMA</h1>
   <p class="muted">
     Relatório gerado a partir de <code>pmieducar.turma.max_aluno</code> e enturmações ativas em <code>pmieducar.matricula_turma</code>.
   </p>
+
+  <div class="box">
+    <strong>Filtros aplicados</strong>
+    <table style="margin-top: 8px;">
+      <tr>
+        <th>Instituição</th><td>{{ $labels['instituicao'] ?? '-' }}</td>
+        <th>Escola</th><td>{{ $labels['escola'] ?? '-' }}</td>
+      </tr>
+      <tr>
+        <th>Curso</th><td>{{ $labels['curso'] ?? '-' }}</td>
+        <th>Série</th><td>{{ $labels['serie'] ?? '-' }}</td>
+      </tr>
+      <tr>
+        <th>Turma</th><td colspan="3">{{ $labels['turma'] ?? '-' }}</td>
+      </tr>
+    </table>
+  </div>
 
   <div class="box">
     <table>

@@ -7,6 +7,7 @@ use iEducar\Packages\AdvancedReports\Exports\VacanciesBySchoolClassExport;
 use iEducar\Packages\AdvancedReports\Services\AdvancedReportsFilterService;
 use iEducar\Packages\AdvancedReports\Services\PdfRenderService;
 use iEducar\Packages\AdvancedReports\Services\VacanciesBySchoolClassService;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
@@ -14,6 +15,37 @@ use Symfony\Component\HttpFoundation\Response;
 
 class VacanciesBySchoolClassController extends Controller
 {
+    private function resolveFilterLabels(?int $instituicaoId, ?int $escolaId, ?int $cursoId, ?int $serieId, ?int $turmaId): array
+    {
+        $instituicao = $instituicaoId
+            ? DB::table('pmieducar.instituicao')->where('cod_instituicao', $instituicaoId)->value('nm_instituicao')
+            : null;
+
+        $escola = $escolaId
+            ? DB::table('pmieducar.escola')->where('cod_escola', $escolaId)->value('nome')
+            : null;
+
+        $curso = $cursoId
+            ? DB::table('pmieducar.curso')->where('cod_curso', $cursoId)->value('nm_curso')
+            : null;
+
+        $serie = $serieId
+            ? DB::table('pmieducar.serie')->where('cod_serie', $serieId)->value('nm_serie')
+            : null;
+
+        $turma = $turmaId
+            ? DB::table('pmieducar.turma')->where('cod_turma', $turmaId)->value('nm_turma')
+            : null;
+
+        return [
+            'instituicao' => $instituicao ? (string) $instituicao : null,
+            'escola' => $escola ? (string) $escola : null,
+            'curso' => $curso ? (string) $curso : null,
+            'serie' => $serie ? (string) $serie : null,
+            'turma' => $turma ? (string) $turma : null,
+        ];
+    }
+
     public function index(Request $request, AdvancedReportsFilterService $filters, VacanciesBySchoolClassService $service): View
     {
         $ano = $request->get('ano');
@@ -67,6 +99,7 @@ class VacanciesBySchoolClassController extends Controller
         }
 
         $data = $service->build($ano, $instituicaoId, $escolaId, $cursoId, $serieId, $turmaId);
+        $filterLabels = $this->resolveFilterLabels($instituicaoId, $escolaId, $cursoId, $serieId, $turmaId);
 
         return app(PdfRenderService::class)->download('advanced-reports::vacancies/pdf', [
             'title' => 'Vagas por turma',
@@ -79,6 +112,7 @@ class VacanciesBySchoolClassController extends Controller
                 'serie' => $serieId,
                 'turma' => $turmaId,
             ],
+            'filterLabels' => $filterLabels,
             'data' => $data,
         ], 'vagas-por-turma-' . $ano . '.pdf', 'a4', 'landscape');
     }

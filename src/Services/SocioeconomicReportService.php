@@ -89,8 +89,8 @@ class SocioeconomicReportService
             ->get();
 
         $benefitStats = (clone $baseQuery)
-            ->selectRaw('COALESCE(aluno_beneficio.descricao, \'Sem benefício\') as beneficio, COUNT(DISTINCT aluno.cod_aluno) as total')
-            ->groupBy('aluno_beneficio.descricao')
+            ->selectRaw('COALESCE(aluno_beneficio.nm_beneficio, \'Sem benefício\') as beneficio, COUNT(DISTINCT aluno.cod_aluno) as total')
+            ->groupBy('aluno_beneficio.nm_beneficio')
             ->orderByDesc('total')
             ->get();
 

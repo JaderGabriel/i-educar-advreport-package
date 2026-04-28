@@ -13,7 +13,10 @@
   <div class="advanced-report-card">
     <strong class="advanced-report-card-title">Atas e registros formais</strong>
     <p class="advanced-report-card-text">
-      Emissão de atas em PDF com validação pública (QR Code). Selecione o tipo e a turma.
+      Emissão de atas em PDF com validação pública (QR Code). Selecione o tipo e informe a turma (ano/escola/série/turma).
+    </p>
+    <p class="advanced-report-card-text">
+      Use <strong>“Ata de resultados finais”</strong> para registrar o quadro de situação; use <strong>“Lista de assinaturas”</strong> para colher confirmação dos responsáveis.
     </p>
   </div>
 
@@ -62,14 +65,6 @@
         <td class="formmdtd"><input class="geral" name="city_uf" value="{{ request('city_uf') }}" style="width: 160px;" placeholder="Ex.: Saubara/BA"></td>
       </tr>
       <tr>
-        <td class="formlttd"><span class="form">Livro/Folha/Registro</span></td>
-        <td class="formlttd">
-          <input class="geral" name="book" value="{{ request('book') }}" style="width: 70px;" placeholder="Livro">
-          <input class="geral" name="page" value="{{ request('page') }}" style="width: 70px;" placeholder="Folha">
-          <input class="geral" name="record" value="{{ request('record') }}" style="width: 90px;" placeholder="Registro">
-        </td>
-      </tr>
-      <tr>
         <td class="formmdtd"><span class="form">Detalhes</span></td>
         <td class="formmdtd">
           <label style="display:inline-flex;align-items:center;gap:6px;">
@@ -87,13 +82,13 @@
     </div>
   </form>
 
-  <div id="advancedReportsMinutesPreviewModal" class="modal" style="display:none; position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 9999;">
-    <div style="background:#fff; width: min(1100px, 96vw); height: min(85vh, 820px); margin: 6vh auto; border-radius: 8px; overflow: hidden;">
-      <div style="display:flex; justify-content: space-between; align-items:center; padding: 10px 12px; border-bottom: 1px solid #e5e7eb;">
+  <div id="advancedReportsMinutesPreviewModal" class="ar-modal">
+    <div class="ar-modal__dialog">
+      <div class="ar-modal__header">
         <strong>Prévia</strong>
         <button type="button" class="btn js-minutes-preview-close">Fechar</button>
       </div>
-      <iframe class="js-minutes-preview-iframe" style="width: 100%; height: calc(100% - 48px); border: 0;"></iframe>
+      <iframe class="js-minutes-preview-iframe ar-modal__iframe"></iframe>
     </div>
   </div>
 @endsection

@@ -22,8 +22,8 @@
                 <select class="geral obrigatorio" name="ano" id="ano" style="width: 80px;">
                     <option value="">Selecione</option>
                     @foreach(($anosLetivos ?? []) as $item)
-                        <option value="{{ $item->id }}" @if(old('ano', $ano ?? null) == $item->id) selected @endif>
-                            {{ $item->nome }}
+                        <option value="{{ data_get($item, 'id') }}" @if(old('ano', $ano ?? null) == data_get($item, 'id')) selected @endif>
+                            {{ data_get($item, 'nome') }}
                         </option>
                     @endforeach
                 </select>
@@ -57,6 +57,22 @@
                 </select>
             </td>
         </tr>
+        @if(!empty($withGrade))
+            <tr id="tr_nm_serie">
+                <td class="formmdtd" valign="top"><span class="form">Série</span></td>
+                <td class="formmdtd" valign="top">
+                    @include('form.select-grade')
+                </td>
+            </tr>
+        @endif
+        @if(!empty($withSchoolClass))
+            <tr id="tr_nm_turma">
+                <td class="formlttd" valign="top"><span class="form">Turma</span></td>
+                <td class="formlttd" valign="top">
+                    @include('form.select-school-class')
+                </td>
+            </tr>
+        @endif
         @if(!empty($withDates))
             <tr id="tr_data_inicial">
                 <td class="formmdtd" valign="top">
@@ -109,6 +125,8 @@
             const instSelect = document.getElementById('ref_cod_instituicao');
             const escolaSelect = document.getElementById('ref_cod_escola');
             const cursoSelect = document.getElementById('ref_cod_curso');
+            const serieSelect = document.getElementById('ref_cod_serie');
+            const turmaSelect = document.getElementById('ref_cod_turma');
 
             if (!instSelect || !escolaSelect || !cursoSelect || !form) {
                 return;
@@ -118,12 +136,22 @@
                 if (!instSelect.value) {
                     escolaSelect.disabled = true;
                     cursoSelect.disabled = true;
+                    if (serieSelect) serieSelect.disabled = true;
+                    if (turmaSelect) turmaSelect.disabled = true;
                 } else {
                     escolaSelect.disabled = false;
                     if (!escolaSelect.value) {
                         cursoSelect.disabled = true;
+                        if (serieSelect) serieSelect.disabled = true;
+                        if (turmaSelect) turmaSelect.disabled = true;
                     } else {
                         cursoSelect.disabled = false;
+                        if (serieSelect) serieSelect.disabled = false;
+                        if (turmaSelect && serieSelect) {
+                            turmaSelect.disabled = !serieSelect.value;
+                        } else if (turmaSelect) {
+                            turmaSelect.disabled = false;
+                        }
                     }
                 }
             }
@@ -133,15 +161,27 @@
             instSelect.addEventListener('change', function () {
                 escolaSelect.value = '';
                 cursoSelect.value = '';
+                if (serieSelect) serieSelect.value = '';
+                if (turmaSelect) turmaSelect.value = '';
                 updateDisabled();
                 form.submit();
             });
 
             escolaSelect.addEventListener('change', function () {
                 cursoSelect.value = '';
+                if (serieSelect) serieSelect.value = '';
+                if (turmaSelect) turmaSelect.value = '';
                 updateDisabled();
                 form.submit();
             });
+
+            if (serieSelect && turmaSelect) {
+                serieSelect.addEventListener('change', function () {
+                    turmaSelect.value = '';
+                    updateDisabled();
+                    form.submit();
+                });
+            }
         })();
     </script>
 @endpush

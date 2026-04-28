@@ -13,6 +13,7 @@ use iEducar\Packages\AdvancedReports\Http\Controllers\SchoolHistoryController;
 use iEducar\Packages\AdvancedReports\Http\Controllers\LookupController;
 use iEducar\Packages\AdvancedReports\Http\Controllers\VacanciesBySchoolClassController;
 use iEducar\Packages\AdvancedReports\Http\Controllers\MinutesController;
+use iEducar\Packages\AdvancedReports\Http\Controllers\PedagogicalController;
 use Illuminate\Support\Facades\Route;
 
 // Validação pública (sem login)
@@ -102,5 +103,10 @@ Route::middleware([
         ->name('advanced-reports.minutes.index');
     Route::get('/relatorios-avancados/atas/pdf', [MinutesController::class, 'pdf'])
         ->name('advanced-reports.minutes.pdf');
+
+    // Placeholders pedagógicos / atas adicionais (roadmap)
+    Route::get('/relatorios-avancados/pedagogico/{slug}', [PedagogicalController::class, 'show'])
+        ->where('slug', '(mapa-notas|mapa-frequencia|espelho-diario|pendencias-lancamento|ata-conselho|ata-entrega-resultados)')
+        ->name('advanced-reports.pedagogical.placeholder');
 });
 

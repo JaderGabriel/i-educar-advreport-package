@@ -1,33 +1,34 @@
 @extends('advanced-reports::pdf.layout')
 
 @section('doc_title', 'Histórico escolar')
-@section('doc_subtitle', ($templateLabel ?? 'Documento oficial — histórico consolidado (modelo moderno)'))
+@section('doc_subtitle', ($templateLabel ?? 'SIMADE: Magistério (Curso Normal — frente/verso)'))
 @section('doc_year', '')
 
 @section('content')
   @php($student = $data['student'])
+  @php($items = $data['items'] ?? [])
 
-  <style>
-    h1 { font-size: 14px; letter-spacing: .08em; text-align: center; margin: 0 0 10px; }
-    h2 { font-size: 11px; margin-top: 12px; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; }
-    table th { background: #f8fafc; }
-    .pill { display:inline-block; padding: 2px 6px; border: 1px solid #e5e7eb; border-radius: 999px; font-size: 9px; color: #374151; }
-  </style>
+  <h1>HISTÓRICO ESCOLAR — CURSO NORMAL (MAGISTÉRIO)</h1>
 
-  <h1>HISTÓRICO ESCOLAR</h1>
-
-  <div class="box" style="border-color:#e5e7eb;">
+  <div class="box">
     <table>
       <tr><th>Aluno(a)</th><td>{{ $student->aluno_nome }}</td></tr>
-      <tr><th>Aluno (ID)</th><td><span class="pill">{{ $student->aluno_id }}</span></td></tr>
+      <tr><th>Aluno (ID)</th><td>{{ $student->aluno_id }}</td></tr>
+      @if(!empty($templateLabel))
+        <tr><th>Modelo</th><td>{{ $templateLabel }}</td></tr>
+      @endif
     </table>
   </div>
 
-  @foreach(($data['items'] ?? []) as $item)
+  <p class="muted" style="margin-top: 8px;">
+    Template focado em cursos do tipo “Normal/Magistério”. A estrutura exata pode variar conforme normativas da rede.
+  </p>
+
+  @foreach($items as $item)
     @php($h = $item['history'])
     @php($disciplines = $item['disciplines'])
 
-    <h2>{{ $h->nm_serie }} — {{ $h->ano }}</h2>
+    <h2 style="margin-top: 14px;">{{ $h->nm_serie }} — {{ $h->ano }}</h2>
     <div class="muted" style="margin-bottom: 6px;">
       Escola: {{ $h->escola }} ({{ $h->escola_cidade }}/{{ $h->escola_uf }})
       @if(!empty($h->nm_curso)) — Curso: {{ $h->nm_curso }} @endif
@@ -35,17 +36,10 @@
       @if(!empty($h->carga_horaria)) — Carga horária: {{ $h->carga_horaria }} @endif
     </div>
 
-    @if(!empty($h->observacao))
-      <div class="box" style="border-color:#e5e7eb;">
-        <strong>Observações</strong>
-        <div class="muted" style="margin-top: 4px;">{{ $h->observacao }}</div>
-      </div>
-    @endif
-
     <table>
       <thead>
       <tr>
-        <th>Disciplina</th>
+        <th>Componente</th>
         <th>Nota</th>
         <th>Faltas</th>
         <th>Carga horária</th>

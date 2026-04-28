@@ -13,11 +13,31 @@ use Symfony\Component\HttpFoundation\Response;
 
 class SchoolHistoryController extends Controller
 {
+    /**
+     * @return array<string, string>
+     */
+    private function templates(): array
+    {
+        return [
+            'classic' => 'Clássico (padrão)',
+            'modern' => 'Moderno (limpo)',
+            'simade_model_1' => 'SIMADE: Modelo 1 (EF 9 anos — frente/verso)',
+            'simade_model_32' => 'SIMADE: Modelo 32 (Res. 2197/2012 — frente/verso)',
+            'simade_magisterio' => 'SIMADE: Magistério (Curso Normal — frente/verso)',
+            'mg_regular_eja_emti_prop' => 'MG: Regular/EJA/Correção de fluxo/EMTI propedêutico (ASIE 6/2021)',
+            'mg_nem_piloto' => 'MG: Novo Ensino Médio piloto (REANP)',
+            'mg_emti_prof' => 'MG: EMTI profissional (REANP)',
+            'mg_tecnico_semestral' => 'MG: Técnico semestral (Histórico + Diploma — REANP)',
+            'mg_normal_infantil' => 'MG: Normal nível médio Educação Infantil (Histórico + Diploma — REANP)',
+        ];
+    }
+
     public function index(Request $request)
     {
         return view('advanced-reports::school-history.index', [
             'alunoId' => $request->get('aluno_id'),
             'template' => $request->get('template', 'classic'),
+            'templates' => $this->templates(),
         ]);
     }
 
@@ -64,8 +84,16 @@ class SchoolHistoryController extends Controller
             ]),
         ]);
 
+        $templates = $this->templates();
+        if (!array_key_exists($template, $templates)) {
+            $template = 'classic';
+        }
+
         $view = match ($template) {
             'modern' => 'advanced-reports::school-history.pdf-modern',
+            'simade_model_1' => 'advanced-reports::school-history.pdf-simade-model-1',
+            'simade_model_32' => 'advanced-reports::school-history.pdf-simade-model-32',
+            'simade_magisterio' => 'advanced-reports::school-history.pdf-simade-magisterio',
             default => 'advanced-reports::school-history.pdf',
         };
 
@@ -80,6 +108,8 @@ class SchoolHistoryController extends Controller
             'book' => $book,
             'page' => $page,
             'record' => $record,
+            'template' => $template,
+            'templateLabel' => $templates[$template] ?? null,
         ], 'historico-escolar-' . $alunoId . '.pdf', 'a4', 'portrait', $disposition);
     }
 }

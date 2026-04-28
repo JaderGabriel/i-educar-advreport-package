@@ -14,39 +14,13 @@
       'route' => route('advanced-reports.vacancies.index'),
       'cursos' => $cursos,
       'cursoId' => $cursoId ?? null,
+      'withGrade' => true,
+      'withSchoolClass' => true,
       'withCharts' => false,
       'explainTitle' => 'Vagas por turma',
-      'explainText' => 'Relatório objetivo de capacidade (max_aluno), matrículas enturmadas ativas e vagas disponíveis por turma. Requer ano e escola.',
+      'explainText' => 'Relatório de gestão para responder rapidamente: “quantas vagas tenho por turma?”. Selecione ano e escola; opcionalmente refine por curso/série/turma.',
       'explainDictionary' => 'Capacidade = max_aluno da turma; Matriculados = enturmações ativas (matricula_turma.ativo=1) desconsiderando matrícula de dependência; Vagas = max( cap - matriculados, 0).'
   ])
-
-  <div class="advanced-report-card" style="margin-top: 12px;">
-    <strong class="advanced-report-card-title">Filtros específicos</strong>
-    <p class="advanced-report-card-text">Opcionalmente refine por série e turma.</p>
-
-    <form action="{{ route('advanced-reports.vacancies.index') }}" method="get" id="vacanciesExtraFilters">
-      @foreach(request()->except(['ref_cod_serie','ref_cod_turma']) as $k => $v)
-        <input type="hidden" name="{{ $k }}" value="{{ $v }}">
-      @endforeach
-
-      <table class="tablecadastro" width="100%" border="0" cellpadding="2" cellspacing="0" role="presentation">
-        <tbody>
-        <tr>
-          <td class="formmdtd"><span class="form">Série</span></td>
-          <td class="formmdtd">@include('form.select-grade')</td>
-        </tr>
-        <tr>
-          <td class="formlttd"><span class="form">Turma</span></td>
-          <td class="formlttd">@include('form.select-school-class')</td>
-        </tr>
-        </tbody>
-      </table>
-
-      <div style="text-align: center; margin-top: 12px;">
-        <button type="submit" class="btn-green">Aplicar</button>
-      </div>
-    </form>
-  </div>
 
   @if(!empty($data))
     <div class="advanced-report-card" style="margin-top: 12px;">

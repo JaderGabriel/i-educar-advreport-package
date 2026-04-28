@@ -35,8 +35,9 @@
         <td class="formlttd"><span class="form">Modelo</span></td>
         <td class="formlttd">
           <select class="geral" name="template" id="template" style="width: 220px;">
-            <option value="classic" @selected(($template ?? 'classic') === 'classic')>Clássico (padrão)</option>
-            <option value="modern" @selected(($template ?? '') === 'modern')>Moderno (limpo)</option>
+            @foreach(($templates ?? ['classic' => 'Clássico (padrão)', 'modern' => 'Moderno (limpo)']) as $key => $label)
+              <option value="{{ $key }}" @selected(($template ?? 'classic') === $key)>{{ $label }}</option>
+            @endforeach
           </select>
         </td>
       </tr>
@@ -57,13 +58,13 @@
     </div>
   </form>
 
-  <div id="advancedReportsHistoryPreviewModal" class="modal" style="display:none; position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 9999;">
-    <div style="background:#fff; width: min(1100px, 96vw); height: min(85vh, 820px); margin: 6vh auto; border-radius: 8px; overflow: hidden;">
-      <div style="display:flex; justify-content: space-between; align-items:center; padding: 10px 12px; border-bottom: 1px solid #e5e7eb;">
+  <div id="advancedReportsHistoryPreviewModal" class="ar-modal">
+    <div class="ar-modal__dialog">
+      <div class="ar-modal__header">
         <strong>Prévia do histórico escolar</strong>
         <button type="button" class="btn js-history-preview-close">Fechar</button>
       </div>
-      <iframe class="js-history-preview-iframe" style="width: 100%; height: calc(100% - 48px); border: 0;"></iframe>
+      <iframe class="js-history-preview-iframe ar-modal__iframe"></iframe>
     </div>
   </div>
 @endsection
