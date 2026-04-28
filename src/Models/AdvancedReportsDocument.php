@@ -32,8 +32,18 @@ class AdvancedReportsDocument extends Model
     {
         $p = is_array($this->payload) ? $this->payload : [];
 
+        $typeHuman = match ((string) ($this->type ?? '')) {
+            'boletim' => 'Boletim do aluno',
+            'boletim_batch' => 'Boletim do aluno (lote)',
+            'declaration_enrollment' => 'Declaração de matrícula',
+            'declaration_frequency' => 'Declaração de frequência',
+            'transfer_guide' => 'Guia/Declaração de transferência',
+            'declaration_nada_consta' => 'Declaração de escolaridade / Nada consta',
+            default => (string) ($this->type ?? ''),
+        };
+
         $summary = [
-            'Tipo' => (string) ($this->type ?? ''),
+            'Tipo' => $typeHuman,
             'Emitido em' => optional($this->issued_at)->format('d/m/Y H:i'),
             'Emissor' => trim((string) ($p['issuer_name'] ?? '') . (!empty($p['issuer_role']) ? (' (' . $p['issuer_role'] . ')') : '')),
             'Cidade/UF' => (string) ($p['city_uf'] ?? ''),

@@ -55,7 +55,10 @@
         <tr id="tr_nm_curso">
             <td class="formlttd" valign="top"><span class="form">Curso</span></td>
             <td class="formlttd" valign="top">
-                <select class="geral" name="ref_cod_curso" id="ref_cod_curso" style="width: 308px;">
+                @if(!empty($requireCourse))
+                    <span class="campo_obrigatorio">*</span>
+                @endif
+                <select class="geral {{ !empty($requireCourse) ? 'obrigatorio' : '' }}" name="ref_cod_curso" id="ref_cod_curso" style="width: 308px;">
                     <option value="">Selecione</option>
                     @foreach($cursos as $curso)
                         <option value="{{ $curso->cod_curso }}" @selected(($cursoId ?? null) == $curso->cod_curso)>

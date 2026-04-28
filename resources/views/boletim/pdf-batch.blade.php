@@ -51,22 +51,22 @@
       </tbody>
     </table>
 
+    @include('advanced-reports::student-documents._footer', [
+      'issuedAt' => $issuedAt,
+      'validationCode' => $it['validationCode'] ?? '',
+      'validationUrl' => $it['validationUrl'] ?? '',
+      'qrDataUri' => $it['qrDataUri'] ?? null,
+      'issuerName' => null,
+      'issuerRole' => null,
+      'cityUf' => null,
+      'book' => null,
+      'page' => null,
+      'record' => null,
+    ])
+
     @if(!$loop->last)
       <div style="page-break-after: always;"></div>
     @endif
   @endforeach
-
-  @include('advanced-reports::student-documents._footer', [
-    'issuedAt' => $issuedAt,
-    'validationCode' => $validationCode,
-    'validationUrl' => $validationUrl,
-    'qrDataUri' => $qrDataUri,
-    'issuerName' => null,
-    'issuerRole' => null,
-    'cityUf' => null,
-    'book' => null,
-    'page' => null,
-    'record' => null,
-  ])
 @endsection
 

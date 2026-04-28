@@ -15,6 +15,7 @@
         'cursos' => $cursos,
         'cursoId' => $cursoId ?? null,
         'withCharts' => true,
+        'requireCourse' => true,
         'explainTitle' => 'Distorção idade/série',
         'explainText' => 'Indicador de distorção idade/série baseado na idade ideal configurada na série e na idade aproximada (ano - ano de nascimento). Serve para gestão e planejamento pedagógico.',
         'explainDictionary' => 'Idade ideal = campo idade_ideal da série; Idade aproximada = ano - ano_nascimento (não considera mês/dia); Faixa usada: 5 a 17 anos.'

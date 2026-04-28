@@ -22,6 +22,9 @@ class AgeDistortionService
      */
     public function buildData(int $year, int $institutionId, int $courseId, ?int $schoolId = null, ?int $gradeId = null, int $situation = 0): array
     {
+        $year = (int) $year;
+        $ageExpr = '(' . $year . ' - EXTRACT(YEAR FROM f.data_nasc)::int)';
+
         $rows = DB::table('pmieducar.matricula as m')
             ->join('pmieducar.matricula_turma as mt', 'mt.ref_cod_matricula', '=', 'm.cod_matricula')
             ->join('relatorio.view_situacao as vs', function ($j) {
@@ -46,10 +49,10 @@ class AgeDistortionService
             ->selectRaw('m.ref_ref_cod_serie as grade_id')
             ->selectRaw('s.nm_serie as grade_name')
             ->selectRaw('COALESCE(s.idade_ideal, 0) as ideal_age')
-            ->selectRaw('(:year - EXTRACT(YEAR FROM f.data_nasc)::int) as age', ['year' => $year])
+            ->selectRaw($ageExpr . ' as age')
             ->selectRaw('COUNT(DISTINCT m.cod_matricula) as total')
-            ->whereRaw('(:year - EXTRACT(YEAR FROM f.data_nasc)::int) > 4', ['year' => $year])
-            ->whereRaw('(:year - EXTRACT(YEAR FROM f.data_nasc)::int) < 18', ['year' => $year])
+            ->whereRaw($ageExpr . ' > 4')
+            ->whereRaw($ageExpr . ' < 18')
             ->groupBy('m.ref_ref_cod_serie', 's.nm_serie', 's.idade_ideal', 'age')
             ->orderBy('s.nm_serie')
             ->orderBy('age')

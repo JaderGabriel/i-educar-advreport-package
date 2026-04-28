@@ -167,59 +167,59 @@ class BoletimController extends Controller
             abort(404, 'Nenhuma matrícula encontrada para os filtros informados.');
         }
 
-        $items = [];
-        foreach ($matriculas as $m) {
-            $items[] = [
-                'aluno_nome' => (string) $m->aluno_nome,
-                'matricula_id' => (int) $m->cod_matricula,
-                'data' => $service->build((int) $m->cod_matricula, $etapa ? (string) $etapa : null),
-            ];
-        }
-
         $instituicaoId = DB::table('pmieducar.escola')->where('cod_escola', $escolaId)->value('ref_cod_instituicao');
         $header = app(OfficialHeaderService::class)->forSchool(
             $instituicaoId ? (int) $instituicaoId : null,
             $escolaId
         );
 
-        $payload = [
-            'mode' => 'batch',
-            'ano' => $ano,
-            'escola_id' => $escolaId,
-            'curso_id' => $cursoId,
-            'serie_id' => $serieId,
-            'turma_id' => $turmaId,
-            'etapa' => $etapa,
-            'count' => count($items),
-        ];
-
         $signing = app(DocumentSigningService::class);
-        $code = $signing->generateCode(8);
-        $mac = $signing->mac($code, 'boletim', $issuedAtIso, $payload);
-        $validationUrl = route('advanced-reports.documents.validate', ['code' => $code]);
-        $qrDataUri = app(QrCodeService::class)->pngDataUri($validationUrl, 4);
+        $items = [];
 
-        AdvancedReportsDocument::query()->create([
-            'code' => $code,
-            'type' => 'boletim_batch',
-            'issued_at' => $issuedAt,
-            'issued_by_user_id' => auth()->id(),
-            'issued_ip' => $request->ip(),
-            'issued_user_agent' => substr((string) $request->userAgent(), 0, 255),
-            'version' => DocumentSigningService::VERSION,
-            'mac' => $mac,
-            'payload' => array_merge($payload, [
-                'validation_url' => $validationUrl,
-            ]),
-        ]);
+        foreach ($matriculas as $m) {
+            $matriculaId = (int) $m->cod_matricula;
+            $data = $service->build($matriculaId, $etapa ? (string) $etapa : null);
+
+            $payload = [
+                'mode' => 'single',
+                'matricula_id' => $matriculaId,
+                'etapa' => $etapa,
+                'ano_letivo' => (string) ($data['matricula']['ano'] ?? ''),
+            ];
+
+            $code = $signing->generateCode(8);
+            $mac = $signing->mac($code, 'boletim', $issuedAtIso, $payload);
+            $validationUrl = route('advanced-reports.documents.validate', ['code' => $code]);
+            $qrDataUri = app(QrCodeService::class)->pngDataUri($validationUrl, 4);
+
+            AdvancedReportsDocument::query()->create([
+                'code' => $code,
+                'type' => 'boletim',
+                'issued_at' => $issuedAt,
+                'issued_by_user_id' => auth()->id(),
+                'issued_ip' => $request->ip(),
+                'issued_user_agent' => substr((string) $request->userAgent(), 0, 255),
+                'version' => DocumentSigningService::VERSION,
+                'mac' => $mac,
+                'payload' => array_merge($payload, [
+                    'validation_url' => $validationUrl,
+                ]),
+            ]);
+
+            $items[] = [
+                'aluno_nome' => (string) $m->aluno_nome,
+                'matricula_id' => $matriculaId,
+                'data' => $data,
+                'validationCode' => $code,
+                'validationUrl' => $validationUrl,
+                'qrDataUri' => $qrDataUri,
+            ];
+        }
 
         return app(PdfRenderService::class)->download('advanced-reports::boletim.pdf-batch', [
             'ano' => $ano,
             'items' => $items,
             'issuedAt' => $issuedAtHuman,
-            'validationCode' => $code,
-            'validationUrl' => $validationUrl,
-            'qrDataUri' => $qrDataUri,
             'municipality' => $header['municipality'] ?? null,
             'schoolName' => $header['schoolName'] ?? null,
             'contact' => $header['contact'] ?? null,
