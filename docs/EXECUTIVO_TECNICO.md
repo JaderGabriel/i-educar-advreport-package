@@ -30,12 +30,15 @@ Fonte: `docs/DOC-EXECUTIVO-PACOTE-RELATORIOS-PORTABILIS.md` seção **8.4**.
 ### 3.1 Prioridade 1 (núcleo)
 
 - **Documentos do aluno (Oficiais)** (8.4.1)
-  - **Faltando**: Boletim, Histórico, Atestado/Declarações “oficiais” (matrícula/frequência), Guia/Transferência, Escolaridade/nada consta.
+  - **Implementado**: Boletim, Histórico (múltiplos modelos), Declarações oficiais (matrícula/frequência) e Guia/Transferência.
+  - **Faltando**: Escolaridade / vida escolar / “nada consta” (definir escopo e LGPD).
 - **Avaliação e frequência (Pedagógico)** (8.4.2)
-  - **Faltando**: mapas, espelho de diário, pendências, fichas individuais.
+  - **Implementado (orientação)**: placeholders de menu/tela para mapas, espelho e pendências (para fluxo claro ao usuário leigo).
+  - **Faltando**: implementação completa (regras por rede: etapas, diários, alocações docentes e lançamentos).
 - **Atas e registros formais (Arquivo)** (8.4.3)
   - **Implementado (inicial)**: Atas (resultado final / lista de assinaturas), com QR/validação e opção de detalhes.
-  - **Faltando**: atas de conselho, entrega de resultados, reclassificação, etc.
+  - **Implementado (orientação)**: placeholders para “Ata de conselho” e “Ata de entrega de resultados”.
+  - **Faltando**: implementação completa dessas variações (layout e regras por rede).
 - **Movimentações e gestão de matrículas** (8.4.4)
   - **Implementado (parcial)**: Movimentações (Geral) com PDF/Excel.
   - **Implementado (inicial)**: Vagas por turma (capacidade/ocupação/vagas) com PDF/Excel.

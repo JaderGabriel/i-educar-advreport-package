@@ -28,7 +28,7 @@ class PedagogicalController extends Controller
             ],
             'pendencias-lancamento' => [
                 'title' => 'Pendências de lançamento (notas/frequência)',
-                'text' => 'Gestão de conformidade: o que ainda não foi lançado por turma/componente/professor. Previsto no roadmap; será disponibilizado aqui.',
+                'text' => 'Este item foi promovido para implementação real. Use o menu para acessar o relatório em: Relatórios Avançados → Pendências de lançamento.',
             ],
             'ata-conselho' => [
                 'title' => 'Ata de conselho de classe (por etapa)',

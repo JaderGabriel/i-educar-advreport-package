@@ -180,6 +180,13 @@ Ao emitir PDF, o pacote retorna o arquivo com `Content-Disposition: inline`, abr
   - Ata de resultados finais (com opção de detalhes por componente/etapa + frequência)
   - Lista de assinaturas (responsáveis)
 
+### 9) Pendências de lançamento (notas/frequência)
+
+- **Rota (UI)**: `/relatorios-avancados/pendencias-lancamento`
+- **PDF**: `/relatorios-avancados/pendencias-lancamento/pdf`
+- **Excel**: `/relatorios-avancados/pendencias-lancamento/excel`
+- **Objetivo**: gestão pedagógica/conformidade — identificar ausências de lançamento por matrícula/componente/etapa.
+
 ## Compatibilidade e migração (remoção de Jasper/Portabilis)
 
 Este pacote foi projetado para coexistir com o i-Educar, mas ao ser instalado:

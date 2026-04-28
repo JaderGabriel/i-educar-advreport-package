@@ -4,13 +4,23 @@
 
 ### Movimentações
 
-- [x] Menu criado (`SCHOOL_ADV_MOVIMENTACOES`)
+- [x] Menu criado
 - [x] Rota `/relatorios-avancados/movimentacoes`
 - [x] Filtros base (ano, instituição, escola, curso)
 - [ ] Serviço `MovementsGeneralReportService` (equivalente à Consulta de movimento geral)
 - [ ] View de resultados (tabela com colunas do `educar_consulta_movimento_geral_lst.php`)
 - [x] PDF
 - [x] Excel
+
+### Avaliação e frequência (Pedagógico)
+
+- [x] Menu criado (grupo)
+- [x] Placeholders (telas de orientação) para itens do roadmap:
+  - `/relatorios-avancados/pedagogico/mapa-notas`
+  - `/relatorios-avancados/pedagogico/mapa-frequencia`
+  - `/relatorios-avancados/pedagogico/espelho-diario`
+  - `/relatorios-avancados/pedagogico/pendencias-lancamento`
+- [ ] Implementação completa (serviços, PDF/Excel) por variação de regra/etapas/diário
 
 ### Lançamentos
 
@@ -116,7 +126,7 @@
 - [x] Controller + Service (Histórico sem Jasper)
 - [x] Rota `/relatorios-avancados/historico`
 - [x] PDF com cabeçalho oficial + QR/HMAC
-- [x] Múltiplos modelos (classic/modern) + prévia (modal)
+- [x] Múltiplos modelos (classic/modern + SIMADE 1/32/magistério) + prévia (modal)
 
 ### Documentos oficiais do aluno
 

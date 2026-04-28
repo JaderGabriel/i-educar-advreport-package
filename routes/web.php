@@ -14,6 +14,7 @@ use iEducar\Packages\AdvancedReports\Http\Controllers\LookupController;
 use iEducar\Packages\AdvancedReports\Http\Controllers\VacanciesBySchoolClassController;
 use iEducar\Packages\AdvancedReports\Http\Controllers\MinutesController;
 use iEducar\Packages\AdvancedReports\Http\Controllers\PedagogicalController;
+use iEducar\Packages\AdvancedReports\Http\Controllers\PendingEntriesController;
 use Illuminate\Support\Facades\Route;
 
 // Validação pública (sem login)
@@ -108,5 +109,13 @@ Route::middleware([
     Route::get('/relatorios-avancados/pedagogico/{slug}', [PedagogicalController::class, 'show'])
         ->where('slug', '(mapa-notas|mapa-frequencia|espelho-diario|pendencias-lancamento|ata-conselho|ata-entrega-resultados)')
         ->name('advanced-reports.pedagogical.placeholder');
+
+    // Pendências de lançamento (notas/frequência) — primeira entrega do bloco pedagógico
+    Route::get('/relatorios-avancados/pendencias-lancamento', [PendingEntriesController::class, 'index'])
+        ->name('advanced-reports.pending-entries.index');
+    Route::get('/relatorios-avancados/pendencias-lancamento/pdf', [PendingEntriesController::class, 'pdf'])
+        ->name('advanced-reports.pending-entries.pdf');
+    Route::get('/relatorios-avancados/pendencias-lancamento/excel', [PendingEntriesController::class, 'excel'])
+        ->name('advanced-reports.pending-entries.excel');
 });
 

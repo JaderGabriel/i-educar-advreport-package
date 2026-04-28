@@ -13,7 +13,7 @@ return new class extends Migration
             $this->createChild($pedagogicalGroup, 9999704, 'Mapa de notas (turma/etapa)', 1, '/relatorios-avancados/pedagogico/mapa-notas');
             $this->createChild($pedagogicalGroup, 9999705, 'Mapa de frequência (turma/etapa)', 2, '/relatorios-avancados/pedagogico/mapa-frequencia');
             $this->createChild($pedagogicalGroup, 9999706, 'Espelho de diário', 3, '/relatorios-avancados/pedagogico/espelho-diario');
-            $this->createChild($pedagogicalGroup, 9999707, 'Pendências de lançamento (notas/frequência)', 4, '/relatorios-avancados/pedagogico/pendencias-lancamento');
+            $this->createChild($pedagogicalGroup, 9999707, 'Pendências de lançamento (notas/frequência)', 4, '/relatorios-avancados/pendencias-lancamento');
         }
 
         $minutesGroup = Menu::query()->where('old', 9999751)->first(); // Escola → Documentos → Atas e registros formais
