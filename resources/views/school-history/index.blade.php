@@ -18,11 +18,12 @@
       'template' => $template ?? request('template', 'classic'),
       'withGrade' => true,
       'withSchoolClass' => true,
-      'requireCourse' => true,
+      'requireCourse' => false,
+      'requireSchool' => true,
       'extraRowsView' => 'advanced-reports::school-history._extra-filters-rows',
       'actionsView' => 'advanced-reports::school-history._actions',
       'explainTitle' => 'Histórico escolar (PDF)',
-      'explainText' => 'Selecione Ano → Instituição → Escola → Curso (obrigatórios). Série e turma refinam a lista. Na turma, escolha o aluno (somente quem já tem histórico nativo consolidado) e em seguida selecione o modelo visual para emitir o PDF validado.',
+      'explainText' => 'Selecione Ano → Instituição → Escola (obrigatórios). A tabela já lista os alunos da escola com histórico nativo consolidado. Curso/Série/Turma apenas refinam a lista.',
   ])
 @endsection
 
@@ -31,10 +32,15 @@
     (function () {
       const form = document.getElementById('formcadastro');
       const turmaSelect = document.getElementById('ref_cod_turma');
+      const escolaSelect = document.getElementById('ref_cod_escola');
+      const cursoSelect = document.getElementById('ref_cod_curso');
+      const serieSelect = document.getElementById('ref_cod_serie');
+      const instSelect = document.getElementById('ref_cod_instituicao');
+      const anoSelect = document.getElementById('ano');
       const tbody = document.querySelector('.js-school-history-tbody');
       const selectAll = document.querySelector('.js-school-history-select-all');
       const selectedCount = document.querySelector('.js-school-history-selected-count');
-      if (!turmaSelect || !tbody) return;
+      if (!tbody) return;
 
       function openError(message) {
         const modal = document.getElementById('advancedReportsSchoolHistoryErrorModal');
@@ -53,11 +59,13 @@
         modal.style.display = 'none';
       }
 
-      async function loadReadyHistories(turmaId) {
+      async function loadReadyHistories() {
         const params = new URLSearchParams();
-        params.set('turma_id', String(turmaId));
-        const ano = document.getElementById('ano');
-        if (ano && ano.value) params.set('ano', ano.value);
+        if (turmaSelect && turmaSelect.value) params.set('turma_id', String(turmaSelect.value));
+        if (anoSelect && anoSelect.value) params.set('ano', String(anoSelect.value));
+        if (escolaSelect && escolaSelect.value) params.set('escola_id', String(escolaSelect.value));
+        if (cursoSelect && cursoSelect.value) params.set('curso_id', String(cursoSelect.value));
+        if (serieSelect && serieSelect.value) params.set('serie_id', String(serieSelect.value));
         const url = "{{ route('advanced-reports.lookup.ready-school-histories') }}" + "?" + params.toString();
         const res = await fetch(url, {headers: {'Accept': 'application/json'}});
         if (!res.ok) return [];
@@ -132,21 +140,29 @@
       }
 
       async function refreshTable() {
-        const turmaId = turmaSelect.value;
         syncSelectedCount();
         syncSelectAllState();
 
-        if (!turmaId) {
-          renderEmpty('Selecione a turma para carregar os alunos com histórico nativo consolidado.');
+        if (!anoSelect || !instSelect || !escolaSelect) return;
+        if (!anoSelect.value) {
+          renderEmpty('Informe o ano letivo para carregar a lista.');
+          return;
+        }
+        if (!instSelect.value) {
+          renderEmpty('Informe a instituição para carregar a lista.');
+          return;
+        }
+        if (!escolaSelect.value) {
+          renderEmpty('Informe a escola para carregar a lista.');
           return;
         }
 
         renderEmpty('Carregando...');
-        const items = await loadReadyHistories(turmaId);
+        const items = await loadReadyHistories();
         tbody.innerHTML = '';
 
         if (!items || items.length === 0) {
-          renderEmpty('Nenhum aluno com histórico nativo pronto foi encontrado para esta turma.');
+          renderEmpty('Nenhum aluno com histórico nativo pronto foi encontrado para os filtros informados.');
           return;
         }
 
@@ -158,8 +174,11 @@
         syncSelectAllState();
       }
 
-      turmaSelect.addEventListener('change', refreshTable);
-      const anoSelect = document.getElementById('ano');
+      if (turmaSelect) turmaSelect.addEventListener('change', refreshTable);
+      if (escolaSelect) escolaSelect.addEventListener('change', refreshTable);
+      if (cursoSelect) cursoSelect.addEventListener('change', refreshTable);
+      if (serieSelect) serieSelect.addEventListener('change', refreshTable);
+      if (instSelect) instSelect.addEventListener('change', refreshTable);
       if (anoSelect) anoSelect.addEventListener('change', refreshTable);
       refreshTable();
 
@@ -213,12 +232,11 @@
           const inst = document.getElementById('ref_cod_instituicao');
           const escola = document.getElementById('ref_cod_escola');
           const curso = document.getElementById('ref_cod_curso');
-          if (!ano || !inst || !escola || !curso) return;
+          if (!ano || !inst || !escola) return;
 
           if (!ano.value) return openError('Informe o ano letivo.');
           if (!inst.value) return openError('Informe a instituição.');
           if (!escola.value) return openError('Informe a escola.');
-          if (!curso.value) return openError('Informe o curso.');
 
           const selected = currentSelectedAlunoIds();
           if (selected.length === 0) return openError('Selecione ao menos um aluno para impressão.');

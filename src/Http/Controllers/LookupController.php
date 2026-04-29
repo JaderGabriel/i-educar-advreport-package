@@ -29,11 +29,15 @@ class LookupController
     public function readySchoolHistories(Request $request)
     {
         $turmaId = (int) $request->get('turma_id');
-        if (!$turmaId) {
+        $escolaId = (int) $request->get('escola_id');
+        $year = $request->get('ano') ? (int) $request->get('ano') : null;
+        $cursoId = $request->get('curso_id') ? (int) $request->get('curso_id') : null;
+        $serieId = $request->get('serie_id') ? (int) $request->get('serie_id') : null;
+
+        // Carregamento em nível de escola: exige ao menos ano + escola.
+        if (!$year || !$escolaId) {
             return response()->json([]);
         }
-
-        $year = $request->get('ano') ? (int) $request->get('ano') : null;
 
         $metaSub = DB::table('pmieducar.historico_escolar as he')
             ->where('he.ativo', 1)
@@ -48,8 +52,7 @@ class LookupController
             ->selectRaw('he.folha as folha')
             ->orderByRaw('he.ref_cod_aluno, he.ano DESC, he.sequencial DESC');
 
-        $rows = DB::table('pmieducar.matricula_turma as mt')
-            ->join('pmieducar.matricula as m', 'm.cod_matricula', '=', 'mt.ref_cod_matricula')
+        $q = DB::table('pmieducar.matricula as m')
             ->join('pmieducar.aluno as a', 'a.cod_aluno', '=', 'm.ref_cod_aluno')
             ->join('cadastro.pessoa as p', 'p.idpes', '=', 'a.ref_idpes')
             ->joinSub($metaSub, 'hm', function ($j) {
@@ -61,11 +64,22 @@ class LookupController
             ->leftJoin('pmieducar.serie as s', function ($j) {
                 $j->on('s.cod_serie', '=', 'm.ref_ref_cod_serie');
             })
-            ->where('mt.ref_cod_turma', $turmaId)
-            ->where('mt.ativo', 1)
             ->where('m.ativo', 1)
             ->where('m.dependencia', false)
-            ->when($year, fn ($qq) => $qq->where('m.ano', $year))
+            ->where('m.ano', $year)
+            ->where('m.ref_ref_cod_escola', $escolaId)
+            ->when($cursoId, fn ($qq) => $qq->where('m.ref_cod_curso', $cursoId))
+            ->when($serieId, fn ($qq) => $qq->where('m.ref_ref_cod_serie', $serieId));
+
+        if ($turmaId) {
+            $q->join('pmieducar.matricula_turma as mt', function ($join) use ($turmaId) {
+                $join->on('mt.ref_cod_matricula', '=', 'm.cod_matricula')
+                    ->where('mt.ativo', 1)
+                    ->where('mt.ref_cod_turma', $turmaId);
+            });
+        }
+
+        $rows = $q
             ->selectRaw('a.cod_aluno as aluno_id')
             ->selectRaw('p.nome as aluno_nome')
             ->selectRaw('hm.ano_historico as ano')

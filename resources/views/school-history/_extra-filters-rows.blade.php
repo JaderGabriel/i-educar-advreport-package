@@ -39,7 +39,7 @@
           <tbody class="js-school-history-tbody">
           <tr>
             <td colspan="8" style="padding:10px; color:#666;">
-              Selecione a turma para carregar os alunos com histórico nativo consolidado.
+              Informe ao menos ano, instituição e escola para carregar os alunos com histórico nativo consolidado.
             </td>
           </tr>
           </tbody>
