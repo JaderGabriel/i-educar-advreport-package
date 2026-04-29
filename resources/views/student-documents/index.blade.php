@@ -30,16 +30,30 @@
       const turmaSelect = document.getElementById('ref_cod_turma');
       const studentsSelect = document.getElementById('studentDocumentsStudentsSelect');
       const matriculaHidden = document.getElementById('studentDocumentsMatriculaId');
+      const documentSelect = document.getElementById('studentDocumentsDocument');
+      const historicoRow = document.getElementById('studentDocumentsHistoricoRow');
+      const filterInput = document.querySelector('.js-student-filter');
       if (!turmaSelect || !studentsSelect || !matriculaHidden) return;
 
+      function syncHistoricoRow() {
+        if (!documentSelect || !historicoRow) return;
+        historicoRow.style.display = documentSelect.value === 'declaration_conclusion' ? '' : 'none';
+      }
+
       async function loadStudentsByClass(turmaId) {
-        const url = "{{ route('advanced-reports.lookup.class-enrollments') }}" + "?turma_id=" + encodeURIComponent(turmaId);
+        const params = new URLSearchParams();
+        params.set('turma_id', String(turmaId));
+        if (documentSelect && documentSelect.value) params.set('document', documentSelect.value);
+        const ano = document.getElementById('ano');
+        if (ano && ano.value) params.set('ano', ano.value);
+        const url = "{{ route('advanced-reports.lookup.class-enrollments') }}" + "?" + params.toString();
         const res = await fetch(url, {headers: {'Accept': 'application/json'}});
         if (!res.ok) return [];
         return await res.json();
       }
 
       async function refreshStudents() {
+        syncHistoricoRow();
         const turmaId = turmaSelect.value;
         studentsSelect.innerHTML = '';
         matriculaHidden.value = '';
@@ -73,7 +87,24 @@
       }
 
       turmaSelect.addEventListener('change', refreshStudents);
+      if (documentSelect) documentSelect.addEventListener('change', refreshStudents);
+      const anoSelect = document.getElementById('ano');
+      if (anoSelect) anoSelect.addEventListener('change', refreshStudents);
       refreshStudents();
+      syncHistoricoRow();
+
+      if (filterInput) {
+        filterInput.addEventListener('input', function () {
+          const q = (filterInput.value || '').toLowerCase().trim();
+          Array.from(studentsSelect.options || []).forEach(function (o) {
+            if (!o.value) {
+              o.hidden = false;
+              return;
+            }
+            o.hidden = q.length > 0 && !(o.textContent || '').toLowerCase().includes(q);
+          });
+        });
+      }
 
       studentsSelect.addEventListener('change', function () {
         const selected = Array.from(studentsSelect.selectedOptions || []).map(o => o.value).filter(Boolean);

@@ -47,7 +47,7 @@
 
     <div class="body">
       <p>
-        Declaramos, para os devidos fins, que <strong>ALUNO EXEMPLO</strong>, regularmente matriculado(a) no curso/etapa
+        Declaramos, para os devidos fins, que <strong>{{ $studentName ?? 'ALUNO(A) EXEMPLO' }}</strong>, regularmente matriculado(a) no curso/etapa
         <strong>{{ $course ?: '__________' }}</strong>, turma <strong>{{ $class ?: '__________' }}</strong>, no ano letivo
         de <strong>{{ $year ?: '__________' }}</strong>, encontra-se em situação regular conforme registros desta unidade.
       </p>
@@ -61,10 +61,22 @@
 
     <div class="sign">
       <div class="sig">
-        <div class="line">Secretaria Escolar</div>
+        <div class="line">
+          <div><strong>Secretaria</strong></div>
+          <div>{{ $secretaryName ?: '' }}</div>
+          @if(!empty($schoolInep))
+            <div style="margin-top:4px;font-size:10px;">INEP (escola): {{ $schoolInep }}</div>
+          @endif
+        </div>
       </div>
       <div class="sig">
-        <div class="line">Direção</div>
+        <div class="line">
+          <div><strong>Direção</strong></div>
+          <div>{{ $directorName ?: '' }}</div>
+          @if(!empty($schoolInep))
+            <div style="margin-top:4px;font-size:10px;">INEP (escola): {{ $schoolInep }}</div>
+          @endif
+        </div>
       </div>
     </div>
 

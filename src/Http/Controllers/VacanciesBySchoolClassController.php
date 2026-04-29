@@ -4,8 +4,12 @@ namespace iEducar\Packages\AdvancedReports\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use iEducar\Packages\AdvancedReports\Exports\VacanciesBySchoolClassExport;
+use iEducar\Packages\AdvancedReports\Models\AdvancedReportsDocument;
 use iEducar\Packages\AdvancedReports\Services\AdvancedReportsFilterService;
+use iEducar\Packages\AdvancedReports\Services\DocumentSigningService;
+use iEducar\Packages\AdvancedReports\Services\OfficialHeaderService;
 use iEducar\Packages\AdvancedReports\Services\PdfRenderService;
+use iEducar\Packages\AdvancedReports\Services\QrCodeService;
 use iEducar\Packages\AdvancedReports\Services\VacanciesBySchoolClassService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
@@ -51,7 +55,7 @@ class VacanciesBySchoolClassController extends Controller
         ];
     }
 
-    public function index(Request $request, AdvancedReportsFilterService $filters, VacanciesBySchoolClassService $service): View
+    public function index(Request $request, AdvancedReportsFilterService $filters): View
     {
         $ano = $request->get('ano');
         $instituicaoId = $request->get('ref_cod_instituicao');
@@ -67,18 +71,6 @@ class VacanciesBySchoolClassController extends Controller
             $cursoId ? (int) $cursoId : null
         );
 
-        $data = null;
-        if ($ano && $escolaId) {
-            $data = $service->build(
-                (int) $ano,
-                $instituicaoId ? (int) $instituicaoId : null,
-                (int) $escolaId,
-                $cursoId ? (int) $cursoId : null,
-                $serieId ? (int) $serieId : null,
-                $turmaId ? (int) $turmaId : null
-            );
-        }
-
         return view('advanced-reports::vacancies/index', array_merge($filterData, [
             'ano' => $ano,
             'instituicaoId' => $instituicaoId,
@@ -86,7 +78,6 @@ class VacanciesBySchoolClassController extends Controller
             'cursoId' => $cursoId,
             'serieId' => $serieId,
             'turmaId' => $turmaId,
-            'data' => $data,
         ]));
     }
 
@@ -103,8 +94,104 @@ class VacanciesBySchoolClassController extends Controller
             abort(422, 'Informe ano e escola.');
         }
 
+        if ($request->boolean('preview')) {
+            $filterLabels = [
+                'instituicao' => 'Instituição (exemplo)',
+                'escola' => 'Escola Municipal Exemplo',
+                'curso' => 'Ensino Fundamental',
+                'serie' => '5º ano',
+                'turma' => '-',
+            ];
+            $items = collect([(object) [
+                'escola' => $filterLabels['escola'],
+                'turma' => 'Turma A',
+                'turno' => 'Matutino',
+                'curso' => $filterLabels['curso'],
+                'serie' => $filterLabels['serie'],
+                'capacidade' => 35,
+                'matriculados' => 30,
+                'vagas' => 5,
+            ]]);
+            $data = [
+                'items' => $items,
+                'summary' => [
+                    'turmas' => 1,
+                    'capacidade' => 35,
+                    'matriculados' => 30,
+                    'vagas' => 5,
+                ],
+            ];
+
+            return app(PdfRenderService::class)->download('advanced-reports::vacancies/pdf', [
+                'title' => 'Vagas por turma',
+                'subtitle' => 'Capacidade, ocupação e vagas disponíveis',
+                'year' => (string) $ano,
+                'filters' => [
+                    'instituicao' => $instituicaoId,
+                    'escola' => $escolaId,
+                    'curso' => $cursoId,
+                    'serie' => $serieId,
+                    'turma' => $turmaId,
+                ],
+                'filterLabels' => $filterLabels,
+                'data' => $data,
+                'municipality' => null,
+                'schoolName' => null,
+                'contact' => null,
+                'issuedAt' => now()->format('d/m/Y H:i'),
+                'validationCode' => 'EXEMPLO',
+                'validationUrl' => '#',
+                'qrDataUri' => null,
+                'issuerName' => null,
+                'issuerRole' => null,
+                'cityUf' => null,
+            ], 'vagas-previa.pdf', 'a4', 'landscape', 'inline');
+        }
+
         $data = $service->build($ano, $instituicaoId, $escolaId, $cursoId, $serieId, $turmaId);
         $filterLabels = $this->resolveFilterLabels($instituicaoId, $escolaId, $cursoId, $serieId, $turmaId);
+
+        if (!$instituicaoId) {
+            $instituicaoId = (int) (DB::table('pmieducar.escola')->where('cod_escola', $escolaId)->value('ref_cod_instituicao') ?: 0) ?: null;
+        }
+
+        $header = app(OfficialHeaderService::class)->forSchool($instituicaoId, $escolaId);
+
+        $issuedAt = now();
+        $issuedAtHuman = $issuedAt->format('d/m/Y H:i');
+        $issuedAtIso = $issuedAt->toISOString();
+
+        $payload = [
+            'report' => 'vacancies_by_school_class',
+            'ano' => $ano,
+            'year' => (string) $ano,
+            'instituicao_id' => $instituicaoId,
+            'escola_id' => $escolaId,
+            'curso_id' => $cursoId,
+            'serie_id' => $serieId,
+            'turma_id' => $turmaId,
+        ];
+
+        $signing = app(DocumentSigningService::class);
+        $code = $signing->generateCode(8);
+        $mac = $signing->mac($code, 'vacancies_by_school_class', $issuedAtIso, $payload);
+        $validationUrl = route('advanced-reports.documents.validate', ['code' => $code]);
+        $qrDataUri = app(QrCodeService::class)->pngDataUri($validationUrl, 4);
+
+        AdvancedReportsDocument::query()->create([
+            'code' => $code,
+            'type' => 'vacancies_by_school_class',
+            'issued_at' => $issuedAt,
+            'issued_by_user_id' => auth()->id(),
+            'issued_ip' => $request->ip(),
+            'issued_user_agent' => substr((string) $request->userAgent(), 0, 255),
+            'version' => DocumentSigningService::VERSION,
+            'mac' => $mac,
+            'payload' => array_merge($payload, [
+                'validation_url' => $validationUrl,
+                'issuer_name' => auth()->user()?->name,
+            ]),
+        ]);
 
         return app(PdfRenderService::class)->download('advanced-reports::vacancies/pdf', [
             'title' => 'Vagas por turma',
@@ -119,7 +206,17 @@ class VacanciesBySchoolClassController extends Controller
             ],
             'filterLabels' => $filterLabels,
             'data' => $data,
-        ], 'vagas-por-turma-' . $ano . '.pdf', 'a4', 'landscape');
+            'municipality' => $header['municipality'] ?? null,
+            'schoolName' => $header['schoolName'] ?? null,
+            'contact' => $header['contact'] ?? null,
+            'issuedAt' => $issuedAtHuman,
+            'validationCode' => $code,
+            'validationUrl' => $validationUrl,
+            'qrDataUri' => $qrDataUri,
+            'issuerName' => auth()->user()?->name,
+            'issuerRole' => null,
+            'cityUf' => null,
+        ], 'vagas-por-turma-' . $ano . '.pdf', 'a4', 'landscape', 'attachment');
     }
 
     public function excel(Request $request, VacanciesBySchoolClassService $service)

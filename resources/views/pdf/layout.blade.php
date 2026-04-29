@@ -13,6 +13,7 @@
       .ar-official-footer { position: fixed; left: 36px; right: 36px; bottom: 44px; }
 
       h1, h2 { margin: 6px 0; }
+      h1 { text-align: center; }
       .muted { color: #666; font-size: 9px; }
       table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
       th, td { border: 1px solid #ccc; padding: 4px; text-align: left; vertical-align: top; }

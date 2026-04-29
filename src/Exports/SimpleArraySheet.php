@@ -26,12 +26,15 @@ class SimpleArraySheet implements FromArray, WithHeadings, WithTitle
 
     public function headings(): array
     {
-        return $this->headings;
+        return SpreadsheetFormulaInjectionGuard::sanitizeHeadings($this->headings);
     }
 
     public function array(): array
     {
-        return $this->rows;
+        return array_map(
+            static fn (array $row) => SpreadsheetFormulaInjectionGuard::sanitizeRow($row),
+            $this->rows
+        );
     }
 }
 

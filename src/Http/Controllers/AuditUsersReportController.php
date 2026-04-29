@@ -63,6 +63,53 @@ class AuditUsersReportController extends Controller
             'origin' => $request->get('origin') ? (string) $request->get('origin') : null,
         ];
 
+        if ($request->boolean('preview')) {
+            $data = [
+                'summary' => [
+                    'period' => [
+                        'start' => $dateStart . ' 00:00:00',
+                        'end' => $dateEnd . ' 23:59:59',
+                    ],
+                    'accesses_total' => 2,
+                    'accesses_success' => 2,
+                    'accesses_failed' => 0,
+                    'changes_total' => 1,
+                    'changes_insert' => 0,
+                    'changes_update' => 1,
+                    'changes_delete' => 0,
+                ],
+                'accesses' => collect([
+                    [
+                        'date' => '01/01/2026 10:00',
+                        'user_id' => 1,
+                        'user_name' => 'Usuário Exemplo',
+                        'success' => true,
+                        'internal_ip' => '127.0.0.1',
+                        'external_ip' => '-',
+                    ],
+                ]),
+                'changes' => collect([
+                    [
+                        'date' => '02/01/2026 15:00',
+                        'id' => 999,
+                        'operation' => 'UPDATE',
+                        'user_id' => 1,
+                        'user_name' => 'Usuário Exemplo',
+                        'schema' => 'public',
+                        'table' => 'exemplo',
+                        'ip' => '127.0.0.1',
+                        'origin' => '/intranet',
+                    ],
+                ]),
+            ];
+
+            return app(PdfRenderService::class)->download('advanced-reports::audit/users-accesses-actions.pdf', [
+                'data' => $data,
+                'filters' => $filters,
+                'operationOptions' => $service->operationOptions(),
+            ], 'auditoria-previa.pdf', 'a4', 'portrait', 'inline');
+        }
+
         $data = $service->build(
             $dateStart,
             $dateEnd,
@@ -78,7 +125,7 @@ class AuditUsersReportController extends Controller
             'data' => $data,
             'filters' => $filters,
             'operationOptions' => $service->operationOptions(),
-        ], 'auditoria-acessos-acoes.pdf');
+        ], 'auditoria-acessos-acoes.pdf', 'a4', 'portrait', 'attachment');
     }
 
     public function excel(Request $request, AuditUsersReportService $service)

@@ -70,9 +70,14 @@
         </tr>
         @if(!empty($withGrade))
             <tr id="tr_nm_serie">
-                <td class="formmdtd" valign="top"><span class="form">Série</span></td>
                 <td class="formmdtd" valign="top">
-                    <select class="geral" name="ref_cod_serie" id="ref_cod_serie" style="width: 308px;">
+                    <span class="form">Série</span>
+                    @if(!empty($requireSerie))
+                        <span class="campo_obrigatorio">*</span>
+                    @endif
+                </td>
+                <td class="formmdtd" valign="top">
+                    <select class="geral {{ !empty($requireSerie) ? 'obrigatorio' : '' }}" name="ref_cod_serie" id="ref_cod_serie" style="width: 308px;">
                         <option value="">Selecione</option>
                         @foreach(($series ?? []) as $s)
                             <option value="{{ data_get($s, 'cod_serie') }}"
@@ -86,9 +91,14 @@
         @endif
         @if(!empty($withSchoolClass))
             <tr id="tr_nm_turma">
-                <td class="formlttd" valign="top"><span class="form">Turma</span></td>
                 <td class="formlttd" valign="top">
-                    <select class="geral" name="ref_cod_turma" id="ref_cod_turma" style="width: 308px;">
+                    <span class="form">Turma</span>
+                    @if(!empty($requireTurma))
+                        <span class="campo_obrigatorio">*</span>
+                    @endif
+                </td>
+                <td class="formlttd" valign="top">
+                    <select class="geral {{ !empty($requireTurma) ? 'obrigatorio' : '' }}" name="ref_cod_turma" id="ref_cod_turma" style="width: 308px;">
                         <option value="">Selecione</option>
                         @foreach(($turmas ?? []) as $t)
                             @php($serieOk = empty(request('ref_cod_serie')) || (string) data_get($t, 'ref_ref_cod_serie') === (string) request('ref_cod_serie'))

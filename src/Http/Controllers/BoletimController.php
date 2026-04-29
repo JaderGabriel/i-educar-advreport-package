@@ -73,7 +73,12 @@ class BoletimController extends Controller
             ], 'boletim-previa.pdf');
         }
 
+        $matriculaIds = array_values(array_filter(array_map('intval', (array) $request->get('matricula_ids', []))));
         $matriculaId = (int) $request->get('matricula_id');
+        if (!$matriculaId && count($matriculaIds) === 1) {
+            $matriculaId = (int) $matriculaIds[0];
+        }
+
         $etapa = $request->get('etapa');
 
         $ano = $request->get('ano') ? (int) $request->get('ano') : null;
@@ -82,8 +87,12 @@ class BoletimController extends Controller
         $serieId = $request->get('ref_cod_serie') ? (int) $request->get('ref_cod_serie') : null;
         $turmaId = $request->get('ref_cod_turma') ? (int) $request->get('ref_cod_turma') : null;
 
-        if (!$matriculaId && (!$ano || !$escolaId || !$cursoId)) {
+        if (!$matriculaId && empty($matriculaIds) && (!$ano || !$escolaId || !$cursoId)) {
             abort(422, 'Informe ao menos ano, escola e curso (aluno é opcional).');
+        }
+
+        if (!$matriculaId && count($matriculaIds) > 1 && (!$ano || !$escolaId || !$cursoId)) {
+            abort(422, 'Para emitir boletins de vários alunos selecionados, informe também ano, escola e curso (filtro de segurança).');
         }
 
         $issuedAt = now();
@@ -145,7 +154,7 @@ class BoletimController extends Controller
             ], 'boletim-' . $matriculaId . '.pdf');
         }
 
-        // Lote (por escola/curso e filtros opcionais)
+        // Lote (por escola/curso e filtros opcionais), ou somente matrículas selecionadas
         $matriculas = DB::table('pmieducar.matricula as m')
             ->join('pmieducar.aluno as a', 'a.cod_aluno', '=', 'm.ref_cod_aluno')
             ->join('cadastro.pessoa as p', 'p.idpes', '=', 'a.ref_idpes')
@@ -159,6 +168,7 @@ class BoletimController extends Controller
             ->where('m.ref_cod_curso', $cursoId)
             ->when($serieId, fn ($q) => $q->where('m.ref_ref_cod_serie', $serieId))
             ->when($turmaId, fn ($q) => $q->where('mt.ref_cod_turma', $turmaId))
+            ->when(count($matriculaIds) > 1, fn ($q) => $q->whereIn('m.cod_matricula', $matriculaIds))
             ->orderBy('p.nome')
             ->limit(200)
             ->get(['m.cod_matricula', 'p.nome as aluno_nome']);

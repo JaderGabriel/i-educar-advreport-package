@@ -11,16 +11,16 @@
 
 @section('content')
   <div class="advanced-report-card">
-    <strong class="advanced-report-card-title">Atas e registros formais</strong>
+    <strong class="advanced-report-card-title">Atas escolares (PDF)</strong>
     <p class="advanced-report-card-text">
-      Emissão de atas em PDF com validação pública (QR Code). Selecione o tipo e informe a turma (ano/escola/série/turma).
+      Emissão de atas em PDF com validação pública (QR Code). Selecione o tipo e informe ano, instituição, escola, série e turma.
     </p>
     <p class="advanced-report-card-text">
-      Use <strong>“Ata de resultados finais”</strong> para registrar o quadro de situação; use <strong>“Lista de assinaturas”</strong> para colher confirmação dos responsáveis.
+      Use <strong>Ata de resultados finais</strong> para o quadro de situação; use <strong>Lista de assinaturas</strong> para colher confirmação dos responsáveis.
     </p>
   </div>
 
-  <form method="get" action="{{ route('advanced-reports.minutes.pdf') }}" id="minutesForm">
+  <form method="get" action="{{ route('advanced-reports.minutes.index') }}" id="minutesForm">
     <table class="tablecadastro" width="100%" border="0" cellpadding="2" cellspacing="0" role="presentation">
       <tbody>
       <tr>
@@ -79,11 +79,11 @@
     <div class="ar-actions">
       <div class="ar-actions__group">
         <a href="{{ route('advanced-reports.minutes.index') }}" class="btn ar-btn ar-btn--ghost">Limpar</a>
-        <button type="submit" class="btn-green ar-btn ar-btn--primary" style="margin-left: 8px;">Filtrar</button>
+        <button type="submit" class="btn-green ar-btn ar-btn--primary">Aplicar filtros</button>
       </div>
       <div class="ar-actions__group">
-        <button type="button" class="btn ar-btn ar-btn--secondary js-minutes-preview-open">Prévia (PDF)</button>
         <button type="button" class="btn-green ar-btn ar-btn--secondary js-minutes-emit">Emitir PDF (final)</button>
+        <button type="button" class="btn ar-btn ar-btn--ghost js-minutes-help" title="Ver prévia (exemplo)" aria-label="Ver prévia (exemplo)">?</button>
       </div>
     </div>
   </form>
@@ -91,7 +91,7 @@
   <div id="advancedReportsMinutesPreviewModal" class="ar-modal">
     <div class="ar-modal__dialog">
       <div class="ar-modal__header">
-        <strong>Prévia</strong>
+        <strong>Prévia (exemplo)</strong>
         <button type="button" class="btn js-minutes-preview-close">Fechar</button>
       </div>
       <iframe class="js-minutes-preview-iframe ar-modal__iframe"></iframe>
@@ -105,18 +105,16 @@
       const form = document.getElementById('minutesForm');
       const modal = document.getElementById('advancedReportsMinutesPreviewModal');
       const iframe = document.querySelector('.js-minutes-preview-iframe');
-      const openBtn = document.querySelector('.js-minutes-preview-open');
       const closeBtn = document.querySelector('.js-minutes-preview-close');
-      if (!form || !modal || !iframe || !openBtn || !closeBtn) return;
+      const helpBtn = document.querySelector('.js-minutes-help');
+      const emitBtn = document.querySelector('.js-minutes-emit');
+      if (!form || !modal || !iframe || !closeBtn) return;
 
-      function buildUrl() {
+      function buildPdfUrl() {
         const params = new URLSearchParams(new FormData(form));
+        params.delete('preview');
+        params.delete('preview[]');
         return "{{ route('advanced-reports.minutes.pdf') }}" + "?" + params.toString();
-      }
-
-      function openModal() {
-        iframe.src = buildUrl() + "&preview=1";
-        modal.style.display = 'block';
       }
 
       function closeModal() {
@@ -124,19 +122,25 @@
         modal.style.display = 'none';
       }
 
-      const emitBtn = document.querySelector('.js-minutes-emit');
+      if (helpBtn) {
+        helpBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          const params = new URLSearchParams(new FormData(form));
+          params.set('preview', '1');
+          iframe.src = "{{ route('advanced-reports.minutes.pdf') }}" + "?" + params.toString();
+          modal.style.display = 'block';
+        });
+      }
 
-      openBtn.addEventListener('click', function (e) { e.preventDefault(); openModal(); });
       closeBtn.addEventListener('click', function (e) { e.preventDefault(); closeModal(); });
       modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
 
       if (emitBtn) {
         emitBtn.addEventListener('click', function (e) {
           e.preventDefault();
-          window.open(buildUrl(), '_blank');
+          window.open(buildPdfUrl(), '_blank');
         });
       }
     })();
   </script>
 @endpush
-

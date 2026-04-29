@@ -10,154 +10,165 @@
 @endpush
 
 @section('content')
-  <div class="advanced-report-card">
-    <strong class="advanced-report-card-title">Emissão</strong>
-    <p class="advanced-report-card-text">
-      Informe o código do aluno para gerar o histórico escolar consolidado com base em registros do i-Educar.
-      O documento inclui QR Code e validação pública.
-    </p>
-  </div>
-
-  <form method="get" action="{{ route('advanced-reports.school-history.pdf') }}" id="formcadastro">
-    <table class="tablecadastro" width="100%" border="0" cellpadding="2" cellspacing="0" role="presentation">
-      <tbody>
-      <tr>
-        <td class="formmdtd"><span class="form">Aluno</span> <span class="campo_obrigatorio">*</span></td>
-        <td class="formmdtd">
-          <input type="hidden" name="aluno_id" id="aluno_id" value="{{ $alunoId }}">
-          <input class="geral obrigatorio" id="aluno_search" list="alunos_suggestions" value="{{ $alunoId }}" style="width: 520px;" placeholder="Digite o nome do aluno ou o ID">
-          <datalist id="alunos_suggestions"></datalist>
-        </td>
-      </tr>
-      <tr>
-        <td class="formlttd"><span class="form">Modelo</span></td>
-        <td class="formlttd">
-          <select class="geral" name="template" id="template" style="width: 220px;">
-            @foreach(($templates ?? ['classic' => 'Clássico (padrão)', 'modern' => 'Moderno (limpo)']) as $key => $label)
-              <option value="{{ $key }}" @selected(($template ?? 'classic') === $key)>{{ $label }}</option>
-            @endforeach
-          </select>
-        </td>
-      </tr>
-      <tr>
-        <td class="formlttd"><span class="form">Livro/Folha/Registro</span></td>
-        <td class="formlttd">
-          <input class="geral" name="book" value="{{ request('book') }}" style="width: 70px;" placeholder="Livro">
-          <input class="geral" name="page" value="{{ request('page') }}" style="width: 70px;" placeholder="Folha">
-          <input class="geral" name="record" value="{{ request('record') }}" style="width: 90px;" placeholder="Registro">
-        </td>
-      </tr>
-      </tbody>
-    </table>
-
-    <div class="ar-actions">
-      <div class="ar-actions__group">
-        <a href="{{ route('advanced-reports.school-history.index') }}" class="btn ar-btn ar-btn--ghost">Limpar</a>
-        <button type="submit" class="btn-green ar-btn ar-btn--primary" style="margin-left: 8px;">Filtrar</button>
-      </div>
-      <div class="ar-actions__group">
-        <button type="button" class="btn ar-btn ar-btn--secondary js-history-preview-open">Prévia (PDF)</button>
-        <button type="button" class="btn-green ar-btn ar-btn--secondary js-history-emit">Emitir PDF (final)</button>
-      </div>
-    </div>
-  </form>
-
-  <div id="advancedReportsHistoryPreviewModal" class="ar-modal">
-    <div class="ar-modal__dialog">
-      <div class="ar-modal__header">
-        <strong>Prévia do histórico escolar</strong>
-        <button type="button" class="btn js-history-preview-close">Fechar</button>
-      </div>
-      <iframe class="js-history-preview-iframe ar-modal__iframe"></iframe>
-    </div>
-  </div>
+  @include('advanced-reports::partials.filters', [
+      'route' => route('advanced-reports.school-history.index'),
+      'cursos' => $cursos,
+      'cursoId' => $cursoId ?? null,
+      'templates' => $templates ?? [],
+      'template' => $template ?? request('template', 'classic'),
+      'withGrade' => true,
+      'withSchoolClass' => true,
+      'requireCourse' => true,
+      'extraRowsView' => 'advanced-reports::school-history._extra-filters-rows',
+      'actionsView' => 'advanced-reports::school-history._actions',
+      'explainTitle' => 'Histórico escolar (PDF)',
+      'explainText' => 'Selecione Ano → Instituição → Escola → Curso (obrigatórios). Série e turma refinam a lista. Na turma, escolha o aluno (somente quem já tem histórico nativo consolidado) e em seguida selecione o modelo visual para emitir o PDF validado.',
+  ])
 @endsection
 
 @push('scripts')
   <script>
     (function () {
-      const input = document.getElementById('aluno_search');
-      const hidden = document.getElementById('aluno_id');
-      const list = document.getElementById('alunos_suggestions');
-      if (!input || !hidden || !list) return;
+      const form = document.getElementById('formcadastro');
+      const turmaSelect = document.getElementById('ref_cod_turma');
+      const studentSelect = document.getElementById('schoolHistoryStudentSelect');
+      const filterInput = document.querySelector('.js-school-history-student-filter');
+      const bookInput = document.getElementById('schoolHistoryBook');
+      const pageInput = document.getElementById('schoolHistoryPage');
+      const recordInput = document.getElementById('schoolHistoryRecord');
+      if (!turmaSelect || !studentSelect) return;
 
-      function extractId(value) {
-        const match = String(value || '').match(/^(\d+)\s+-\s+/);
-        return match ? match[1] : (String(value || '').match(/^\d+$/) ? value : '');
-      }
-
-      async function loadSuggestions(q) {
-        const url = "{{ route('advanced-reports.lookup.alunos') }}" + "?q=" + encodeURIComponent(q);
+      async function loadStudentsByClass(turmaId) {
+        const params = new URLSearchParams();
+        params.set('turma_id', String(turmaId));
+        const ano = document.getElementById('ano');
+        if (ano && ano.value) params.set('ano', ano.value);
+        params.set('only_with_history', '1');
+        const url = "{{ route('advanced-reports.lookup.class-enrollments') }}" + "?" + params.toString();
         const res = await fetch(url, {headers: {'Accept': 'application/json'}});
         if (!res.ok) return [];
         return await res.json();
       }
 
-      let last = '';
-      input.addEventListener('input', async function () {
-        const raw = input.value || '';
-        const id = extractId(raw);
-        if (id) hidden.value = id;
+      function clearMeta() {
+        if (bookInput) bookInput.value = '';
+        if (pageInput) pageInput.value = '';
+        if (recordInput) recordInput.value = '';
+      }
 
-        const q = raw.trim();
-        if (q.length < 3 || q === last) return;
-        last = q;
+      async function loadMeta(alunoId) {
+        clearMeta();
+        if (!alunoId) return;
+        const url = "{{ route('advanced-reports.lookup.school-history-meta') }}" + "?aluno_id=" + encodeURIComponent(String(alunoId));
+        const res = await fetch(url, {headers: {'Accept': 'application/json'}});
+        if (!res.ok) return;
+        const json = await res.json();
+        if (!json || !json.ok) return;
+        if (bookInput) bookInput.value = json.book || '';
+        if (pageInput) pageInput.value = json.page || '';
+        if (recordInput) recordInput.value = json.record || '';
+      }
 
-        const items = await loadSuggestions(q);
-        list.innerHTML = '';
-        (items || []).forEach(function (it) {
+      async function refreshStudents() {
+        const turmaId = turmaSelect.value;
+        studentSelect.innerHTML = '';
+        studentSelect.value = '';
+        clearMeta();
+
+        if (!turmaId) {
+          studentSelect.disabled = true;
           const opt = document.createElement('option');
-          opt.value = it.label;
-          list.appendChild(opt);
+          opt.value = '';
+          opt.textContent = 'Selecione a turma para listar alunos com histórico nativo';
+          studentSelect.appendChild(opt);
+          return;
+        }
+
+        studentSelect.disabled = true;
+        const loading = document.createElement('option');
+        loading.value = '';
+        loading.textContent = 'Carregando alunos...';
+        studentSelect.appendChild(loading);
+
+        const items = await loadStudentsByClass(turmaId);
+        studentSelect.innerHTML = '';
+
+        const seen = {};
+        (items || []).forEach(function (it) {
+          const aid = String(it.aluno_id);
+          if (seen[aid]) return;
+          seen[aid] = true;
+          const opt = document.createElement('option');
+          opt.value = aid;
+          opt.textContent = it.label || ('Aluno ' + aid);
+          studentSelect.appendChild(opt);
         });
+
+        studentSelect.disabled = false;
+      }
+
+      turmaSelect.addEventListener('change', refreshStudents);
+      const anoSelect = document.getElementById('ano');
+      if (anoSelect) anoSelect.addEventListener('change', refreshStudents);
+      refreshStudents();
+
+      if (filterInput) {
+        filterInput.addEventListener('input', function () {
+          const q = (filterInput.value || '').toLowerCase().trim();
+          Array.from(studentSelect.options || []).forEach(function (o) {
+            if (!o.value) {
+              o.hidden = false;
+              return;
+            }
+            o.hidden = q.length > 0 && !(o.textContent || '').toLowerCase().includes(q);
+          });
+        });
+      }
+
+      studentSelect.addEventListener('change', function () {
+        loadMeta(studentSelect.value);
       });
 
-      input.addEventListener('change', function () {
-        const id = extractId(input.value);
-        hidden.value = id || '';
-      });
-    })();
-  </script>
+      const modal = document.getElementById('advancedReportsSchoolHistoryPreviewModal');
+      const iframe = document.querySelector('.js-school-history-preview-iframe');
+      const openBtn = document.querySelector('.js-school-history-help');
+      const closeBtn = document.querySelector('.js-school-history-preview-close');
+      const emitBtn = document.querySelector('.js-school-history-emit');
 
-  <script>
-    (function () {
-      const form = document.getElementById('formcadastro');
-      const modal = document.getElementById('advancedReportsHistoryPreviewModal');
-      const iframe = document.querySelector('.js-history-preview-iframe');
-      const openBtn = document.querySelector('.js-history-preview-open');
-      const closeBtn = document.querySelector('.js-history-preview-close');
-      if (!form || !modal || !iframe || !openBtn || !closeBtn) return;
+      function buildPdfUrl() {
+        if (!form) return null;
+        const params = new URLSearchParams(new FormData(form));
+        params.delete('preview');
+        params.delete('preview[]');
+        return "{{ route('advanced-reports.school-history.pdf') }}" + "?" + params.toString();
+      }
 
-      function openModal() {
+      function openPreview() {
+        if (!modal || !iframe || !form) return;
         const params = new URLSearchParams(new FormData(form));
         params.set('preview', '1');
         iframe.src = "{{ route('advanced-reports.school-history.pdf') }}" + "?" + params.toString();
         modal.style.display = 'block';
       }
 
-      function closeModal() {
+      function closePreview() {
+        if (!modal || !iframe) return;
         iframe.src = 'about:blank';
         modal.style.display = 'none';
       }
 
-      const emitBtn = document.querySelector('.js-history-emit');
-
-      function buildUrl() {
-        const params = new URLSearchParams(new FormData(form));
-        return "{{ route('advanced-reports.school-history.pdf') }}" + "?" + params.toString();
-      }
-
-      openBtn.addEventListener('click', function (e) { e.preventDefault(); openModal(); });
-      closeBtn.addEventListener('click', function (e) { e.preventDefault(); closeModal(); });
-      modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
+      if (openBtn) openBtn.addEventListener('click', function (e) { e.preventDefault(); openPreview(); });
+      if (closeBtn) closeBtn.addEventListener('click', function (e) { e.preventDefault(); closePreview(); });
+      if (modal) modal.addEventListener('click', function (e) { if (e.target === modal) closePreview(); });
 
       if (emitBtn) {
         emitBtn.addEventListener('click', function (e) {
           e.preventDefault();
-          window.open(buildUrl(), '_blank');
+          const url = buildPdfUrl();
+          if (!url) return;
+          window.open(url, '_blank');
         });
       }
     })();
   </script>
 @endpush
-

@@ -1,10 +1,19 @@
 @extends('layout.default')
 
+@push('styles')
+  @if (class_exists('Asset'))
+    <link rel="stylesheet" type="text/css" href="{{ Asset::get('css/ieducar.css') }}"/>
+    <link rel="stylesheet" type="text/css" href="{{ Asset::get('css/advanced-reports.css') }}"/>
+  @else
+    <link rel="stylesheet" type="text/css" href="{{ asset('css/advanced-reports.css') }}"/>
+  @endif
+@endpush
+
 @section('content')
     <div class="advanced-report-card">
         <strong class="advanced-report-card-title">Auditoria — acessos e ações de usuários</strong>
         <p class="advanced-report-card-text">
-            Consolida **acessos (login)** e **alterações de dados** (triggers de auditoria) com origem (URL), IP e antes/depois.
+            Consolida <strong>acessos (login)</strong> e <strong>alterações de dados</strong> (triggers de auditoria) com origem (URL), IP e antes/depois.
             Use filtros para restringir o período e/ou um usuário.
         </p>
 
@@ -74,33 +83,14 @@
 
             <div class="ar-actions">
                 <div class="ar-actions__group">
-                    <a href="{{ route('advanced-reports.audit.users.index') }}" class="btn ar-btn ar-btn--ghost">
-                        <span class="ar-btn__icon" aria-hidden="true"></span>
-                        Limpar
-                    </a>
-                    <button type="submit" class="btn-green ar-btn ar-btn--primary">
-                        <span class="ar-btn__icon" aria-hidden="true"></span>
-                        Filtrar
-                    </button>
+                    <a href="{{ route('advanced-reports.audit.users.index') }}" class="btn ar-btn ar-btn--ghost">Limpar</a>
+                    <button type="submit" class="btn-green ar-btn ar-btn--primary">Aplicar filtros</button>
                 </div>
 
                 <div class="ar-actions__group">
-                    <button type="button" class="btn ar-btn ar-btn--secondary js-audit-preview-open" {{ !(request('date_start') && request('date_end')) ? 'disabled' : '' }}>
-                        <span class="ar-btn__icon" aria-hidden="true"></span>
-                        Prévia (PDF)
-                    </button>
-
-                    <span class="ar-actions__label">Saída</span>
-                    <select class="geral ar-select js-export-type" style="width: 210px;"
-                            data-pdf="{{ route('advanced-reports.audit.users.pdf') . '?' . http_build_query(request()->all()) }}"
-                            data-excel="{{ route('advanced-reports.audit.users.excel') . '?' . http_build_query(request()->all()) }}">
-                        <option value="pdf">PDF (prévia)</option>
-                        <option value="excel">Excel</option>
-                    </select>
-                    <button type="button" class="btn-green ar-btn ar-btn--secondary js-export-run" {{ !(request('date_start') && request('date_end')) ? 'disabled' : '' }}>
-                        <span class="ar-btn__icon" aria-hidden="true"></span>
-                        Executar
-                    </button>
+                    <button type="button" class="btn-green ar-btn ar-btn--secondary js-audit-emit-pdf" {{ !(request('date_start') && request('date_end')) ? 'disabled' : '' }}>Emitir PDF (final)</button>
+                    <button type="button" class="btn ar-btn ar-btn--ghost js-audit-help" title="Ver prévia (exemplo)" aria-label="Ver prévia (exemplo)" {{ !(request('date_start') && request('date_end')) ? 'disabled' : '' }}>?</button>
+                    <button type="button" class="btn ar-btn ar-btn--secondary js-audit-excel" {{ !(request('date_start') && request('date_end')) ? 'disabled' : '' }}>Exportar Excel</button>
                 </div>
             </div>
         </form>
@@ -196,56 +186,67 @@
     <div id="advancedReportsAuditPreviewModal" class="ar-modal">
         <div class="ar-modal__dialog">
             <div class="ar-modal__header">
-                <strong>Prévia (PDF)</strong>
+                <strong>Prévia (exemplo)</strong>
                 <button type="button" class="btn js-audit-preview-close">Fechar</button>
             </div>
             <iframe class="js-audit-preview-iframe ar-modal__iframe"></iframe>
         </div>
     </div>
+@endsection
 
+@push('scripts')
     <script>
         (function () {
-            const typeSelect = document.querySelector('.js-export-type');
-            const runBtn = document.querySelector('.js-export-run');
-            if (typeSelect && runBtn) {
-                runBtn.addEventListener('click', function () {
-                    const url = (typeSelect.value === 'excel') ? typeSelect.dataset.excel : typeSelect.dataset.pdf;
-                    if (!url) return;
-                    if (typeSelect.value === 'excel') {
-                        window.open(url, '_blank');
-                    } else {
-                        // PDF: abre como prévia no modal
-                        const modal = document.getElementById('advancedReportsAuditPreviewModal');
-                        const iframe = document.querySelector('.js-audit-preview-iframe');
-                        if (!modal || !iframe) return;
-                        iframe.src = url;
-                        modal.style.display = 'block';
-                    }
-                });
-            }
-
             const form = document.getElementById('auditUsersForm');
             const modal = document.getElementById('advancedReportsAuditPreviewModal');
             const iframe = document.querySelector('.js-audit-preview-iframe');
-            const openBtn = document.querySelector('.js-audit-preview-open');
             const closeBtn = document.querySelector('.js-audit-preview-close');
-            if (form && modal && iframe && openBtn && closeBtn) {
-                function openModal() {
+            const emitPdf = document.querySelector('.js-audit-emit-pdf');
+            const helpBtn = document.querySelector('.js-audit-help');
+            const excelBtn = document.querySelector('.js-audit-excel');
+            const pdfBase = "{{ route('advanced-reports.audit.users.pdf') }}";
+            const excelBase = "{{ route('advanced-reports.audit.users.excel') }}";
+
+            function buildQuery() {
+                if (!form) return '';
+                return new URLSearchParams(new FormData(form)).toString();
+            }
+
+            function closeModal() {
+                if (!iframe || !modal) return;
+                iframe.src = 'about:blank';
+                modal.style.display = 'none';
+            }
+
+            if (emitPdf) {
+                emitPdf.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const q = buildQuery();
+                    if (!q) return;
+                    window.open(pdfBase + '?' + q, '_blank');
+                });
+            }
+
+            if (excelBtn) {
+                excelBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const q = buildQuery();
+                    if (!q) return;
+                    window.open(excelBase + '?' + q, '_blank');
+                });
+            }
+
+            if (form && modal && iframe && helpBtn && closeBtn) {
+                helpBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
                     const params = new URLSearchParams(new FormData(form));
-                    iframe.src = "{{ route('advanced-reports.audit.users.pdf') }}" + "?" + params.toString();
+                    params.set('preview', '1');
+                    iframe.src = pdfBase + '?' + params.toString();
                     modal.style.display = 'block';
-                }
-
-                function closeModal() {
-                    iframe.src = 'about:blank';
-                    modal.style.display = 'none';
-                }
-
-                openBtn.addEventListener('click', function (e) { e.preventDefault(); openModal(); });
+                });
                 closeBtn.addEventListener('click', function (e) { e.preventDefault(); closeModal(); });
                 modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
             }
         })();
     </script>
-@endsection
-
+@endpush

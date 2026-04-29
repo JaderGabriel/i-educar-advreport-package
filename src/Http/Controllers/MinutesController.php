@@ -35,6 +35,67 @@ class MinutesController extends Controller
             abort(422, 'Informe a turma.');
         }
 
+        if ($request->boolean('preview')) {
+            $anoLetivo = (int) ($request->get('ano') ?: date('Y'));
+            $class = (object) [
+                'turma_id' => $schoolClassId,
+                'turma' => 'Turma Exemplo (prévia)',
+                'ano_letivo' => $anoLetivo,
+                'escola' => 'Escola Municipal Exemplo',
+                'instituicao' => 'Instituição Exemplo',
+                'curso' => 'Ensino Fundamental',
+                'serie' => '5º ano',
+                'turno' => 'Matutino',
+                'instituicao_id' => null,
+                'escola_id' => null,
+            ];
+            $students = collect([
+                [
+                    'student' => 'Aluno(a) Exemplo A',
+                    'registration_id' => 100001,
+                    'status' => 'Aprovado',
+                    'frequency' => 95.0,
+                    'details' => null,
+                ],
+                [
+                    'student' => 'Aluno(a) Exemplo B',
+                    'registration_id' => 100002,
+                    'status' => 'Cursando',
+                    'frequency' => 88.0,
+                    'details' => null,
+                ],
+            ]);
+            $data = [
+                'class' => $class,
+                'students' => $students,
+            ];
+            $header = app(OfficialHeaderService::class)->forSchool(null, null);
+            $view = match ($document) {
+                'signatures' => 'advanced-reports::minutes.signatures',
+                default => 'advanced-reports::minutes.final-results',
+            };
+            $title = match ($document) {
+                'signatures' => 'Lista de assinaturas (responsáveis)',
+                default => 'Ata de resultados finais',
+            };
+
+            return app(PdfRenderService::class)->download($view, [
+                'title' => $title,
+                'data' => $data,
+                'withDetails' => false,
+                'issuedAt' => now()->format('d/m/Y H:i'),
+                'validationCode' => 'EXEMPLO',
+                'validationUrl' => '#',
+                'qrDataUri' => null,
+                'issuerName' => $issuerName,
+                'issuerRole' => $issuerRole,
+                'cityUf' => $cityUf,
+                'municipality' => $header['municipality'] ?? null,
+                'schoolName' => $header['schoolName'] ?? null,
+                'contact' => $header['contact'] ?? null,
+            ], 'ata-previa.pdf', 'a4', 'portrait', 'inline');
+        }
+
         $data = $service->buildFinalResults($schoolClassId, $withDetails);
         $class = $data['class'] ?? null;
         $header = app(OfficialHeaderService::class)->forSchool(

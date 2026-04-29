@@ -11,6 +11,8 @@
       .ar-footer { position: fixed; bottom: -26px; left: 0; right: 0; font-size: 9px; color: #444; }
       .ar-content { padding-bottom: 96px; }
       .ar-official-footer { position: fixed; left: 36px; right: 36px; bottom: 36px; }
+      h1, h2 { margin: 6px 0; }
+      h1 { text-align: center; }
     </style>
   </head>
   <body>

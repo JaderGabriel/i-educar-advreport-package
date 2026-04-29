@@ -2,6 +2,8 @@
 
 @section('doc_title', 'Alunos por situação')
 @section('doc_subtitle', 'Matrículas por situação (resumo + listagem)')
+@section('doc_year', (string) ($year ?? ''))
+@section('formal_header', '1')
 
 @section('content')
     @php($summary = $data['summary'] ?? [])
@@ -53,5 +55,18 @@
         @endforeach
         </tbody>
     </table>
+
+  @include('advanced-reports::student-documents._footer', [
+    'issuedAt' => $issuedAt ?? now()->format('d/m/Y H:i'),
+    'validationCode' => $validationCode ?? '',
+    'validationUrl' => $validationUrl ?? '',
+    'qrDataUri' => $qrDataUri ?? '',
+    'issuerName' => $issuerName ?? null,
+    'issuerRole' => $issuerRole ?? null,
+    'cityUf' => $cityUf ?? null,
+    'book' => null,
+    'page' => null,
+    'record' => null,
+  ])
 @endsection
 

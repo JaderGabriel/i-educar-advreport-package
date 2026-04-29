@@ -6,12 +6,15 @@
   </td>
 </tr>
 <tr>
-  <td class="formlttd"><span class="form">Aluno (opcional)</span></td>
+  <td class="formlttd"><span class="form">Alunos (opcional)</span></td>
   <td class="formlttd">
-    <input type="hidden" name="matricula_id" id="boletimMatriculaId" value="{{ request('matricula_id') }}">
-    <select class="geral" id="boletimStudentSelect" style="width: 520px;" disabled>
+    <select class="geral" id="boletimStudentSelect" name="matricula_ids[]" multiple size="8" style="width: 520px;" disabled>
       <option value="">Selecione a turma para listar alunos</option>
     </select>
+    <input type="text" class="geral js-boletim-student-filter" placeholder="Filtrar por nome (não precisa Ctrl)" style="width: 520px; margin-top: 6px;">
+    <small style="display:block;color:#666;margin-top:4px;">
+      Nenhuma seleção = emite em lote pelo filtro (ano/escola/curso e opcionais). Uma seleção = um PDF. Várias = lote só dos selecionados.
+    </small>
   </td>
 </tr>
 

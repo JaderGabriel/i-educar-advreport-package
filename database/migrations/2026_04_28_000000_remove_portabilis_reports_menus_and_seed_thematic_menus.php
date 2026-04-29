@@ -72,7 +72,9 @@ return new class extends Migration
 
         if ($schoolReports) {
             $groupPedagogical = $this->createChild($schoolReports, 9999700, 'Avaliação e frequência', 1, null);
-            $groupMovements = $this->createChild($schoolReports, 9999701, 'Movimentações', 2, '/relatorios-avancados/movimentacoes');
+            $groupMovements = $this->createChild($schoolReports, 9999701, 'Fluxo de Alunos', 2, null);
+            // Entrada inicial do submenu “Fluxo de Alunos”
+            $this->createChild($groupMovements, 9999704, 'Movimentações', 1, '/relatorios-avancados/movimentacoes');
             $groupIndicators = $this->createChild($schoolReports, 9999702, 'Indicadores', 3, null);
 
             // Indicadores → Socioeconômicos
@@ -99,7 +101,7 @@ return new class extends Migration
     {
         // Mantemos reversão simples: remove apenas a árvore nova deste pacote (old 99997xx/99998xx).
         $this->deleteMenusByOld([
-            9999700, 9999701, 9999702, 9999703,
+            9999700, 9999701, 9999702, 9999703, 9999704,
             9999750, 9999751, 9999752, 9999753,
             9999800,
         ]);

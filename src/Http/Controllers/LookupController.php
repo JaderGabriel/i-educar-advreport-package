@@ -8,6 +8,24 @@ use Illuminate\Support\Str;
 
 class LookupController
 {
+    private function historyNativeMetaQuery(int $alunoId)
+    {
+        // “Rotina nativa”: histórico interno (origem = interno) vinculado a uma matrícula.
+        // Critério conservador:
+        // - ativo=1
+        // - origem interno (NULL/false/0)
+        // - ref_cod_matricula preenchido
+        return DB::table('pmieducar.historico_escolar as he')
+            ->where('he.ref_cod_aluno', $alunoId)
+            ->where('he.ativo', 1)
+            ->whereNotNull('he.ref_cod_matricula')
+            ->where(function ($w) {
+                $w->whereNull('he.origem')->orWhere('he.origem', 0);
+            })
+            ->orderByDesc('he.ano')
+            ->orderByDesc('he.sequencial');
+    }
+
     public function matriculas(Request $request)
     {
         $q = trim((string) $request->get('q', ''));
@@ -22,10 +40,13 @@ class LookupController
             ->join('pmieducar.aluno as a', 'a.cod_aluno', '=', 'm.ref_cod_aluno')
             ->join('cadastro.pessoa as p', 'p.idpes', '=', 'a.ref_idpes')
             ->leftJoin('pmieducar.escola as e', 'e.cod_escola', '=', 'm.ref_ref_cod_escola')
+            ->leftJoin('cadastro.pessoa as ep', 'ep.idpes', '=', 'e.ref_idpes')
+            ->leftJoin('cadastro.juridica as ej', 'ej.idpes', '=', 'ep.idpes')
+            ->leftJoin('pmieducar.escola_complemento as ec', 'ec.ref_cod_escola', '=', 'e.cod_escola')
             ->selectRaw('m.cod_matricula as id')
             ->selectRaw('p.nome as aluno_nome')
             ->selectRaw('m.ano as ano_letivo')
-            ->selectRaw('e.nome as escola')
+            ->selectRaw('COALESCE(ej.fantasia, ec.nm_escola, \'\') as escola')
             ->when($qId, fn ($qq) => $qq->where('m.cod_matricula', $qId))
             ->when(!$qId, fn ($qq) => $qq->where('p.nome', 'ILIKE', $qLike))
             ->orderByDesc('m.ano')
@@ -118,7 +139,11 @@ class LookupController
             return response()->json([]);
         }
 
-        $rows = DB::table('pmieducar.matricula_turma as mt')
+        $document = (string) $request->get('document', '');
+        $year = $request->get('ano') ? (int) $request->get('ano') : null;
+        $onlyWithHistory = $request->boolean('only_with_history');
+
+        $q = DB::table('pmieducar.matricula_turma as mt')
             ->join('pmieducar.matricula as m', 'm.cod_matricula', '=', 'mt.ref_cod_matricula')
             ->join('pmieducar.aluno as a', 'a.cod_aluno', '=', 'm.ref_cod_aluno')
             ->join('cadastro.pessoa as p', 'p.idpes', '=', 'a.ref_idpes')
@@ -126,6 +151,36 @@ class LookupController
             ->where('mt.ativo', 1)
             ->where('m.ativo', 1)
             ->where('m.dependencia', false)
+            ->when($year, fn ($qq) => $qq->where('m.ano', $year));
+
+        if ($onlyWithHistory) {
+            $q->whereExists(function ($sub) {
+                $sub->selectRaw('1')
+                    ->from('pmieducar.historico_escolar as he')
+                    ->whereColumn('he.ref_cod_aluno', 'a.cod_aluno')
+                    ->where('he.ativo', 1)
+                    ->whereNotNull('he.ref_cod_matricula')
+                    ->where(function ($w) {
+                        $w->whereNull('he.origem')->orWhere('he.origem', 0);
+                    });
+            });
+        }
+
+        if ($document === 'transfer_guide') {
+            $q->join('relatorio.view_situacao as vs', function ($j) {
+                $j->on('vs.cod_matricula', '=', 'm.cod_matricula')
+                    ->on('vs.cod_turma', '=', 'mt.ref_cod_turma')
+                    ->on('vs.sequencial', '=', 'mt.sequencial');
+            })->where('vs.cod_situacao', 4);
+        } elseif ($document === 'declaration_conclusion') {
+            $q->join('relatorio.view_situacao as vs', function ($j) {
+                $j->on('vs.cod_matricula', '=', 'm.cod_matricula')
+                    ->on('vs.cod_turma', '=', 'mt.ref_cod_turma')
+                    ->on('vs.sequencial', '=', 'mt.sequencial');
+            })->whereIn('vs.cod_situacao', [1, 12, 13]);
+        }
+
+        $rows = $q
             ->selectRaw('m.cod_matricula as matricula_id')
             ->selectRaw('a.cod_aluno as aluno_id')
             ->selectRaw('p.nome as aluno_nome')
@@ -142,6 +197,39 @@ class LookupController
         })->values();
 
         return response()->json($items);
+    }
+
+    public function schoolHistoryMeta(Request $request)
+    {
+        $alunoId = (int) $request->get('aluno_id');
+        if (!$alunoId) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'Informe o aluno.',
+            ], 422);
+        }
+
+        $row = $this->historyNativeMetaQuery($alunoId)
+            ->selectRaw('he.livro as book')
+            ->selectRaw('he.folha as page')
+            ->selectRaw('he.registro as record')
+            ->selectRaw('he.ano as year')
+            ->first();
+
+        if (!$row) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'Nenhum histórico nativo encontrado para este aluno.',
+            ], 404);
+        }
+
+        return response()->json([
+            'ok' => true,
+            'book' => (string) ($row->book ?? ''),
+            'page' => (string) ($row->page ?? ''),
+            'record' => (string) ($row->record ?? ''),
+            'year' => (int) ($row->year ?? 0),
+        ]);
     }
 }
 

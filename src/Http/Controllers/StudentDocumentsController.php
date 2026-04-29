@@ -16,6 +16,23 @@ use Symfony\Component\HttpFoundation\Response;
 
 class StudentDocumentsController extends Controller
 {
+    /**
+     * @return array<int, array{month:int,label:string,percent:float|null}>
+     */
+    private function monthlyFrequencyStub(): array
+    {
+        $labels = [
+            1 => 'Janeiro', 2 => 'Fevereiro', 3 => 'Março', 4 => 'Abril', 5 => 'Maio', 6 => 'Junho',
+            7 => 'Julho', 8 => 'Agosto', 9 => 'Setembro', 10 => 'Outubro', 11 => 'Novembro', 12 => 'Dezembro',
+        ];
+
+        $out = [];
+        foreach ($labels as $m => $label) {
+            $out[] = ['month' => $m, 'label' => $label, 'percent' => null];
+        }
+
+        return $out;
+    }
     public function index(Request $request, AdvancedReportsFilterService $filters): View
     {
         $ano = $request->get('ano');
@@ -61,6 +78,7 @@ class StudentDocumentsController extends Controller
             $view = match ($document) {
                 'declaration_frequency' => 'advanced-reports::student-documents.declaration-frequency',
                 'transfer_guide' => 'advanced-reports::student-documents.transfer-guide',
+                'declaration_conclusion' => 'advanced-reports::student-documents.declaration-conclusion',
                 'declaration_nada_consta' => 'advanced-reports::student-documents.declaration-nada-consta',
                 default => 'advanced-reports::student-documents.declaration-enrollment',
             };
@@ -68,6 +86,7 @@ class StudentDocumentsController extends Controller
             $title = match ($document) {
                 'declaration_frequency' => 'Declaração de frequência',
                 'transfer_guide' => 'Guia/Declaração de transferência',
+                'declaration_conclusion' => 'Declaração de conclusão',
                 'declaration_nada_consta' => 'Declaração de escolaridade / Nada consta',
                 default => 'Declaração de matrícula',
             };
@@ -75,6 +94,10 @@ class StudentDocumentsController extends Controller
             $extra = [];
             if ($document === 'declaration_frequency') {
                 $extra['frequencia_percentual'] = 92.5;
+                $extra['frequencia_mensal'] = $this->monthlyFrequencyStub();
+            }
+            if ($document === 'declaration_conclusion') {
+                $extra['historico_emissao_dias'] = (int) ($request->get('historico_emissao_dias') ?: 30);
             }
 
             return app(PdfRenderService::class)->download($view, [
@@ -184,6 +207,10 @@ class StudentDocumentsController extends Controller
             if ($document === 'declaration_frequency') {
                 $freq = DB::selectOne('SELECT modules.frequencia_da_matricula(?) as frequencia', [$id]);
                 $extra['frequencia_percentual'] = $freq?->frequencia;
+                $extra['frequencia_mensal'] = $this->monthlyFrequencyStub();
+            }
+            if ($document === 'declaration_conclusion') {
+                $extra['historico_emissao_dias'] = (int) ($request->get('historico_emissao_dias') ?: 0);
             }
 
             $items[] = [
@@ -237,6 +264,7 @@ class StudentDocumentsController extends Controller
         $view = match ($document) {
             'declaration_frequency' => 'advanced-reports::student-documents.declaration-frequency',
             'transfer_guide' => 'advanced-reports::student-documents.transfer-guide',
+            'declaration_conclusion' => 'advanced-reports::student-documents.declaration-conclusion',
             'declaration_nada_consta' => 'advanced-reports::student-documents.declaration-nada-consta',
             default => 'advanced-reports::student-documents.declaration-enrollment',
         };
@@ -244,6 +272,7 @@ class StudentDocumentsController extends Controller
         $title = match ($document) {
             'declaration_frequency' => 'Declaração de frequência',
             'transfer_guide' => 'Guia/Declaração de transferência',
+            'declaration_conclusion' => 'Declaração de conclusão',
             'declaration_nada_consta' => 'Declaração de escolaridade / Nada consta',
             default => 'Declaração de matrícula',
         };

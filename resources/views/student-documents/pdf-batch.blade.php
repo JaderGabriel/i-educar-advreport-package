@@ -23,6 +23,30 @@
           <tr><th>% Frequência</th><td><strong>{{ $extra['frequencia_percentual'] ?? '-' }}%</strong></td></tr>
         </table>
       </div>
+
+      <div class="box">
+        <strong>Frequência mensal</strong>
+        <p class="muted" style="margin-top: 4px;">
+          Observação: a frequência mensal depende de dados de diário/chamada por data. Quando não disponível, o valor pode aparecer como “—”.
+        </p>
+        <table style="margin-top: 8px;">
+          <thead>
+          <tr>
+            <th style="width: 220px;">Mês</th>
+            <th style="width: 160px;">% Frequência</th>
+          </tr>
+          </thead>
+          <tbody>
+          @foreach(($extra['frequencia_mensal'] ?? []) as $row)
+            <tr>
+              <td>{{ $row['label'] ?? '' }}</td>
+              <td><strong>{{ isset($row['percent']) && $row['percent'] !== null ? ($row['percent'] . '%') : '—' }}</strong></td>
+            </tr>
+          @endforeach
+          </tbody>
+        </table>
+      </div>
+
       <p>Declaramos, para os devidos fins, que o(a) aluno(a) acima identificado(a) possui frequência conforme percentual informado.</p>
     @elseif(($document ?? '') === 'transfer_guide')
       <h1>GUIA / DECLARAÇÃO DE TRANSFERÊNCIA</h1>
@@ -38,6 +62,28 @@
       </div>
       <p>Declaramos que o(a) aluno(a) acima identificado(a) está vinculado(a) à escola de origem indicada, para fins de transferência/continuidade dos estudos, conforme registros no i-Educar.</p>
       <p class="muted">Recomenda-se incluir: destino, data efetiva, motivo, responsáveis, e eventuais pendências/documentos anexos (por rede).</p>
+    @elseif(($document ?? '') === 'declaration_conclusion')
+      <h1 style="text-align:center;">DECLARAÇÃO DE CONCLUSÃO</h1>
+      <p class="muted">Emitida com base nos registros do i-Educar para fins de comprovação.</p>
+      <div class="box">
+        <table>
+          <tr><th>Aluno(a)</th><td>{{ $m->aluno_nome ?? '' }}</td></tr>
+          <tr><th>Matrícula (ID)</th><td>{{ $m->matricula_id ?? '' }}</td></tr>
+          <tr><th>Ano letivo</th><td>{{ $m->ano_letivo ?? '' }}</td></tr>
+          <tr><th>Instituição</th><td>{{ $m->instituicao ?? '' }}</td></tr>
+          <tr><th>Escola</th><td>{{ $m->escola ?? '' }}</td></tr>
+          <tr><th>Curso</th><td>{{ $m->curso ?? '' }}</td></tr>
+          <tr><th>Série</th><td>{{ $m->serie ?? '' }}</td></tr>
+          <tr><th>Turma</th><td>{{ $m->turma ?? '' }}</td></tr>
+          @if(!empty($extra['historico_emissao_dias']))
+            <tr><th>Prazo informado (histórico)</th><td><strong>{{ (int) $extra['historico_emissao_dias'] }} dia(s)</strong></td></tr>
+          @endif
+        </table>
+      </div>
+      <p>Declaramos, para os devidos fins, que o(a) aluno(a) acima identificado(a) concluiu a etapa/cursamento conforme registros desta unidade escolar no ano letivo informado.</p>
+      @if(!empty($extra['historico_emissao_dias']))
+        <p><strong>Observação:</strong> prazo informado de <strong>{{ (int) $extra['historico_emissao_dias'] }} dia(s)</strong> para emissão/entrega do histórico escolar.</p>
+      @endif
     @elseif(($document ?? '') === 'declaration_nada_consta')
       <h1>DECLARAÇÃO DE ESCOLARIDADE / NADA CONSTA</h1>
       <p>
@@ -67,11 +113,22 @@
       <p>Declaramos, para os devidos fins, que o(a) aluno(a) acima identificado(a) encontra-se regularmente matriculado(a) nesta unidade escolar no ano letivo informado.</p>
     @endif
 
+    @include('advanced-reports::student-documents._footer', [
+      'issuedAt' => $issuedAt ?? now()->format('d/m/Y H:i'),
+      'validationCode' => $validationCode ?? '',
+      'validationUrl' => $validationUrl ?? '',
+      'qrDataUri' => $qrDataUri ?? '',
+      'issuerName' => $issuerName ?? null,
+      'issuerRole' => $issuerRole ?? null,
+      'cityUf' => $cityUf ?? null,
+      'book' => null,
+      'page' => null,
+      'record' => null,
+    ])
+
     @if(!$loop->last)
       <div style="page-break-after: always;"></div>
     @endif
   @endforeach
-
-  @include('advanced-reports::student-documents._footer')
 @endsection
 

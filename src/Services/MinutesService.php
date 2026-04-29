@@ -15,6 +15,9 @@ class MinutesService
     {
         $class = DB::table('pmieducar.turma as t')
             ->join('pmieducar.escola as e', 'e.cod_escola', '=', 't.ref_ref_cod_escola')
+            ->leftJoin('cadastro.pessoa as ep', 'ep.idpes', '=', 'e.ref_idpes')
+            ->leftJoin('cadastro.juridica as ej', 'ej.idpes', '=', 'ep.idpes')
+            ->leftJoin('pmieducar.escola_complemento as ec', 'ec.ref_cod_escola', '=', 'e.cod_escola')
             ->leftJoin('pmieducar.instituicao as i', 'i.cod_instituicao', '=', 'e.ref_cod_instituicao')
             ->leftJoin('pmieducar.curso as c', 'c.cod_curso', '=', 't.ref_cod_curso')
             ->leftJoin('pmieducar.serie as s', 's.cod_serie', '=', 't.ref_ref_cod_serie')
@@ -23,7 +26,7 @@ class MinutesService
             ->selectRaw('t.cod_turma as turma_id')
             ->selectRaw('t.nm_turma as turma')
             ->selectRaw('t.ano as ano_letivo')
-            ->selectRaw('COALESCE(e.fantasia, \'\') as escola')
+            ->selectRaw('COALESCE(ej.fantasia, ec.nm_escola, \'\') as escola')
             ->selectRaw('e.ref_cod_instituicao as instituicao_id')
             ->selectRaw('e.cod_escola as escola_id')
             ->selectRaw('COALESCE(i.nm_instituicao, \'\') as instituicao')

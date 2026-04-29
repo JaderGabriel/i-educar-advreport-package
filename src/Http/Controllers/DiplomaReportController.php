@@ -22,6 +22,8 @@ class DiplomaReportController extends Controller
         $instituicaoId = $request->get('ref_cod_instituicao');
         $escolaId = $request->get('ref_cod_escola');
         $cursoId = $request->get('ref_cod_curso');
+        $serieId = $request->get('ref_cod_serie');
+        $turmaId = $request->get('ref_cod_turma');
 
         $filterData = $filters->getFilters(
             $ano ? (int) $ano : null,
@@ -34,60 +36,219 @@ class DiplomaReportController extends Controller
             'ano',
             'instituicaoId',
             'escolaId',
-            'cursoId'
+            'cursoId',
+            'serieId',
+            'turmaId'
         )));
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function resolveMatriculaIdsForClass(int $year, int $turmaId, array $requestedIds): array
+    {
+        if (!empty($requestedIds)) {
+            return $requestedIds;
+        }
+
+        return DB::table('pmieducar.matricula_turma as mt')
+            ->join('pmieducar.matricula as m', 'm.cod_matricula', '=', 'mt.ref_cod_matricula')
+            ->where('mt.ref_cod_turma', $turmaId)
+            ->where('mt.ativo', 1)
+            ->where('m.ativo', 1)
+            ->where('m.dependencia', false)
+            ->where('m.ano', $year)
+            ->orderBy('m.cod_matricula')
+            ->limit(200)
+            ->pluck('m.cod_matricula')
+            ->map(fn ($v) => (int) $v)
+            ->all();
+    }
+
+    /**
+     * @return array{director_name: string, secretary_name: string, school_inep: ?string}
+     */
+    private function resolveSchoolSigners(int $escolaId): array
+    {
+        $row = DB::table('pmieducar.escola as e')
+            ->leftJoin('modules.educacenso_cod_escola as ine', 'ine.cod_escola', '=', 'e.cod_escola')
+            ->leftJoin('cadastro.pessoa as pg', 'pg.idpes', '=', 'e.ref_idpes_gestor')
+            ->leftJoin('cadastro.pessoa as ps', 'ps.idpes', '=', 'e.ref_idpes_secretario_escolar')
+            ->where('e.cod_escola', $escolaId)
+            ->selectRaw('pg.nome as director_name')
+            ->selectRaw('ps.nome as secretary_name')
+            ->selectRaw('ine.cod_escola_inep::text as school_inep')
+            ->first();
+
+        if (!$row) {
+            return [
+                'director_name' => '',
+                'secretary_name' => '',
+                'school_inep' => null,
+            ];
+        }
+
+        return [
+            'director_name' => (string) ($row->director_name ?? ''),
+            'secretary_name' => (string) ($row->secretary_name ?? ''),
+            'school_inep' => $row->school_inep ?? null,
+        ];
     }
 
     public function pdf(Request $request): Response
     {
-        $document = $request->get('document', 'diploma'); // diploma|certificate|declaration
-        $template = $request->get('template', 'classic');
-        $side = $request->get('side', 'front');
+        $document = (string) $request->get('document', 'diploma');
+        $template = (string) $request->get('template', 'classic');
+        $side = (string) $request->get('side', 'both');
 
-        // Para este módulo de “modelos”, o usuário escolhe apenas tipo/template/lado.
-        // Demais dados devem vir do sistema (quando possível) ou serem fictícios na prévia.
-        $ano = $request->get('ano') ? (int) $request->get('ano') : null;
-        $escolaId = $request->get('ref_cod_escola') ? (int) $request->get('ref_cod_escola') : null;
-        $instituicaoId = $request->get('ref_cod_instituicao') ? (int) $request->get('ref_cod_instituicao') : null;
+        if ($request->query('preview') === '1') {
+            $issuedAt = now()->format('d/m/Y H:i');
 
-        $issuerName = auth()->user()?->name;
-        $issuerRole = null;
-        $cityUf = null;
+            $view = match ($document) {
+                'certificate' => 'advanced-reports::diplomas.certificate',
+                'declaration' => 'advanced-reports::diplomas.declaration',
+                default => 'advanced-reports::diplomas.pdf',
+            };
 
-        $header = null;
-        if ($escolaId) {
-            if (!$instituicaoId) {
-                $instituicaoId = (int) (DB::table('pmieducar.escola')->where('cod_escola', $escolaId)->value('ref_cod_instituicao') ?: 0) ?: null;
-            }
-            $header = app(OfficialHeaderService::class)->forSchool($instituicaoId, $escolaId);
+            $filename = match ($document) {
+                'certificate' => 'certificado-previa.pdf',
+                'declaration' => 'declaracao-previa.pdf',
+                default => 'diploma-previa.pdf',
+            };
+
+            return app(PdfRenderService::class)->download($view, [
+                'document' => $document,
+                'template' => $template,
+                'side' => $side,
+                'year' => (string) ($request->get('ano') ?: date('Y')),
+                'course' => null,
+                'class' => null,
+                'enrollment' => null,
+                'studentName' => 'ALUNO(A) EXEMPLO',
+                'students' => null,
+                'issuedAt' => $issuedAt,
+                'validationCode' => 'EXEMPLO',
+                'validationUrl' => '#',
+                'qrDataUri' => null,
+                'issuerName' => auth()->user()?->name,
+                'issuerRole' => null,
+                'cityUf' => null,
+                'municipality' => 'Prefeitura Municipal (Exemplo) • Secretaria de Educação',
+                'schoolName' => 'Unidade Escolar (Exemplo)',
+                'contact' => 'Endereço (Exemplo) • Tel: (00) 0000-0000 • E-mail: exemplo@rede.gov.br',
+                'directorName' => 'Diretor(a) (Exemplo)',
+                'secretaryName' => 'Secretário(a) (Exemplo)',
+                'schoolInep' => '00000000',
+            ], $filename, 'a4', 'landscape');
         }
 
-        $municipality = $header['municipality'] ?? null;
-        $schoolName = $header['schoolName'] ?? null;
-        $contact = $header['contact'] ?? null;
+        $ano = (int) $request->get('ano');
+        $instituicaoId = (int) $request->get('ref_cod_instituicao');
+        $escolaId = (int) $request->get('ref_cod_escola');
+        $cursoId = (int) $request->get('ref_cod_curso');
+        $serieId = (int) $request->get('ref_cod_serie');
+        $turmaId = (int) $request->get('ref_cod_turma');
 
-        // Campos do “conteúdo” (fictícios por padrão, já que este é um gerador de modelos)
-        $year = $ano ? (string) $ano : null;
-        $course = null;
-        $class = null;
-        $enrollment = null;
+        if (!$ano || !$instituicaoId || !$escolaId || !$cursoId || !$serieId || !$turmaId) {
+            abort(422, 'Preencha ano, instituição, escola, curso, série e turma.');
+        }
+
+        $requestedIds = array_values(array_filter(array_map('intval', (array) $request->get('matricula_ids', []))));
+        $ids = $this->resolveMatriculaIdsForClass($ano, $turmaId, $requestedIds);
+        if (empty($ids)) {
+            abort(404, 'Nenhuma matrícula encontrada para a turma/ano informados.');
+        }
+
+        if (in_array($document, ['certificate', 'declaration'], true) && count($ids) > 1) {
+            abort(422, 'Para certificado/declaração (modelo), selecione apenas um(a) aluno(a).');
+        }
+
+        $signers = $this->resolveSchoolSigners($escolaId);
+        $directorName = $signers['director_name'];
+        $secretaryName = $signers['secretary_name'];
+        $schoolInep = $signers['school_inep'];
+
+        $header = app(OfficialHeaderService::class)->forSchool($instituicaoId, $escolaId);
+
+        $courseName = (string) (DB::table('pmieducar.curso')->where('cod_curso', $cursoId)->value('nm_curso') ?: '');
+        $className = (string) (DB::table('pmieducar.turma')->where('cod_turma', $turmaId)->value('nm_turma') ?: '');
+
+        $students = [];
+        foreach ($ids as $matriculaId) {
+            $row = DB::table('pmieducar.matricula as m')
+                ->join('pmieducar.aluno as a', 'a.cod_aluno', '=', 'm.ref_cod_aluno')
+                ->join('cadastro.pessoa as p', 'p.idpes', '=', 'a.ref_idpes')
+                ->where('m.cod_matricula', $matriculaId)
+                ->where('m.ano', $ano)
+                ->selectRaw('p.nome as aluno_nome')
+                ->first();
+            if (!$row) {
+                continue;
+            }
+
+            $students[] = [
+                'matricula_id' => $matriculaId,
+                'studentName' => (string) $row->aluno_nome,
+                'course' => $courseName,
+                'class' => $className,
+                'year' => (string) $ano,
+            ];
+        }
+
+        if (empty($students)) {
+            abort(404, 'Nenhuma matrícula válida para emissão.');
+        }
 
         $issuedAt = now();
         $issuedAtHuman = $issuedAt->format('d/m/Y H:i');
         $issuedAtIso = $issuedAt->toISOString();
 
-        $payload = [
-            'document' => $document,
-            'template' => $template,
-            'side' => $side,
-            'ano' => $ano,
-            'instituicao_id' => $instituicaoId,
-            'escola_id' => $escolaId,
-        ];
+        $pages = [];
+        foreach ($students as $stu) {
+            $payload = [
+                'document' => $document,
+                'template' => $template,
+                'side' => $side,
+                'ano' => $ano,
+                'year' => (string) $ano,
+                'instituicao_id' => $instituicaoId,
+                'escola_id' => $escolaId,
+                'turma_id' => $turmaId,
+                'matricula_id' => $stu['matricula_id'],
+                'course' => $courseName,
+                'class' => $className,
+            ];
 
-        $signing = app(DocumentSigningService::class);
-        $validationCode = $signing->generateCode(8); // 16 hex (alto o suficiente e “curto”)
-        $mac = $signing->mac($validationCode, (string) $document, $issuedAtIso, $payload);
+            $signing = app(DocumentSigningService::class);
+            $code = $signing->generateCode(8);
+            $mac = $signing->mac($code, $document, $issuedAtIso, $payload);
+            $validationUrl = route('advanced-reports.documents.validate', ['code' => $code]);
+            $qrDataUri = app(QrCodeService::class)->pngDataUri($validationUrl, 4);
+
+            AdvancedReportsDocument::query()->create([
+                'code' => $code,
+                'type' => $document,
+                'issued_at' => $issuedAt,
+                'issued_by_user_id' => auth()->id(),
+                'issued_ip' => $request->ip(),
+                'issued_user_agent' => substr((string) $request->userAgent(), 0, 255),
+                'version' => DocumentSigningService::VERSION,
+                'mac' => $mac,
+                'payload' => array_merge($payload, [
+                    'validation_url' => $validationUrl,
+                    'issuer_name' => auth()->user()?->name,
+                ]),
+            ]);
+
+            $pages[] = array_merge($stu, [
+                'issuedAt' => $issuedAtHuman,
+                'validationCode' => $code,
+                'validationUrl' => $validationUrl,
+                'qrDataUri' => $qrDataUri,
+            ]);
+        }
+
+        $issuerName = auth()->user()?->name;
 
         $view = match ($document) {
             'certificate' => 'advanced-reports::diplomas.certificate',
@@ -101,46 +262,31 @@ class DiplomaReportController extends Controller
             default => 'diploma-' . $template . '-' . $side . '.pdf',
         };
 
-        $publicValidationUrl = route('advanced-reports.documents.validate', ['code' => $validationCode]);
-        $qrDataUri = app(QrCodeService::class)->pngDataUri($publicValidationUrl, 4);
-
-        AdvancedReportsDocument::query()->updateOrCreate(
-            ['code' => $validationCode],
-            [
-                'type' => $document,
-                'issued_at' => $issuedAt,
-                'issued_by_user_id' => auth()->id(),
-                'issued_ip' => $request->ip(),
-                'issued_user_agent' => substr((string) $request->userAgent(), 0, 255),
-                'version' => DocumentSigningService::VERSION,
-                'mac' => $mac,
-                'payload' => array_merge($payload, [
-                    'validation_url' => $publicValidationUrl,
-                ]),
-            ]
-        );
-
-        $disposition = 'inline';
+        $first = $students[0];
 
         return app(PdfRenderService::class)->download($view, [
             'document' => $document,
             'template' => $template,
             'side' => $side,
-            'year' => $year,
-            'course' => $course,
-            'class' => $class,
-            'enrollment' => $enrollment,
+            'year' => (string) $ano,
+            'course' => $courseName,
+            'class' => $className,
+            'enrollment' => (string) $first['matricula_id'],
+            'studentName' => (string) $first['studentName'],
+            'students' => $pages,
             'issuedAt' => $issuedAtHuman,
-            'validationCode' => $validationCode,
-            'validationUrl' => $publicValidationUrl,
-            'qrDataUri' => $qrDataUri,
+            'validationCode' => $pages[0]['validationCode'] ?? '',
+            'validationUrl' => $pages[0]['validationUrl'] ?? '',
+            'qrDataUri' => $pages[0]['qrDataUri'] ?? '',
             'issuerName' => $issuerName,
-            'issuerRole' => $issuerRole,
-            'cityUf' => $cityUf,
-            'municipality' => $municipality ?: ($request->boolean('preview') ? 'Prefeitura Municipal (Exemplo) • Secretaria de Educação' : null),
-            'schoolName' => $schoolName ?: ($request->boolean('preview') ? 'Unidade Escolar (Exemplo)' : null),
-            'contact' => $contact ?: ($request->boolean('preview') ? 'Endereço (Exemplo) • Tel: (00) 0000-0000 • E-mail: exemplo@rede.gov.br' : null),
-        ], $filename, 'a4', 'landscape', $disposition);
+            'issuerRole' => null,
+            'cityUf' => null,
+            'municipality' => $header['municipality'] ?? null,
+            'schoolName' => $header['schoolName'] ?? null,
+            'contact' => $header['contact'] ?? null,
+            'directorName' => $directorName ?: null,
+            'secretaryName' => $secretaryName ?: null,
+            'schoolInep' => $schoolInep,
+        ], $filename, 'a4', 'landscape', 'inline');
     }
 }
-

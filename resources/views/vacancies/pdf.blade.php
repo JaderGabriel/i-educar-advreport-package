@@ -3,6 +3,7 @@
 @section('doc_title', 'Vagas por turma')
 @section('doc_subtitle', 'Capacidade, ocupação e vagas disponíveis')
 @section('doc_year', (string) ($year ?? ''))
+@section('formal_header', '1')
 
 @section('content')
   @php($items = $data['items'] ?? collect())
@@ -70,5 +71,18 @@
     @endforeach
     </tbody>
   </table>
+
+  @include('advanced-reports::student-documents._footer', [
+    'issuedAt' => $issuedAt ?? now()->format('d/m/Y H:i'),
+    'validationCode' => $validationCode ?? '',
+    'validationUrl' => $validationUrl ?? '',
+    'qrDataUri' => $qrDataUri ?? '',
+    'issuerName' => $issuerName ?? null,
+    'issuerRole' => $issuerRole ?? null,
+    'cityUf' => $cityUf ?? null,
+    'book' => null,
+    'page' => null,
+    'record' => null,
+  ])
 @endsection
 

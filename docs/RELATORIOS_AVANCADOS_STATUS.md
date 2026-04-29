@@ -109,6 +109,7 @@
 
 - [x] PDF abre como prévia no navegador (inline, sem download automático)
 - [x] Autocomplete/lookup para Aluno/Matrícula em telas de emissão
+- [x] Hardening de Excel contra injeção de fórmula (sanitização de células em exports do pacote)
 
 ## Escola > Documentos
 
@@ -144,6 +145,8 @@
 - [x] Rota `/relatorios-avancados/historico`
 - [x] PDF com cabeçalho oficial + QR/HMAC
 - [x] Múltiplos modelos (classic/modern + SIMADE 1/32/magistério) + prévia (modal)
+- [x] Emissão em lote (multi-aluno) com validação por aluno (SIMADE restrito a 1 aluno)
+- [x] Documento executivo comparativo nativo × pacote: `docs/EXECUTIVO-HISTORICO-ESCOLAR-FLUXO-NATIVO-VS-PACOTE.md`
 
 ### Documentos oficiais do aluno
 

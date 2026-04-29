@@ -37,8 +37,14 @@ class AdvancedReportsDocument extends Model
             'boletim_batch' => 'Boletim do aluno (lote)',
             'declaration_enrollment' => 'Declaração de matrícula',
             'declaration_frequency' => 'Declaração de frequência',
+            'declaration_conclusion' => 'Declaração de conclusão',
             'transfer_guide' => 'Guia/Declaração de transferência',
             'declaration_nada_consta' => 'Declaração de escolaridade / Nada consta',
+            'vacancies_by_school_class' => 'Vagas por turma',
+            'students_by_situation' => 'Alunos por situação',
+            'diploma' => 'Diploma (modelo)',
+            'certificate' => 'Certificado (modelo)',
+            'declaration' => 'Declaração (modelo)',
             default => (string) ($this->type ?? ''),
         };
 

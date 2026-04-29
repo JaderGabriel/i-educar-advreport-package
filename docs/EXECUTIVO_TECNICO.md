@@ -17,8 +17,10 @@ Este documento consolida **o que foi implementado** no pacote `buriti/i-educar-a
   - Layout padrão: `resources/views/pdf/layout.blade.php` (retrato) e `pdf/layout-landscape.blade.php` (paisagem)
   - Cabeçalho oficial: `pdf/header.blade.php`
   - Rodapé com paginação: `pdf/footer.blade.php` (desligável por documento)
+- **Padrão visual (título)**: títulos (`<h1>`) centralizados via CSS nos layouts base (inclui prévias).
 - **Gráficos em PDF**: `ChartImageService` (PNG data-uri) quando `with_charts=1`.
 - **Excel**: `maatwebsite/excel` (múltiplas abas quando faz sentido).
+  - **Hardening**: sanitização de células contra injeção de fórmula (OWASP CSV/Excel Injection) via `SpreadsheetFormulaInjectionGuard` aplicado em `SimpleArraySheet` e exports específicos.
 - **QR Code**: `QrCodeService` (`chillerlan/php-qrcode`), gerando PNG data-uri para uso em PDF.
 
 **Comportamento padrão**: PDFs são emitidos como **prévia no navegador** (header `Content-Disposition: inline`), permitindo imprimir/baixar sem download automático.
@@ -99,6 +101,7 @@ Validação pública:
 
 - `/relatorios-avancados/boletim` (+ PDF)
 - `/relatorios-avancados/historico` (+ PDF, múltiplos modelos + prévia modal)
+  - **Observação (política atual)**: o histórico é **impresso a partir do histórico nativo consolidado** (o pacote não “cria histórico”; apenas imprime e adiciona validação/QR).
 
 ### 4.6 Atas (com validação)
 

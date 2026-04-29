@@ -19,12 +19,12 @@ class VacanciesBySchoolClassExport implements FromCollection, WithHeadings
     {
         return $this->items->map(static function ($row) {
             return [
-                'instituicao' => (string) ($row->instituicao ?? ''),
-                'escola' => (string) ($row->escola ?? ''),
-                'turma' => (string) ($row->turma ?? ''),
-                'turno' => (string) ($row->turno ?? ''),
-                'curso' => (string) ($row->curso ?? ''),
-                'serie' => (string) ($row->serie ?? ''),
+                'instituicao' => SpreadsheetFormulaInjectionGuard::sanitizeScalar((string) ($row->instituicao ?? '')),
+                'escola' => SpreadsheetFormulaInjectionGuard::sanitizeScalar((string) ($row->escola ?? '')),
+                'turma' => SpreadsheetFormulaInjectionGuard::sanitizeScalar((string) ($row->turma ?? '')),
+                'turno' => SpreadsheetFormulaInjectionGuard::sanitizeScalar((string) ($row->turno ?? '')),
+                'curso' => SpreadsheetFormulaInjectionGuard::sanitizeScalar((string) ($row->curso ?? '')),
+                'serie' => SpreadsheetFormulaInjectionGuard::sanitizeScalar((string) ($row->serie ?? '')),
                 'capacidade' => (int) ($row->capacidade ?? 0),
                 'matriculados' => (int) ($row->matriculados ?? 0),
                 'vagas' => (int) ($row->vagas ?? 0),

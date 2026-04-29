@@ -23,6 +23,29 @@
     </table>
   </div>
 
+  <div class="box">
+    <strong>Frequência mensal</strong>
+    <p class="muted" style="margin-top: 4px;">
+      Observação: a frequência mensal depende de dados de diário/chamada por data. Quando não disponível, o valor pode aparecer como “—”.
+    </p>
+    <table style="margin-top: 8px;">
+      <thead>
+      <tr>
+        <th style="width: 220px;">Mês</th>
+        <th style="width: 160px;">% Frequência</th>
+      </tr>
+      </thead>
+      <tbody>
+      @foreach(($extra['frequencia_mensal'] ?? []) as $row)
+        <tr>
+          <td>{{ $row['label'] ?? '' }}</td>
+          <td><strong>{{ isset($row['percent']) && $row['percent'] !== null ? ($row['percent'] . '%') : '—' }}</strong></td>
+        </tr>
+      @endforeach
+      </tbody>
+    </table>
+  </div>
+
   <p>
     Declaramos, para os devidos fins, que o(a) aluno(a) acima identificado(a) possui frequência conforme percentual informado.
   </p>

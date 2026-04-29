@@ -49,7 +49,7 @@
 
     <div class="body">
       <p>
-        Certificamos que <strong>ALUNO EXEMPLO</strong> concluiu, no ano letivo de
+        Certificamos que <strong>{{ $studentName ?? 'ALUNO(A) EXEMPLO' }}</strong> concluiu, no ano letivo de
         <strong>{{ $year ?: '__________' }}</strong>, o curso/etapa <strong>{{ $course ?: '__________' }}</strong>,
         atendendo às exigências legais e regimentais aplicáveis.
       </p>
@@ -63,10 +63,22 @@
 
     <div class="signatures">
       <div class="sig">
-        <div class="line">Diretor(a)</div>
+        <div class="line">
+          <div><strong>Direção</strong></div>
+          <div>{{ $directorName ?: '' }}</div>
+          @if(!empty($schoolInep))
+            <div style="margin-top:4px;font-size:10px;">INEP (escola): {{ $schoolInep }}</div>
+          @endif
+        </div>
       </div>
       <div class="sig">
-        <div class="line">Secretário(a) Escolar</div>
+        <div class="line">
+          <div><strong>Secretaria</strong></div>
+          <div>{{ $secretaryName ?: '' }}</div>
+          @if(!empty($schoolInep))
+            <div style="margin-top:4px;font-size:10px;">INEP (escola): {{ $schoolInep }}</div>
+          @endif
+        </div>
       </div>
     </div>
 

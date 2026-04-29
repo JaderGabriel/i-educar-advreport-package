@@ -14,13 +14,21 @@
       'route' => route('advanced-reports.diplomas.index'),
       'cursos' => $cursos,
       'cursoId' => $cursoId ?? null,
-      'withGrade' => false,
-      'withSchoolClass' => false,
+      'ano' => $ano ?? null,
+      'instituicaoId' => $instituicaoId ?? null,
+      'escolaId' => $escolaId ?? null,
+      'series' => $series ?? [],
+      'turmas' => $turmas ?? [],
+      'withGrade' => true,
+      'withSchoolClass' => true,
+      'requireCourse' => true,
+      'requireSerie' => true,
+      'requireTurma' => true,
       'withCharts' => false,
       'extraRowsView' => 'advanced-reports::diplomas._extra-filters-rows',
       'actionsView' => 'advanced-reports::diplomas._actions',
       'explainTitle' => 'Diplomas/Certificados/Declarações (modelos)',
-      'explainText' => 'Escolha ano/instituição/escola/curso (para buscar dados oficiais) e selecione apenas Documento/Tipo/Lado. A prévia é um exemplo (dados fictícios).',
+      'explainText' => 'Selecione ano → instituição → escola → curso → série → turma (obrigatórios). Depois escolha documento/tipo/lado e, se quiser, selecione um ou mais alunos. A prévia (?) usa dados fictícios; “Emitir PDF (final)” usa dados reais do cadastro.',
   ])
 @endsection
 
@@ -33,6 +41,9 @@
           const closeBtn = document.querySelector('.js-diplomas-preview-close');
           const helpBtn = document.querySelector('.js-diplomas-help');
           const emitBtn = document.querySelector('.js-diplomas-emit');
+          const turmaSelect = document.getElementById('ref_cod_turma');
+          const studentsSelect = document.getElementById('diplomasStudentsSelect');
+          const filterInput = document.querySelector('.js-diplomas-student-filter');
           if (!form || !modal || !iframe) return;
 
           function previewUrl() {
@@ -44,6 +55,7 @@
           function emitUrl() {
             const params = new URLSearchParams(new FormData(form));
             params.delete('preview');
+            params.delete('preview[]');
             return "{{ route('advanced-reports.diplomas.pdf') }}" + "?" + params.toString();
           }
 
@@ -65,6 +77,63 @@
             e.preventDefault();
             window.open(emitUrl(), '_blank');
           });
+
+          async function loadStudentsByClass(turmaId) {
+            const params = new URLSearchParams();
+            params.set('turma_id', String(turmaId));
+            const ano = document.getElementById('ano');
+            if (ano && ano.value) params.set('ano', ano.value);
+            const url = "{{ route('advanced-reports.lookup.class-enrollments') }}" + "?" + params.toString();
+            const res = await fetch(url, {headers: {'Accept': 'application/json'}});
+            if (!res.ok) return [];
+            return await res.json();
+          }
+
+          async function refreshDiplomaStudents() {
+            if (!turmaSelect || !studentsSelect) return;
+            const turmaId = turmaSelect.value;
+            studentsSelect.innerHTML = '';
+            if (!turmaId) {
+              studentsSelect.disabled = true;
+              const opt = document.createElement('option');
+              opt.value = '';
+              opt.textContent = 'Selecione a turma para listar alunos';
+              studentsSelect.appendChild(opt);
+              return;
+            }
+            studentsSelect.disabled = true;
+            const loading = document.createElement('option');
+            loading.value = '';
+            loading.textContent = 'Carregando alunos...';
+            studentsSelect.appendChild(loading);
+            const items = await loadStudentsByClass(turmaId);
+            studentsSelect.innerHTML = '';
+            (items || []).forEach(function (it) {
+              const opt = document.createElement('option');
+              opt.value = String(it.matricula_id);
+              opt.textContent = it.label;
+              studentsSelect.appendChild(opt);
+            });
+            studentsSelect.disabled = false;
+          }
+
+          if (turmaSelect) {
+            turmaSelect.addEventListener('change', refreshDiplomaStudents);
+            refreshDiplomaStudents();
+          }
+
+          if (filterInput && studentsSelect) {
+            filterInput.addEventListener('input', function () {
+              const q = (filterInput.value || '').toLowerCase().trim();
+              Array.from(studentsSelect.options || []).forEach(function (o) {
+                if (!o.value) {
+                  o.hidden = false;
+                  return;
+                }
+                o.hidden = q.length > 0 && !(o.textContent || '').toLowerCase().includes(q);
+              });
+            });
+          }
         })();
     </script>
 @endpush

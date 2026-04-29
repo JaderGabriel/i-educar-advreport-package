@@ -57,6 +57,46 @@ class PendingEntriesController extends Controller
         $checkGrades = $request->boolean('check_grades', true);
         $checkFrequency = $request->boolean('check_frequency', true);
 
+        if ($request->boolean('preview')) {
+            $class = (object) [
+                'turma_id' => $turmaId,
+                'turma' => 'Turma Exemplo (prévia)',
+                'ano_letivo' => (int) date('Y'),
+                'escola' => 'Escola Municipal Exemplo',
+                'curso' => 'Ensino Fundamental',
+                'serie' => '5º ano',
+                'turno' => 'Matutino',
+            ];
+            $rows = collect([
+                [
+                    'student' => 'Aluno(a) Exemplo',
+                    'registration_id' => 100001,
+                    'component' => 'Língua Portuguesa',
+                    'stage' => '1',
+                    'pending_grade' => true,
+                    'pending_frequency' => false,
+                ],
+            ]);
+            $data = [
+                'class' => $class,
+                'summary' => [
+                    'registrations' => 1,
+                    'pending_grade_items' => 1,
+                    'pending_frequency_items' => 0,
+                ],
+                'rows' => $rows,
+            ];
+
+            return app(PdfRenderService::class)->download('advanced-reports::pending-entries.pdf', [
+                'data' => $data,
+                'filters' => [
+                    'etapa' => $etapa,
+                    'check_grades' => $checkGrades,
+                    'check_frequency' => $checkFrequency,
+                ],
+            ], 'pendencias-previa.pdf', 'a4', 'portrait', 'inline');
+        }
+
         $data = $service->build($turmaId, $etapa, $checkGrades, $checkFrequency);
 
         $filename = 'pendencias-lancamento-turma-' . $turmaId . '.pdf';
@@ -71,7 +111,7 @@ class PendingEntriesController extends Controller
                 'check_grades' => $checkGrades,
                 'check_frequency' => $checkFrequency,
             ],
-        ], $filename);
+        ], $filename, 'a4', 'portrait', 'attachment');
     }
 
     public function excel(Request $request, PendingEntriesService $service)

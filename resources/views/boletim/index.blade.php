@@ -20,20 +20,25 @@
       'extraRowsView' => 'advanced-reports::boletim._extra-filters-rows',
       'actionsView' => 'advanced-reports::boletim._actions',
       'explainTitle' => 'Boletim do aluno (PDF)',
-      'explainText' => 'Selecione Ano → Instituição → Escola → Curso (obrigatórios). Série/turma são opcionais. Se selecionar um aluno, emite apenas o boletim dele; se não selecionar, emite em lote para as matrículas do filtro.',
+      'explainText' => 'Selecione Ano → Instituição → Escola → Curso (obrigatórios). Série/turma são opcionais. Na turma, você pode filtrar por nome e selecionar nenhum, um ou vários alunos (sem Ctrl).',
   ])
 @endsection
 
 @push('scripts')
   <script>
     (function () {
+      const form = document.getElementById('formcadastro');
       const turmaSelect = document.getElementById('ref_cod_turma');
       const studentSelect = document.getElementById('boletimStudentSelect');
-      const matriculaHidden = document.getElementById('boletimMatriculaId');
-      if (!turmaSelect || !studentSelect || !matriculaHidden) return;
+      const filterInput = document.querySelector('.js-boletim-student-filter');
+      if (!turmaSelect || !studentSelect) return;
 
       async function loadStudentsByClass(turmaId) {
-        const url = "{{ route('advanced-reports.lookup.class-enrollments') }}" + "?turma_id=" + encodeURIComponent(turmaId);
+        const params = new URLSearchParams();
+        params.set('turma_id', String(turmaId));
+        const ano = document.getElementById('ano');
+        if (ano && ano.value) params.set('ano', ano.value);
+        const url = "{{ route('advanced-reports.lookup.class-enrollments') }}" + "?" + params.toString();
         const res = await fetch(url, {headers: {'Accept': 'application/json'}});
         if (!res.ok) return [];
         return await res.json();
@@ -42,7 +47,6 @@
       async function refreshStudents() {
         const turmaId = turmaSelect.value;
         studentSelect.innerHTML = '';
-        matriculaHidden.value = '';
 
         if (!turmaId) {
           studentSelect.disabled = true;
@@ -62,11 +66,6 @@
         const items = await loadStudentsByClass(turmaId);
         studentSelect.innerHTML = '';
 
-        const first = document.createElement('option');
-        first.value = '';
-        first.textContent = 'Selecione o aluno';
-        studentSelect.appendChild(first);
-
         (items || []).forEach(function (it) {
           const opt = document.createElement('option');
           opt.value = String(it.matricula_id);
@@ -78,11 +77,22 @@
       }
 
       turmaSelect.addEventListener('change', refreshStudents);
+      const anoSelect = document.getElementById('ano');
+      if (anoSelect) anoSelect.addEventListener('change', refreshStudents);
       refreshStudents();
 
-      studentSelect.addEventListener('change', function () {
-        matriculaHidden.value = studentSelect.value || '';
-      });
+      if (filterInput) {
+        filterInput.addEventListener('input', function () {
+          const q = (filterInput.value || '').toLowerCase().trim();
+          Array.from(studentSelect.options || []).forEach(function (o) {
+            if (!o.value) {
+              o.hidden = false;
+              return;
+            }
+            o.hidden = q.length > 0 && !(o.textContent || '').toLowerCase().includes(q);
+          });
+        });
+      }
 
       const modal = document.getElementById('advancedReportsBoletimPreviewModal');
       const iframe = document.querySelector('.js-boletim-preview-iframe');
@@ -90,18 +100,20 @@
       const closeBtn = document.querySelector('.js-boletim-preview-close');
       const emitBtn = document.querySelector('.js-boletim-emit');
       const helpBtn = document.querySelector('.js-boletim-help');
-      const form = document.getElementById('formcadastro');
 
       function buildPdfUrl() {
         if (!form) return null;
         const params = new URLSearchParams(new FormData(form));
+        params.delete('preview');
+        params.delete('preview[]');
         return "{{ route('advanced-reports.boletim.pdf') }}" + "?" + params.toString();
       }
 
       function openPreview() {
-        if (!modal || !iframe) return;
-        const url = "{{ route('advanced-reports.boletim.pdf') }}" + "?preview=1";
-        if (!url || !modal || !iframe) return;
+        if (!modal || !iframe || !form) return;
+        const params = new URLSearchParams(new FormData(form));
+        params.set('preview', '1');
+        const url = "{{ route('advanced-reports.boletim.pdf') }}" + "?" + params.toString();
         iframe.src = url;
         modal.style.display = 'block';
       }
