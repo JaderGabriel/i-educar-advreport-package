@@ -34,7 +34,9 @@
       const matriculaHidden = document.getElementById('studentDocumentsMatriculaId');
       const documentSelect = document.getElementById('studentDocumentsDocument');
       const historicoRow = document.getElementById('studentDocumentsHistoricoRow');
-      const filterInput = document.querySelector('.js-student-filter');
+      const filterInput = document.querySelector('.js-student-docs-student-filter');
+      const countEl = document.querySelector('.js-student-docs-selected-count');
+      const clearBtn = document.querySelector('.js-student-docs-clear-selected');
       if (!turmaSelect || !studentsSelect || !matriculaHidden) return;
 
       function syncHistoricoRow() {
@@ -59,6 +61,7 @@
         const turmaId = turmaSelect.value;
         studentsSelect.innerHTML = '';
         matriculaHidden.value = '';
+        if (filterInput) filterInput.value = '';
 
         if (!turmaId) {
           studentsSelect.disabled = true;
@@ -66,6 +69,7 @@
           opt.value = '';
           opt.textContent = 'Selecione a turma para listar alunos';
           studentsSelect.appendChild(opt);
+          if (countEl) countEl.textContent = '0 selecionados';
           return;
         }
 
@@ -86,6 +90,7 @@
         });
 
         studentsSelect.disabled = false;
+        if (countEl) countEl.textContent = '0 selecionados';
       }
 
       turmaSelect.addEventListener('change', refreshStudents);
@@ -108,10 +113,24 @@
         });
       }
 
-      studentsSelect.addEventListener('change', function () {
-        const selected = Array.from(studentsSelect.selectedOptions || []).map(o => o.value).filter(Boolean);
-        matriculaHidden.value = selected.length === 1 ? selected[0] : '';
-      });
+      function updateSelectedCount() {
+        if (countEl) {
+          const selected = Array.from(studentsSelect.selectedOptions || []).filter(o => !!o.value).length;
+          countEl.textContent = selected + ' selecionado' + (selected === 1 ? '' : 's');
+        }
+        const selectedIds = Array.from(studentsSelect.selectedOptions || []).map(o => o.value).filter(Boolean);
+        matriculaHidden.value = selectedIds.length === 1 ? selectedIds[0] : '';
+      }
+
+      studentsSelect.addEventListener('change', updateSelectedCount);
+      updateSelectedCount();
+
+      if (clearBtn) {
+        clearBtn.addEventListener('click', function () {
+          Array.from(studentsSelect.options || []).forEach(function (o) { o.selected = false; });
+          updateSelectedCount();
+        });
+      }
 
       // Ações (prévia/emissão)
       const modal = document.getElementById('advancedReportsStudentDocsPreviewModal');

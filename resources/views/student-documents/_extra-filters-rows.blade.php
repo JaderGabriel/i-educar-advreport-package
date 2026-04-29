@@ -21,13 +21,19 @@
   <td class="formlttd"><span class="form">Alunos (opcional)</span></td>
   <td class="formlttd">
     <input type="hidden" name="matricula_id" id="studentDocumentsMatriculaId" value="{{ request('matricula_id') }}">
-    <select class="geral" id="studentDocumentsStudentsSelect" name="matricula_ids[]" multiple size="8" style="width: 520px;" disabled>
-      <option value="">Selecione a turma para listar alunos</option>
-    </select>
-    <input type="text" class="geral js-student-filter" placeholder="Filtrar por nome (não precisa Ctrl)" style="width: 520px; margin-top: 6px;">
-    <small style="display:block;color:#666;margin-top:4px;">
-      Dica: use Escola → Série → Turma. Selecione um ou mais alunos (clique em várias linhas). Se não selecionar nenhum, o sistema emite em lote pelo filtro (limitado).
-    </small>
+    <div style="border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;width:520px;background:#fff;">
+      <div style="display:flex;align-items:center;gap:8px;padding:10px;border-bottom:1px solid #e5e7eb;background:#f9fafb;">
+        <input type="text" class="geral js-student-docs-student-filter" placeholder="Buscar aluno na lista (sem Ctrl)" style="flex:1;min-width:220px;">
+        <small class="js-student-docs-selected-count" style="color:#6b7280;white-space:nowrap;">0 selecionados</small>
+        <button type="button" class="btn ar-btn ar-btn--ghost js-student-docs-clear-selected" title="Limpar seleção" aria-label="Limpar seleção">Limpar</button>
+      </div>
+      <select class="geral" id="studentDocumentsStudentsSelect" name="matricula_ids[]" multiple size="9" style="width:100%;border:0;border-radius:0;" disabled>
+        <option value="">Selecione a turma para listar alunos</option>
+      </select>
+      <div style="padding:10px;color:#6b7280;font-size:11px;line-height:1.35;">
+        Nenhuma seleção = emite em lote pelo filtro (limitado). Uma seleção = um PDF. Várias = lote só dos selecionados.
+      </div>
+    </div>
   </td>
 </tr>
 

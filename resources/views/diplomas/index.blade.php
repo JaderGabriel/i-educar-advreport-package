@@ -44,6 +44,8 @@
           const turmaSelect = document.getElementById('ref_cod_turma');
           const studentsSelect = document.getElementById('diplomasStudentsSelect');
           const filterInput = document.querySelector('.js-diplomas-student-filter');
+          const countEl = document.querySelector('.js-diplomas-selected-count');
+          const clearBtn = document.querySelector('.js-diplomas-clear-selected');
           if (!form || !modal || !iframe) return;
 
           function previewUrl() {
@@ -93,12 +95,14 @@
             if (!turmaSelect || !studentsSelect) return;
             const turmaId = turmaSelect.value;
             studentsSelect.innerHTML = '';
+            if (filterInput) filterInput.value = '';
             if (!turmaId) {
               studentsSelect.disabled = true;
               const opt = document.createElement('option');
               opt.value = '';
               opt.textContent = 'Selecione a turma para listar alunos';
               studentsSelect.appendChild(opt);
+              if (countEl) countEl.textContent = '0 selecionados';
               return;
             }
             studentsSelect.disabled = true;
@@ -115,6 +119,7 @@
               studentsSelect.appendChild(opt);
             });
             studentsSelect.disabled = false;
+            if (countEl) countEl.textContent = '0 selecionados';
           }
 
           if (turmaSelect) {
@@ -132,6 +137,24 @@
                 }
                 o.hidden = q.length > 0 && !(o.textContent || '').toLowerCase().includes(q);
               });
+            });
+          }
+
+          function updateSelectedCount() {
+            if (!countEl || !studentsSelect) return;
+            const selected = Array.from(studentsSelect.selectedOptions || []).filter(o => !!o.value).length;
+            countEl.textContent = selected + ' selecionado' + (selected === 1 ? '' : 's');
+          }
+
+          if (studentsSelect) {
+            studentsSelect.addEventListener('change', updateSelectedCount);
+            updateSelectedCount();
+          }
+
+          if (clearBtn && studentsSelect) {
+            clearBtn.addEventListener('click', function () {
+              Array.from(studentsSelect.options || []).forEach(function (o) { o.selected = false; });
+              updateSelectedCount();
             });
           }
         })();
