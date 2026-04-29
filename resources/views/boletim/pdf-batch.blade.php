@@ -43,9 +43,11 @@
         <tr>
           <td>{{ $r['nome'] }}</td>
           @for($i = 1; $i <= (int) ($data['etapas_count'] ?? 0); $i++)
-            <td>{{ $r['etapas'][(string) $i] ?? '-' }}</td>
+            @php($cell = $r['etapas'][(string) $i] ?? null)
+            <td>{{ is_array($cell) ? ($cell['nota'] ?? '-') : ($cell ?? '-') }}</td>
           @endfor
-          <td>{{ $r['etapas']['Rc'] ?? '-' }}</td>
+          @php($rc = $r['etapas']['Rc'] ?? null)
+          <td>{{ is_array($rc) ? ($rc['nota'] ?? '-') : ($rc ?? '-') }}</td>
         </tr>
       @endforeach
       </tbody>
