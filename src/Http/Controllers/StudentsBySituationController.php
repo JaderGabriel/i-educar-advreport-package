@@ -108,9 +108,13 @@ class StudentsBySituationController extends Controller
 
         $signing = app(DocumentSigningService::class);
         $code = $signing->generateCode(8);
-        $mac = $signing->mac($code, 'students_by_situation', $issuedAtIso, $payload);
         $validationUrl = route('advanced-reports.documents.validate', ['code' => $code]);
         $qrDataUri = app(QrCodeService::class)->pngDataUri($validationUrl, 4);
+        $payloadToStore = array_merge($payload, [
+            'validation_url' => $validationUrl,
+            'issuer_name' => auth()->user()?->name,
+        ]);
+        $mac = $signing->mac($code, 'students_by_situation', $issuedAtIso, $payloadToStore);
 
         AdvancedReportsDocument::query()->create([
             'code' => $code,
@@ -121,10 +125,7 @@ class StudentsBySituationController extends Controller
             'issued_user_agent' => substr((string) $request->userAgent(), 0, 255),
             'version' => DocumentSigningService::VERSION,
             'mac' => $mac,
-            'payload' => array_merge($payload, [
-                'validation_url' => $validationUrl,
-                'issuer_name' => auth()->user()?->name,
-            ]),
+            'payload' => $payloadToStore,
         ]);
 
         return app(PdfRenderService::class)->download('advanced-reports::students-by-situation.pdf', [

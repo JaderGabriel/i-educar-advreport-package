@@ -222,9 +222,13 @@ class DiplomaReportController extends Controller
 
             $signing = app(DocumentSigningService::class);
             $code = $signing->generateCode(8);
-            $mac = $signing->mac($code, $document, $issuedAtIso, $payload);
             $validationUrl = route('advanced-reports.documents.validate', ['code' => $code]);
             $qrDataUri = app(QrCodeService::class)->pngDataUri($validationUrl, 4);
+            $payloadToStore = array_merge($payload, [
+                'validation_url' => $validationUrl,
+                'issuer_name' => auth()->user()?->name,
+            ]);
+            $mac = $signing->mac($code, $document, $issuedAtIso, $payloadToStore);
 
             AdvancedReportsDocument::query()->create([
                 'code' => $code,
@@ -235,10 +239,7 @@ class DiplomaReportController extends Controller
                 'issued_user_agent' => substr((string) $request->userAgent(), 0, 255),
                 'version' => DocumentSigningService::VERSION,
                 'mac' => $mac,
-                'payload' => array_merge($payload, [
-                    'validation_url' => $validationUrl,
-                    'issuer_name' => auth()->user()?->name,
-                ]),
+                'payload' => $payloadToStore,
             ]);
 
             $pages[] = array_merge($stu, [

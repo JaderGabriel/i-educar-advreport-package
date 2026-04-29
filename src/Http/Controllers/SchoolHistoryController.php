@@ -223,9 +223,12 @@ class SchoolHistoryController extends Controller
                 ];
 
                 $code = $signing->generateCode(8);
-                $mac = $signing->mac($code, 'historico', $issuedAtIso, $payload);
                 $validationUrl = route('advanced-reports.documents.validate', ['code' => $code]);
                 $qrDataUri = $qrService->pngDataUri($validationUrl, 4);
+                $payloadToStore = array_merge($payload, [
+                    'validation_url' => $validationUrl,
+                ]);
+                $mac = $signing->mac($code, 'historico', $issuedAtIso, $payloadToStore);
 
                 AdvancedReportsDocument::query()->create([
                     'code' => $code,
@@ -236,9 +239,7 @@ class SchoolHistoryController extends Controller
                     'issued_user_agent' => substr((string) $request->userAgent(), 0, 255),
                     'version' => DocumentSigningService::VERSION,
                     'mac' => $mac,
-                    'payload' => array_merge($payload, [
-                        'validation_url' => $validationUrl,
-                    ]),
+                    'payload' => $payloadToStore,
                 ]);
 
                 $items[] = [
@@ -278,9 +279,12 @@ class SchoolHistoryController extends Controller
         ];
 
         $code = $signing->generateCode(8);
-        $mac = $signing->mac($code, 'historico', $issuedAtIso, $payload);
         $validationUrl = route('advanced-reports.documents.validate', ['code' => $code]);
         $qrDataUri = $qrService->pngDataUri($validationUrl, 4);
+        $payloadToStore = array_merge($payload, [
+            'validation_url' => $validationUrl,
+        ]);
+        $mac = $signing->mac($code, 'historico', $issuedAtIso, $payloadToStore);
 
         AdvancedReportsDocument::query()->create([
             'code' => $code,
@@ -291,9 +295,7 @@ class SchoolHistoryController extends Controller
             'issued_user_agent' => substr((string) $request->userAgent(), 0, 255),
             'version' => DocumentSigningService::VERSION,
             'mac' => $mac,
-            'payload' => array_merge($payload, [
-                'validation_url' => $validationUrl,
-            ]),
+            'payload' => $payloadToStore,
         ]);
 
         $view = $this->resolveSingleView($template);
