@@ -86,10 +86,12 @@ return new class extends Migration
             $groupMinutes = $this->createChild($schoolDocs, 9999751, 'Atas e registros formais', 2, null);
             $groupBlankForms = $this->createChild($schoolDocs, 9999752, 'Fichas e formulários (em branco)', 3, null);
 
-            // Exemplos iniciais apontando para o módulo “Diplomas”
-            $this->createChild($groupStudentDocs, 9999753, 'Diplomas/Certificados (modelos)', 1, '/relatorios-avancados/diplomas');
-
-            // As demais telas/documents serão adicionadas incrementalmente conforme o roadmap do DOC executivo.
+            // Ordem desejada em “Documentos do aluno”:
+            // 1) Boletins  2) Declarações  3) Históricos  4) Diplomas e Certificados
+            $this->createChild($groupStudentDocs, 9999755, 'Boletins', 1, '/relatorios-avancados/boletim');
+            $this->createChild($groupStudentDocs, 9999754, 'Declarações', 2, '/relatorios-avancados/documentos');
+            $this->createChild($groupStudentDocs, 9999756, 'Históricos', 3, '/relatorios-avancados/historico');
+            $this->createChild($groupStudentDocs, 9999753, 'Diplomas e Certificados', 4, '/relatorios-avancados/diplomas');
         }
 
         if ($employeesReports) {
@@ -102,7 +104,7 @@ return new class extends Migration
         // Mantemos reversão simples: remove apenas a árvore nova deste pacote (old 99997xx/99998xx).
         $this->deleteMenusByOld([
             9999700, 9999701, 9999702, 9999703, 9999704,
-            9999750, 9999751, 9999752, 9999753,
+            9999750, 9999751, 9999752, 9999753, 9999754, 9999755, 9999756,
             9999800,
         ]);
     }

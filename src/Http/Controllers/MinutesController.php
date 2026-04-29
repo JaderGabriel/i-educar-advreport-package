@@ -9,16 +9,34 @@ use iEducar\Packages\AdvancedReports\Services\MinutesService;
 use iEducar\Packages\AdvancedReports\Services\OfficialHeaderService;
 use iEducar\Packages\AdvancedReports\Services\PdfRenderService;
 use iEducar\Packages\AdvancedReports\Services\QrCodeService;
+use iEducar\Packages\AdvancedReports\Services\AdvancedReportsFilterService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\Response;
 
 class MinutesController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request, AdvancedReportsFilterService $filters): View
     {
+        $ano = $request->get('ano');
+        $instituicaoId = $request->get('ref_cod_instituicao');
+        $escolaId = $request->get('ref_cod_escola');
+        $cursoId = $request->get('ref_cod_curso');
+
+        $filterData = $filters->getFilters(
+            $ano ? (int) $ano : null,
+            $instituicaoId ? (int) $instituicaoId : null,
+            $escolaId ? (int) $escolaId : null,
+            $cursoId ? (int) $cursoId : null
+        );
+
         return view('advanced-reports::minutes.index', [
             'document' => $request->get('document', 'final_results'),
+            'ano' => $ano,
+            'instituicaoId' => $instituicaoId,
+            'escolaId' => $escolaId,
+            'cursoId' => $cursoId,
+            ...$filterData,
         ]);
     }
 

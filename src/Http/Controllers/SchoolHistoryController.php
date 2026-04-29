@@ -175,20 +175,6 @@ class SchoolHistoryController extends Controller
             );
         }
 
-        if (!empty((array) $request->get('aluno_ids', []))) {
-            abort(422, 'Selecione apenas um aluno para emitir o histórico escolar.');
-        }
-
-        $alunoId = (int) $request->get('aluno_id');
-        if (!$alunoId) {
-            abort(422, 'Informe o aluno.');
-        }
-
-        $meta = $this->nativeHistoryMeta($alunoId);
-        $book = $meta['book'] ?? null;
-        $page = $meta['page'] ?? null;
-        $record = $meta['record'] ?? null;
-
         $issuedAt = now();
         $issuedAtHuman = $issuedAt->format('d/m/Y H:i');
         $issuedAtIso = $issuedAt->toISOString();
@@ -197,10 +183,93 @@ class SchoolHistoryController extends Controller
         $signing = app(DocumentSigningService::class);
         $qrService = app(QrCodeService::class);
 
-        $data = $service->build($alunoId);
+        $alunoIds = array_values(array_unique(array_filter(array_map(
+            static fn ($v) => (int) $v,
+            (array) $request->get('aluno_ids', [])
+        ), static fn ($v) => $v > 0)));
+
+        $alunoId = (int) $request->get('aluno_id');
+        if ($alunoId) {
+            $alunoIds = [$alunoId];
+        }
+
+        if (empty($alunoIds)) {
+            abort(422, 'Selecione ao menos um aluno para emitir o histórico escolar.');
+        }
+
+        $isBatch = count($alunoIds) > 1;
+        if ($isBatch && !in_array($template, ['classic', 'modern'], true)) {
+            abort(422, 'Para emissão em lote, selecione um modelo compatível (Clássico ou Moderno).');
+        }
+
+        if ($isBatch) {
+            $items = [];
+
+            foreach ($alunoIds as $aid) {
+                $meta = $this->nativeHistoryMeta($aid);
+                $book = $meta['book'] ?? null;
+                $page = $meta['page'] ?? null;
+                $record = $meta['record'] ?? null;
+
+                $data = $service->build($aid);
+
+                $payload = [
+                    'aluno_id' => $aid,
+                    'book' => $book,
+                    'page' => $page,
+                    'record' => $record,
+                    'template' => $template,
+                    'source' => 'native_history',
+                ];
+
+                $code = $signing->generateCode(8);
+                $mac = $signing->mac($code, 'historico', $issuedAtIso, $payload);
+                $validationUrl = route('advanced-reports.documents.validate', ['code' => $code]);
+                $qrDataUri = $qrService->pngDataUri($validationUrl, 4);
+
+                AdvancedReportsDocument::query()->create([
+                    'code' => $code,
+                    'type' => 'historico',
+                    'issued_at' => $issuedAt,
+                    'issued_by_user_id' => auth()->id(),
+                    'issued_ip' => $request->ip(),
+                    'issued_user_agent' => substr((string) $request->userAgent(), 0, 255),
+                    'version' => DocumentSigningService::VERSION,
+                    'mac' => $mac,
+                    'payload' => array_merge($payload, [
+                        'validation_url' => $validationUrl,
+                    ]),
+                ]);
+
+                $items[] = [
+                    'data' => $data,
+                    'validationCode' => $code,
+                    'validationUrl' => $validationUrl,
+                    'qrDataUri' => $qrDataUri,
+                    'book' => $book,
+                    'page' => $page,
+                    'record' => $record,
+                ];
+            }
+
+            return app(PdfRenderService::class)->download('advanced-reports::school-history.pdf-batch', [
+                'items' => $items,
+                'issuedAt' => $issuedAtHuman,
+                'template' => $template,
+                'templateLabel' => $templates[$template] ?? null,
+            ], 'historico-escolar-lote.pdf', 'a4', 'portrait', $disposition);
+        }
+
+        $aid = (int) $alunoIds[0];
+        $meta = $this->nativeHistoryMeta($aid);
+        $book = $meta['book'] ?? null;
+        $page = $meta['page'] ?? null;
+        $record = $meta['record'] ?? null;
+
+        $data = $service->build($aid);
 
         $payload = [
-            'aluno_id' => $alunoId,
+            'aluno_id' => $aid,
             'book' => $book,
             'page' => $page,
             'record' => $record,
@@ -240,6 +309,6 @@ class SchoolHistoryController extends Controller
             'record' => $record,
             'template' => $template,
             'templateLabel' => $templates[$template] ?? null,
-        ], 'historico-escolar-' . $alunoId . '.pdf', 'a4', 'portrait', $disposition);
+        ], 'historico-escolar-' . $aid . '.pdf', 'a4', 'portrait', $disposition);
     }
 }

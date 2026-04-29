@@ -19,7 +19,7 @@ class StudentDocumentsController extends Controller
     /**
      * @return array<int, array{month:int,label:string,percent:float|null}>
      */
-    private function monthlyFrequencyStub(): array
+    private function monthlyFrequencyFallbackFromOverall(?float $overallPercent): array
     {
         $labels = [
             1 => 'Janeiro', 2 => 'Fevereiro', 3 => 'Março', 4 => 'Abril', 5 => 'Maio', 6 => 'Junho',
@@ -28,7 +28,7 @@ class StudentDocumentsController extends Controller
 
         $out = [];
         foreach ($labels as $m => $label) {
-            $out[] = ['month' => $m, 'label' => $label, 'percent' => null];
+            $out[] = ['month' => $m, 'label' => $label, 'percent' => $overallPercent];
         }
 
         return $out;
@@ -94,7 +94,7 @@ class StudentDocumentsController extends Controller
             $extra = [];
             if ($document === 'declaration_frequency') {
                 $extra['frequencia_percentual'] = 92.5;
-                $extra['frequencia_mensal'] = $this->monthlyFrequencyStub();
+                $extra['frequencia_mensal'] = $this->monthlyFrequencyFallbackFromOverall(92.5);
             }
             if ($document === 'declaration_conclusion') {
                 $extra['historico_emissao_dias'] = (int) ($request->get('historico_emissao_dias') ?: 30);
@@ -206,8 +206,9 @@ class StudentDocumentsController extends Controller
             $extra = [];
             if ($document === 'declaration_frequency') {
                 $freq = DB::selectOne('SELECT modules.frequencia_da_matricula(?) as frequencia', [$id]);
-                $extra['frequencia_percentual'] = $freq?->frequencia;
-                $extra['frequencia_mensal'] = $this->monthlyFrequencyStub();
+                $freqPercent = $freq?->frequencia !== null ? (float) $freq->frequencia : null;
+                $extra['frequencia_percentual'] = $freqPercent;
+                $extra['frequencia_mensal'] = $this->monthlyFrequencyFallbackFromOverall($freqPercent);
             }
             if ($document === 'declaration_conclusion') {
                 $extra['historico_emissao_dias'] = (int) ($request->get('historico_emissao_dias') ?: 0);

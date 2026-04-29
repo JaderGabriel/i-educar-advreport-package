@@ -46,6 +46,8 @@ Route::middleware([
         ->name('advanced-reports.lookup.class-enrollments');
     Route::get('/relatorios-avancados/api/historico-meta', [LookupController::class, 'schoolHistoryMeta'])
         ->name('advanced-reports.lookup.school-history-meta');
+    Route::get('/relatorios-avancados/api/historico-prontos', [LookupController::class, 'readySchoolHistories'])
+        ->name('advanced-reports.lookup.ready-school-histories');
 
     Route::get('/relatorios-avancados/socioeconomicos', [SocioeconomicReportController::class, 'index'])
         ->name('advanced-reports.socioeconomic.index');

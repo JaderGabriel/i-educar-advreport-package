@@ -14,13 +14,15 @@
       'route' => route('advanced-reports.student-documents.index'),
       'cursos' => $cursos,
       'cursoId' => $cursoId ?? null,
+      'requireCourse' => true,
+      'requireSchool' => true,
       'withGrade' => true,
       'withSchoolClass' => true,
       'withCharts' => false,
       'extraRowsView' => 'advanced-reports::student-documents._extra-filters-rows',
       'actionsView' => 'advanced-reports::student-documents._actions',
       'explainTitle' => 'Documentos oficiais do aluno',
-      'explainText' => 'Selecione ano/instituição/escola/curso (obrigatórios). Série/turma são opcionais. Se selecionar alunos, emite para os selecionados; se não selecionar, emite em lote pelo filtro (limitado).',
+      'explainText' => 'Selecione ano, instituição, escola e curso (obrigatórios). Série/turma são opcionais. Se selecionar alunos, emite para os selecionados; se não selecionar, emite em lote pelo filtro (limitado).',
   ])
 @endsection
 
@@ -118,6 +120,23 @@
       const closeBtn = document.querySelector('.js-student-docs-preview-close');
       const emitBtn = document.querySelector('.js-student-docs-emit');
       const form = document.getElementById('formcadastro');
+      const errorModal = document.getElementById('advancedReportsStudentDocsErrorModal');
+      const errorText = document.querySelector('.js-student-docs-error-text');
+      const errorClose = document.querySelector('.js-student-docs-error-close');
+
+      function openError(message) {
+        if (!errorModal || !errorText) {
+          alert(message);
+          return;
+        }
+        errorText.textContent = message;
+        errorModal.style.display = 'block';
+      }
+
+      function closeError() {
+        if (!errorModal) return;
+        errorModal.style.display = 'none';
+      }
 
       function buildPdfUrl() {
         if (!form) return null;
@@ -127,6 +146,11 @@
 
       function openPreview() {
         if (!modal || !iframe) return;
+        const msg = requiredMessage();
+        if (msg) {
+          openError(msg);
+          return;
+        }
         const params = new URLSearchParams(new FormData(form));
         params.set('preview', '1');
         const url = "{{ route('advanced-reports.student-documents.pdf') }}" + "?" + params.toString();
@@ -144,8 +168,39 @@
       if (helpBtn) helpBtn.addEventListener('click', function (e) { e.preventDefault(); openPreview(); });
       if (closeBtn) closeBtn.addEventListener('click', function (e) { e.preventDefault(); closePreview(); });
       if (modal) modal.addEventListener('click', function (e) { if (e.target === modal) closePreview(); });
+
+      function requiredMessage() {
+        const ano = document.getElementById('ano');
+        const inst = document.getElementById('ref_cod_instituicao');
+        const escola = document.getElementById('ref_cod_escola');
+        const curso = document.getElementById('ref_cod_curso');
+        if (!ano || !inst || !escola || !curso) return null;
+        if (!ano.value) return 'Informe o ano letivo.';
+        if (!inst.value) return 'Informe a instituição.';
+        if (!escola.value) return 'Informe a escola.';
+        if (!curso.value) return 'Informe o curso.';
+        return null;
+      }
+
+      function updateEmitState() {
+        if (!emitBtn) return;
+        emitBtn.disabled = !!requiredMessage();
+      }
+
+      const reqEls = ['ano', 'ref_cod_instituicao', 'ref_cod_escola', 'ref_cod_curso'].map(id => document.getElementById(id)).filter(Boolean);
+      reqEls.forEach(function (el) { el.addEventListener('change', updateEmitState); });
+      updateEmitState();
+
+      if (errorClose) errorClose.addEventListener('click', function (e) { e.preventDefault(); closeError(); });
+      if (errorModal) errorModal.addEventListener('click', function (e) { if (e.target === errorModal) closeError(); });
+
       if (emitBtn) emitBtn.addEventListener('click', function (e) {
         e.preventDefault();
+        const msg = requiredMessage();
+        if (msg) {
+          openError(msg);
+          return;
+        }
         const url = buildPdfUrl();
         if (!url) return;
         window.open(url, '_blank');
@@ -153,4 +208,16 @@
     })();
   </script>
 @endpush
+
+<div id="advancedReportsStudentDocsErrorModal" class="ar-modal">
+  <div class="ar-modal__dialog">
+    <div class="ar-modal__header">
+      <strong>Não foi possível emitir</strong>
+      <button type="button" class="btn js-student-docs-error-close">Fechar</button>
+    </div>
+    <div style="padding: 12px 14px;">
+      <p class="js-student-docs-error-text" style="margin: 0;"></p>
+    </div>
+  </div>
+</div>
 

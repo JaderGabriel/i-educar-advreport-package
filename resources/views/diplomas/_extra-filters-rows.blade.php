@@ -4,7 +4,6 @@
     <select id="diplomasDocument" name="document" class="geral" style="width: 320px;">
       <option value="diploma" {{ request('document', 'diploma') === 'diploma' ? 'selected' : '' }}>Diploma</option>
       <option value="certificate" {{ request('document') === 'certificate' ? 'selected' : '' }}>Certificado</option>
-      <option value="declaration" {{ request('document') === 'declaration' ? 'selected' : '' }}>Declaração</option>
     </select>
   </td>
 </tr>

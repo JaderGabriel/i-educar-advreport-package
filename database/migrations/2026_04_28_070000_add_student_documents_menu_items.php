@@ -12,11 +12,11 @@ return new class extends Migration
             return;
         }
 
-        // Item agregador: "Documentos do aluno"
+        // Declarações (ordem padrão)
         Menu::query()->updateOrCreate(
             ['parent_id' => $docs->getKey(), 'old' => 9999754],
             [
-                'title' => 'Declarações e guias (oficiais)',
+                'title' => 'Declarações',
                 'order' => 2,
                 'parent_old' => 9999750,
                 'type' => 3,

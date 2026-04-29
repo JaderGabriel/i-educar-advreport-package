@@ -26,7 +26,7 @@
   <div class="box">
     <strong>Frequência mensal</strong>
     <p class="muted" style="margin-top: 4px;">
-      Observação: a frequência mensal depende de dados de diário/chamada por data. Quando não disponível, o valor pode aparecer como “—”.
+      Observação: quando não houver detalhamento mensal disponível, o sistema replica o percentual geral como referência, para manter consistência com o cálculo padrão.
     </p>
     <table style="margin-top: 8px;">
       <thead>

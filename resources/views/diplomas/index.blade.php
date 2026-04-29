@@ -27,8 +27,8 @@
       'withCharts' => false,
       'extraRowsView' => 'advanced-reports::diplomas._extra-filters-rows',
       'actionsView' => 'advanced-reports::diplomas._actions',
-      'explainTitle' => 'Diplomas/Certificados/Declarações (modelos)',
-      'explainText' => 'Selecione ano → instituição → escola → curso → série → turma (obrigatórios). Depois escolha documento/tipo/lado e, se quiser, selecione um ou mais alunos. A prévia (?) usa dados fictícios; “Emitir PDF (final)” usa dados reais do cadastro.',
+      'explainTitle' => 'Diplomas e Certificados (modelos)',
+      'explainText' => 'Selecione ano → instituição → escola → curso → série → turma (obrigatórios). Depois escolha o documento (diploma/certificado), o tipo e o lado e, se quiser, selecione um ou mais alunos. A prévia (?) usa dados fictícios; “Emitir PDF (final)” usa dados reais do cadastro.',
   ])
 @endsection
 

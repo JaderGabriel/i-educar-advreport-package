@@ -31,6 +31,8 @@
       const turmaSelect = document.getElementById('ref_cod_turma');
       const studentSelect = document.getElementById('boletimStudentSelect');
       const filterInput = document.querySelector('.js-boletim-student-filter');
+      const countEl = document.querySelector('.js-boletim-selected-count');
+      const clearBtn = document.querySelector('.js-boletim-clear-selected');
       if (!turmaSelect || !studentSelect) return;
 
       async function loadStudentsByClass(turmaId) {
@@ -47,6 +49,7 @@
       async function refreshStudents() {
         const turmaId = turmaSelect.value;
         studentSelect.innerHTML = '';
+        if (filterInput) filterInput.value = '';
 
         if (!turmaId) {
           studentSelect.disabled = true;
@@ -54,6 +57,7 @@
           opt.value = '';
           opt.textContent = 'Selecione a turma para listar alunos';
           studentSelect.appendChild(opt);
+          if (countEl) countEl.textContent = '0 selecionados';
           return;
         }
 
@@ -74,6 +78,7 @@
         });
 
         studentSelect.disabled = false;
+        if (countEl) countEl.textContent = '0 selecionados';
       }
 
       turmaSelect.addEventListener('change', refreshStudents);
@@ -91,6 +96,22 @@
             }
             o.hidden = q.length > 0 && !(o.textContent || '').toLowerCase().includes(q);
           });
+        });
+      }
+
+      function updateSelectedCount() {
+        if (!countEl) return;
+        const selected = Array.from(studentSelect.selectedOptions || []).filter(o => !!o.value).length;
+        countEl.textContent = selected + ' selecionado' + (selected === 1 ? '' : 's');
+      }
+
+      studentSelect.addEventListener('change', updateSelectedCount);
+      updateSelectedCount();
+
+      if (clearBtn) {
+        clearBtn.addEventListener('click', function () {
+          Array.from(studentSelect.options || []).forEach(function (o) { o.selected = false; });
+          updateSelectedCount();
         });
       }
 

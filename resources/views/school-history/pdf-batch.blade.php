@@ -22,9 +22,9 @@
       'issuerName' => null,
       'issuerRole' => null,
       'cityUf' => null,
-      'book' => $book ?? null,
-      'page' => $page ?? null,
-      'record' => $record ?? null,
+      'book' => $it['book'] ?? null,
+      'page' => $it['page'] ?? null,
+      'record' => $it['record'] ?? null,
     ])
 
     @if(!$loop->last)

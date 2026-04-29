@@ -98,6 +98,9 @@ class DiplomaReportController extends Controller
     public function pdf(Request $request): Response
     {
         $document = (string) $request->get('document', 'diploma');
+        if (!in_array($document, ['diploma', 'certificate'], true)) {
+            $document = 'diploma';
+        }
         $template = (string) $request->get('template', 'classic');
         $side = (string) $request->get('side', 'both');
 
@@ -106,13 +109,11 @@ class DiplomaReportController extends Controller
 
             $view = match ($document) {
                 'certificate' => 'advanced-reports::diplomas.certificate',
-                'declaration' => 'advanced-reports::diplomas.declaration',
                 default => 'advanced-reports::diplomas.pdf',
             };
 
             $filename = match ($document) {
                 'certificate' => 'certificado-previa.pdf',
-                'declaration' => 'declaracao-previa.pdf',
                 default => 'diploma-previa.pdf',
             };
 
@@ -159,8 +160,8 @@ class DiplomaReportController extends Controller
             abort(404, 'Nenhuma matrícula encontrada para a turma/ano informados.');
         }
 
-        if (in_array($document, ['certificate', 'declaration'], true) && count($ids) > 1) {
-            abort(422, 'Para certificado/declaração (modelo), selecione apenas um(a) aluno(a).');
+        if ($document === 'certificate' && count($ids) > 1) {
+            abort(422, 'Para certificado (modelo), selecione apenas um(a) aluno(a).');
         }
 
         $signers = $this->resolveSchoolSigners($escolaId);
@@ -252,13 +253,11 @@ class DiplomaReportController extends Controller
 
         $view = match ($document) {
             'certificate' => 'advanced-reports::diplomas.certificate',
-            'declaration' => 'advanced-reports::diplomas.declaration',
             default => 'advanced-reports::diplomas.pdf',
         };
 
         $filename = match ($document) {
             'certificate' => 'certificado-modelo.pdf',
-            'declaration' => 'declaracao-modelo.pdf',
             default => 'diploma-' . $template . '-' . $side . '.pdf',
         };
 

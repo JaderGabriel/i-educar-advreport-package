@@ -37,9 +37,19 @@
       @else
         <div class="badge-bad">INVÁLIDO</div>
       @endif
+
+      <p class="muted" style="margin: 10px 0 0; max-width: 980px;">
+        @if(!empty($isValid))
+          <strong>O que isso significa?</strong> O documento foi localizado e a assinatura de verificação confere com o conteúdo registrado no momento da emissão.
+          Em outras palavras, o PDF corresponde a um documento emitido pelo sistema, com este código.
+        @else
+          <strong>O que isso significa?</strong> O documento foi localizado, porém a assinatura de verificação <strong>não confere</strong> com o conteúdo registrado.
+          Isso pode ocorrer por alteração do conteúdo/registro, chave de assinatura diferente entre ambientes, ou inconsistência de dados. Em caso de dúvida, solicite nova emissão.
+        @endif
+      </p>
       <div class="row" style="margin-top: 10px;">
         <div><strong>Código</strong>: <span class="code">{{ $doc->code }}</span></div>
-        <div><strong>Tipo</strong>: {{ $doc->type }}</div>
+        <div><strong>Tipo</strong>: {{ (string) (($summary['Tipo'] ?? '') ?: $doc->type) }}</div>
         <div><strong>Emitido em</strong>: {{ optional($doc->issued_at)->format('d/m/Y H:i') }}</div>
       </div>
     </div>

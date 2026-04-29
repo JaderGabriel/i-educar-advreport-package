@@ -61,7 +61,8 @@ class BoletimService
         if (!empty($meta?->turma_id) && !empty($matricula['ano'])) {
             $professor = DB::table('modules.professor_turma as pt')
                 ->join('pmieducar.servidor as s', 's.cod_servidor', '=', 'pt.servidor_id')
-                ->join('cadastro.pessoa as pp', 'pp.idpes', '=', 's.ref_idpes')
+                // Em i-Educar, `pmieducar.servidor.cod_servidor` é o idpes (pessoa). Não existe `ref_idpes`.
+                ->join('cadastro.pessoa as pp', 'pp.idpes', '=', 's.cod_servidor')
                 ->where('pt.turma_id', (int) $meta->turma_id)
                 ->where('pt.ano', (int) $matricula['ano'])
                 ->orderBy('pt.funcao_exercida')

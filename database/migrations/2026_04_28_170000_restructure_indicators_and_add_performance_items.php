@@ -132,21 +132,7 @@ return new class extends Migration
             ]
         );
 
-        // Link de entrada em "Avaliação e frequência" (grupo já existe em Escola → Relatórios)
-        $pedagogical = Menu::query()->where('old', 9999700)->first();
-        if ($pedagogical) {
-            Menu::query()->updateOrCreate(
-                ['parent_id' => $pedagogical->getKey(), 'old' => 9999720],
-                [
-                    'title' => 'Indicadores (desempenho/resultado)',
-                    'order' => 10,
-                    'parent_old' => 9999700,
-                    'type' => 3,
-                    'active' => true,
-                    'link' => '/relatorios-avancados/indicadores/avaliacao-frequencia',
-                ]
-            );
-        }
+        // Removido: submenu “Indicadores (desempenho/resultado)” em “Avaliação e frequência”.
     }
 
     public function down(): void
@@ -154,7 +140,6 @@ return new class extends Migration
         Menu::query()->whereIn('old', [
             9999710, 9999711, 9999712,
             9999713, 9999714, 9999715, 9999716, 9999717,
-            9999720,
         ])->delete();
     }
 };

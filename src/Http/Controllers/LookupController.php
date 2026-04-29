@@ -26,6 +26,74 @@ class LookupController
             ->orderByDesc('he.sequencial');
     }
 
+    public function readySchoolHistories(Request $request)
+    {
+        $turmaId = (int) $request->get('turma_id');
+        if (!$turmaId) {
+            return response()->json([]);
+        }
+
+        $year = $request->get('ano') ? (int) $request->get('ano') : null;
+
+        $metaSub = DB::table('pmieducar.historico_escolar as he')
+            ->where('he.ativo', 1)
+            ->whereNotNull('he.ref_cod_matricula')
+            ->where(function ($w) {
+                $w->whereNull('he.origem')->orWhere('he.origem', 0);
+            })
+            ->selectRaw('DISTINCT ON (he.ref_cod_aluno) he.ref_cod_aluno')
+            ->selectRaw('he.ano as ano_historico')
+            ->selectRaw('he.registro as registro')
+            ->selectRaw('he.livro as livro')
+            ->selectRaw('he.folha as folha')
+            ->orderByRaw('he.ref_cod_aluno, he.ano DESC, he.sequencial DESC');
+
+        $rows = DB::table('pmieducar.matricula_turma as mt')
+            ->join('pmieducar.matricula as m', 'm.cod_matricula', '=', 'mt.ref_cod_matricula')
+            ->join('pmieducar.aluno as a', 'a.cod_aluno', '=', 'm.ref_cod_aluno')
+            ->join('cadastro.pessoa as p', 'p.idpes', '=', 'a.ref_idpes')
+            ->joinSub($metaSub, 'hm', function ($j) {
+                $j->on('hm.ref_cod_aluno', '=', 'a.cod_aluno');
+            })
+            ->leftJoin('pmieducar.curso as c', function ($j) {
+                $j->on('c.cod_curso', '=', 'm.ref_cod_curso');
+            })
+            ->leftJoin('pmieducar.serie as s', function ($j) {
+                $j->on('s.cod_serie', '=', 'm.ref_ref_cod_serie');
+            })
+            ->where('mt.ref_cod_turma', $turmaId)
+            ->where('mt.ativo', 1)
+            ->where('m.ativo', 1)
+            ->where('m.dependencia', false)
+            ->when($year, fn ($qq) => $qq->where('m.ano', $year))
+            ->selectRaw('a.cod_aluno as aluno_id')
+            ->selectRaw('p.nome as aluno_nome')
+            ->selectRaw('hm.ano_historico as ano')
+            ->selectRaw('hm.registro as registro')
+            ->selectRaw('hm.livro as livro')
+            ->selectRaw('hm.folha as folha')
+            ->selectRaw('c.nm_curso as curso')
+            ->selectRaw('s.nm_serie as serie')
+            ->orderBy('p.nome')
+            ->limit(500)
+            ->get();
+
+        $items = $rows->map(static function ($r) {
+            return [
+                'aluno_id' => (int) $r->aluno_id,
+                'aluno_nome' => (string) $r->aluno_nome,
+                'ano' => (int) ($r->ano ?? 0),
+                'curso' => (string) ($r->curso ?? ''),
+                'serie' => (string) ($r->serie ?? ''),
+                'registro' => (string) ($r->registro ?? ''),
+                'livro' => (string) ($r->livro ?? ''),
+                'folha' => (string) ($r->folha ?? ''),
+            ];
+        })->values();
+
+        return response()->json($items);
+    }
+
     public function matriculas(Request $request)
     {
         $q = trim((string) $request->get('q', ''));

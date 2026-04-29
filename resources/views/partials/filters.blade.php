@@ -41,6 +41,9 @@
         <tr id="tr_nm_escola">
             <td class="formmdtd" valign="top"><span class="form">Escola</span></td>
             <td class="formmdtd" valign="top">
+                @if(!empty($requireSchool))
+                    <span class="campo_obrigatorio">*</span>
+                @endif
                 <select class="geral" name="ref_cod_escola" id="ref_cod_escola" style="width: 308px;">
                     <option value="">Selecione</option>
                     @foreach(($escolas ?? []) as $item)

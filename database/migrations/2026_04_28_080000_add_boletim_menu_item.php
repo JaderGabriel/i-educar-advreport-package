@@ -15,7 +15,7 @@ return new class extends Migration
         Menu::query()->updateOrCreate(
             ['parent_id' => $docs->getKey(), 'old' => 9999755],
             [
-                'title' => 'Boletim do aluno (PDF)',
+                'title' => 'Boletins',
                 'order' => 1,
                 'parent_old' => 9999750,
                 'type' => 3,
