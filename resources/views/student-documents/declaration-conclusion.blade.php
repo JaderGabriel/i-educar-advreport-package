@@ -40,5 +40,10 @@
     </p>
   @endif
 
+  @include('advanced-reports::pdf._issuer-signature', [
+    'issuerName' => $issuerName ?? null,
+    'schoolInep' => $schoolInep ?? null,
+  ])
+
   @include('advanced-reports::student-documents._footer')
 @endsection

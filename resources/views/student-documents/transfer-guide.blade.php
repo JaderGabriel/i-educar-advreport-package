@@ -31,6 +31,11 @@
     Recomenda-se incluir: destino, data efetiva, motivo, responsáveis, e eventuais pendências/documentos anexos (por rede).
   </p>
 
+  @include('advanced-reports::pdf._issuer-signature', [
+    'issuerName' => $issuerName ?? null,
+    'schoolInep' => $schoolInep ?? null,
+  ])
+
   @include('advanced-reports::student-documents._footer')
 @endsection
 

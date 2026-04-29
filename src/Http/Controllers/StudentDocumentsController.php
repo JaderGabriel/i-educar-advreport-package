@@ -110,6 +110,7 @@ class StudentDocumentsController extends Controller
                 'issuerName' => null,
                 'issuerRole' => null,
                 'cityUf' => null,
+                'schoolInep' => '00000000',
                 'extra' => $extra,
                 'municipality' => 'Prefeitura Municipal (Exemplo) • Secretaria de Educação',
                 'schoolName' => 'Unidade Escolar (Exemplo)',
@@ -230,6 +231,12 @@ class StudentDocumentsController extends Controller
             !empty($first->instituicao_id) ? (int) $first->instituicao_id : null,
             !empty($first->escola_id) ? (int) $first->escola_id : null,
         );
+        $schoolInep = null;
+        if (!empty($first->escola_id)) {
+            $schoolInep = DB::table('modules.educacenso_cod_escola')
+                ->where('cod_escola', (int) $first->escola_id)
+                ->value('cod_escola_inep');
+        }
 
         $payload = [
             'mode' => count($items) > 1 ? 'batch' : 'single',
@@ -292,6 +299,7 @@ class StudentDocumentsController extends Controller
                 'issuerName' => $issuerName,
                 'issuerRole' => $issuerRole,
                 'cityUf' => $cityUf,
+                'schoolInep' => $schoolInep ? (string) $schoolInep : null,
                 'extra' => $one['extra'] ?? [],
                 'municipality' => $header['municipality'] ?? null,
                 'schoolName' => $header['schoolName'] ?? null,
@@ -310,6 +318,7 @@ class StudentDocumentsController extends Controller
             'issuerName' => $issuerName,
             'issuerRole' => $issuerRole,
             'cityUf' => $cityUf,
+            'schoolInep' => $schoolInep ? (string) $schoolInep : null,
             'municipality' => $header['municipality'] ?? null,
             'schoolName' => $header['schoolName'] ?? null,
             'contact' => $header['contact'] ?? null,

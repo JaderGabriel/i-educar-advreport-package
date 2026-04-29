@@ -31,7 +31,8 @@ class VacanciesBySchoolClassController extends Controller
                 ->leftJoin('cadastro.juridica as j', 'j.idpes', '=', 'p.idpes')
                 ->leftJoin('pmieducar.escola_complemento as ec', 'ec.ref_cod_escola', '=', 'e.cod_escola')
                 ->where('e.cod_escola', $escolaId)
-                ->value(DB::raw('COALESCE(j.fantasia, ec.nm_escola)'))
+                ->selectRaw('COALESCE(j.fantasia, ec.nm_escola) as nome')
+                ->value('nome')
             : null;
 
         $curso = $cursoId
@@ -156,6 +157,12 @@ class VacanciesBySchoolClassController extends Controller
         }
 
         $header = app(OfficialHeaderService::class)->forSchool($instituicaoId, $escolaId);
+        $schoolInep = null;
+        if ($escolaId) {
+            $schoolInep = DB::table('modules.educacenso_cod_escola')
+                ->where('cod_escola', (int) $escolaId)
+                ->value('cod_escola_inep');
+        }
 
         $issuedAt = now();
         $issuedAtHuman = $issuedAt->format('d/m/Y H:i');
@@ -217,6 +224,7 @@ class VacanciesBySchoolClassController extends Controller
             'issuerName' => auth()->user()?->name,
             'issuerRole' => null,
             'cityUf' => null,
+            'schoolInep' => $schoolInep ? (string) $schoolInep : null,
         ], 'vagas-por-turma-' . $ano . '.pdf', 'a4', 'landscape', 'attachment');
     }
 

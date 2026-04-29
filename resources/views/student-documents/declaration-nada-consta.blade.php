@@ -19,6 +19,11 @@
     Observação: esta declaração é um resumo oficial para fins administrativos. Informações sensíveis não são exibidas na validação pública.
   </p>
 
+  @include('advanced-reports::pdf._issuer-signature', [
+    'issuerName' => $issuerName ?? null,
+    'schoolInep' => $schoolInep ?? null,
+  ])
+
   @include('advanced-reports::student-documents._footer', [
     'issuedAt' => $issuedAt,
     'validationCode' => $validationCode,

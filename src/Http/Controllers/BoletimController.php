@@ -113,6 +113,14 @@ class BoletimController extends Controller
                 !empty($headerMeta?->instituicao_id) ? (int) $headerMeta->instituicao_id : null,
                 !empty($headerMeta?->escola_id) ? (int) $headerMeta->escola_id : null,
             );
+            $schoolInep = null;
+            if (!empty($headerMeta?->escola_id)) {
+                $schoolInep = DB::table('modules.educacenso_cod_escola')
+                    ->where('cod_escola', (int) $headerMeta->escola_id)
+                    ->value('cod_escola_inep');
+            }
+
+            $issuerName = auth()->user()?->name;
 
             $payload = [
                 'mode' => 'single',
@@ -152,6 +160,8 @@ class BoletimController extends Controller
                 'municipality' => $header['municipality'] ?? null,
                 'schoolName' => $header['schoolName'] ?? null,
                 'contact' => $header['contact'] ?? null,
+                'issuerName' => $issuerName,
+                'schoolInep' => $schoolInep ? (string) $schoolInep : null,
             ], 'boletim-' . $matriculaId . '.pdf');
         }
 
@@ -183,6 +193,13 @@ class BoletimController extends Controller
             $instituicaoId ? (int) $instituicaoId : null,
             $escolaId
         );
+        $schoolInep = null;
+        if ($escolaId) {
+            $schoolInep = DB::table('modules.educacenso_cod_escola')
+                ->where('cod_escola', (int) $escolaId)
+                ->value('cod_escola_inep');
+        }
+        $issuerName = auth()->user()?->name;
 
         $signing = app(DocumentSigningService::class);
         $items = [];
@@ -235,6 +252,8 @@ class BoletimController extends Controller
             'municipality' => $header['municipality'] ?? null,
             'schoolName' => $header['schoolName'] ?? null,
             'contact' => $header['contact'] ?? null,
+            'issuerName' => $issuerName,
+            'schoolInep' => $schoolInep ? (string) $schoolInep : null,
         ], 'boletins-' . $ano . '-' . $escolaId . '-' . $cursoId . '.pdf');
     }
 }

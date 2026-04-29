@@ -50,6 +50,11 @@
     Declaramos, para os devidos fins, que o(a) aluno(a) acima identificado(a) possui frequência conforme percentual informado.
   </p>
 
+  @include('advanced-reports::pdf._issuer-signature', [
+    'issuerName' => $issuerName ?? null,
+    'schoolInep' => $schoolInep ?? null,
+  ])
+
   @include('advanced-reports::student-documents._footer')
 @endsection
 

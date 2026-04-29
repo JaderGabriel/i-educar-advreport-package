@@ -108,6 +108,7 @@ class MinutesController extends Controller
                 'issuerName' => $issuerName,
                 'issuerRole' => $issuerRole,
                 'cityUf' => $cityUf,
+                'schoolInep' => null,
                 'municipality' => $header['municipality'] ?? null,
                 'schoolName' => $header['schoolName'] ?? null,
                 'contact' => $header['contact'] ?? null,
@@ -120,6 +121,12 @@ class MinutesController extends Controller
             !empty($class?->instituicao_id) ? (int) $class->instituicao_id : null,
             !empty($class?->escola_id) ? (int) $class->escola_id : null,
         );
+        $schoolInep = null;
+        if (!empty($class?->escola_id)) {
+            $schoolInep = \Illuminate\Support\Facades\DB::table('modules.educacenso_cod_escola')
+                ->where('cod_escola', (int) $class->escola_id)
+                ->value('cod_escola_inep');
+        }
 
         $issuedAt = now();
         $issuedAtHuman = $issuedAt->format('d/m/Y H:i');
@@ -178,6 +185,7 @@ class MinutesController extends Controller
             'issuerName' => $issuerName,
             'issuerRole' => $issuerRole,
             'cityUf' => $cityUf,
+            'schoolInep' => $schoolInep ? (string) $schoolInep : null,
             'municipality' => $header['municipality'] ?? null,
             'schoolName' => $header['schoolName'] ?? null,
             'contact' => $header['contact'] ?? null,

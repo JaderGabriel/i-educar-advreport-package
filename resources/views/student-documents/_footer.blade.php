@@ -14,17 +14,6 @@
     @endif
         <div><strong>Código</strong>: {{ $validationCode }}</div>
         <div><strong>Validação</strong>: {{ $validationUrl }}</div>
-
-        @if(!empty($issuerName))
-          <div style="margin-top: 10px;">
-            <div style="border-top: 1px solid #94a3b8; width: 280px; padding-top: 4px;">
-              {{ $issuerName }}
-              @if(!empty($issuerRole))
-                <span class="muted">— {{ $issuerRole }}</span>
-              @endif
-            </div>
-          </div>
-        @endif
       </td>
 
       <td style="vertical-align: top; padding: 0; border: 0; width: 96px; text-align: right;">

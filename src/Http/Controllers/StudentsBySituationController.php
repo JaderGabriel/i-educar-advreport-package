@@ -89,6 +89,12 @@ class StudentsBySituationController extends Controller
         $header = $escolaId
             ? app(OfficialHeaderService::class)->forSchool($instituicaoId, $escolaId)
             : ['municipality' => null, 'schoolName' => null, 'contact' => null];
+        $schoolInep = null;
+        if ($escolaId) {
+            $schoolInep = DB::table('modules.educacenso_cod_escola')
+                ->where('cod_escola', (int) $escolaId)
+                ->value('cod_escola_inep');
+        }
 
         $issuedAt = now();
         $issuedAtHuman = $issuedAt->format('d/m/Y H:i');
@@ -142,6 +148,7 @@ class StudentsBySituationController extends Controller
             'issuerName' => auth()->user()?->name,
             'issuerRole' => null,
             'cityUf' => null,
+            'schoolInep' => $schoolInep ? (string) $schoolInep : null,
         ], 'alunos-por-situacao-' . $ano . '.pdf');
     }
 
