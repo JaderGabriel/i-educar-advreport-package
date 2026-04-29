@@ -227,16 +227,3 @@
     })();
   </script>
 @endpush
-
-<div id="advancedReportsStudentDocsErrorModal" class="ar-modal">
-  <div class="ar-modal__dialog">
-    <div class="ar-modal__header">
-      <strong>Não foi possível emitir</strong>
-      <button type="button" class="btn js-student-docs-error-close">Fechar</button>
-    </div>
-    <div style="padding: 12px 14px;">
-      <p class="js-student-docs-error-text" style="margin: 0;"></p>
-    </div>
-  </div>
-</div>
-

@@ -25,3 +25,9 @@
     </button>
   </div>
 </div>
+
+@include('advanced-reports::partials._emit-error-modal', [
+  'modalId' => 'advancedReportsStudentsSituationErrorModal',
+  'closeClass' => 'js-students-situation-error-close',
+  'textClass' => 'js-students-situation-error-text',
+])

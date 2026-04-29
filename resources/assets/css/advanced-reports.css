@@ -45,6 +45,16 @@
     font-weight: 600;
 }
 
+.ar-actions--wrap {
+    justify-content: flex-start;
+}
+
+.ar-post-filter-heading {
+    font-size: 15px;
+    margin: 18px 0 0;
+    color: #111827;
+}
+
 .ar-select {
     height: 32px;
     border-radius: 6px;

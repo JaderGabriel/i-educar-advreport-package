@@ -23,3 +23,9 @@
     </button>
   </div>
 </div>
+
+@include('advanced-reports::partials._emit-error-modal', [
+  'modalId' => 'advancedReportsVacanciesErrorModal',
+  'closeClass' => 'js-vacancies-error-close',
+  'textClass' => 'js-vacancies-error-text',
+])

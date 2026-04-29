@@ -248,7 +248,13 @@ class LookupController
             });
         }
 
-        if ($document === 'transfer_guide') {
+        if (in_array($document, ['diploma', 'certificate'], true)) {
+            $q->join('relatorio.view_situacao as vs', function ($j) {
+                $j->on('vs.cod_matricula', '=', 'm.cod_matricula')
+                    ->on('vs.cod_turma', '=', 'mt.ref_cod_turma')
+                    ->on('vs.sequencial', '=', 'mt.sequencial');
+            })->whereIn('vs.cod_situacao', [1, 12, 13]);
+        } elseif ($document === 'transfer_guide') {
             $q->join('relatorio.view_situacao as vs', function ($j) {
                 $j->on('vs.cod_matricula', '=', 'm.cod_matricula')
                     ->on('vs.cod_turma', '=', 'mt.ref_cod_turma')

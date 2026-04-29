@@ -41,7 +41,7 @@
         <option value="">Selecione a turma para listar alunos</option>
       </select>
       <div style="padding:10px;color:#6b7280;font-size:11px;line-height:1.35;">
-        Nenhuma seleção = emite para todos da turma (limite de segurança). Uma seleção = um PDF. Várias = lote só dos selecionados.
+        Selecione um ou mais alunos. Diplomas/certificados não são emitidos em “todos da turma” automaticamente.
       </div>
     </div>
   </td>

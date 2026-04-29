@@ -117,10 +117,25 @@
 
       const modal = document.getElementById('advancedReportsBoletimPreviewModal');
       const iframe = document.querySelector('.js-boletim-preview-iframe');
-      const openBtn = document.querySelector('.js-boletim-preview-open');
       const closeBtn = document.querySelector('.js-boletim-preview-close');
       const emitBtn = document.querySelector('.js-boletim-emit');
       const helpBtn = document.querySelector('.js-boletim-help');
+      const errorModal = document.getElementById('advancedReportsBoletimErrorModal');
+      const errorText = document.querySelector('.js-boletim-error-text');
+      const errorClose = document.querySelector('.js-boletim-error-close');
+
+      function openError(message) {
+        if (!errorModal || !errorText) {
+          window.alert(message);
+          return;
+        }
+        errorText.textContent = message;
+        errorModal.style.display = 'block';
+      }
+      function closeError() {
+        if (!errorModal) return;
+        errorModal.style.display = 'none';
+      }
 
       function buildPdfUrl() {
         if (!form) return null;
@@ -130,8 +145,26 @@
         return "{{ route('advanced-reports.boletim.pdf') }}" + "?" + params.toString();
       }
 
+      function requiredMessage() {
+        const ano = document.getElementById('ano');
+        const inst = document.getElementById('ref_cod_instituicao');
+        const escola = document.getElementById('ref_cod_escola');
+        const curso = document.getElementById('ref_cod_curso');
+        if (!ano || !inst || !escola || !curso) return null;
+        if (!ano.value) return 'Informe o ano letivo.';
+        if (!inst.value) return 'Informe a instituição.';
+        if (!escola.value) return 'Informe a escola.';
+        if (!curso.value) return 'Informe o curso.';
+        return null;
+      }
+
       function openPreview() {
         if (!modal || !iframe || !form) return;
+        const msg = requiredMessage();
+        if (msg) {
+          openError(msg);
+          return;
+        }
         const params = new URLSearchParams(new FormData(form));
         params.set('preview', '1');
         const url = "{{ route('advanced-reports.boletim.pdf') }}" + "?" + params.toString();
@@ -148,8 +181,16 @@
       if (helpBtn) helpBtn.addEventListener('click', function (e) { e.preventDefault(); openPreview(); });
       if (closeBtn) closeBtn.addEventListener('click', function (e) { e.preventDefault(); closePreview(); });
       if (modal) modal.addEventListener('click', function (e) { if (e.target === modal) closePreview(); });
+      if (errorClose) errorClose.addEventListener('click', function (e) { e.preventDefault(); closeError(); });
+      if (errorModal) errorModal.addEventListener('click', function (e) { if (e.target === errorModal) closeError(); });
+
       if (emitBtn) emitBtn.addEventListener('click', function (e) {
         e.preventDefault();
+        const msg = requiredMessage();
+        if (msg) {
+          openError(msg);
+          return;
+        }
         const url = buildPdfUrl();
         if (!url) return;
         window.open(url, '_blank');

@@ -25,3 +25,9 @@
   </div>
 </div>
 
+@include('advanced-reports::partials._emit-error-modal', [
+  'modalId' => 'advancedReportsDiplomasErrorModal',
+  'closeClass' => 'js-diplomas-error-close',
+  'textClass' => 'js-diplomas-error-text',
+])
+

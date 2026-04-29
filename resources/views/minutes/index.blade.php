@@ -37,7 +37,41 @@
       const closeBtn = document.querySelector('.js-minutes-preview-close');
       const helpBtn = document.querySelector('.js-minutes-help');
       const emitBtn = document.querySelector('.js-minutes-emit');
+      const errorModal = document.getElementById('advancedReportsMinutesErrorModal');
+      const errorText = document.querySelector('.js-minutes-error-text');
+      const errorClose = document.querySelector('.js-minutes-error-close');
       if (!form || !modal || !iframe || !closeBtn) return;
+
+      function openError(message) {
+        if (!errorModal || !errorText) {
+          window.alert(message);
+          return;
+        }
+        errorText.textContent = message;
+        errorModal.style.display = 'block';
+      }
+      function closeError() {
+        if (!errorModal) return;
+        errorModal.style.display = 'none';
+      }
+      if (errorClose) errorClose.addEventListener('click', function (e) { e.preventDefault(); closeError(); });
+      if (errorModal) errorModal.addEventListener('click', function (e) { if (e.target === errorModal) closeError(); });
+
+      function requiredMessage() {
+        const ano = document.getElementById('ano');
+        const inst = document.getElementById('ref_cod_instituicao');
+        const escola = document.getElementById('ref_cod_escola');
+        const curso = document.getElementById('ref_cod_curso');
+        const serie = document.getElementById('ref_cod_serie');
+        const turma = document.getElementById('ref_cod_turma');
+        if (!ano || !ano.value) return 'Informe o ano letivo.';
+        if (!inst || !inst.value) return 'Informe a instituição.';
+        if (!escola || !escola.value) return 'Informe a escola.';
+        if (!curso || !curso.value) return 'Informe o curso.';
+        if (!serie || !serie.value) return 'Informe a série.';
+        if (!turma || !turma.value) return 'Informe a turma.';
+        return null;
+      }
 
       function buildPdfUrl() {
         const params = new URLSearchParams(new FormData(form));
@@ -54,6 +88,11 @@
       if (helpBtn) {
         helpBtn.addEventListener('click', function (e) {
           e.preventDefault();
+          const msg = requiredMessage();
+          if (msg) {
+            openError(msg);
+            return;
+          }
           const params = new URLSearchParams(new FormData(form));
           params.set('preview', '1');
           iframe.src = "{{ route('advanced-reports.minutes.pdf') }}" + "?" + params.toString();
@@ -67,6 +106,11 @@
       if (emitBtn) {
         emitBtn.addEventListener('click', function (e) {
           e.preventDefault();
+          const msg = requiredMessage();
+          if (msg) {
+            openError(msg);
+            return;
+          }
           window.open(buildPdfUrl(), '_blank');
         });
       }

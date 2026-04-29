@@ -46,10 +46,42 @@
         return new URLSearchParams(new FormData(form)).toString();
       }
 
+      const errorModal = document.getElementById('advancedReportsVacanciesErrorModal');
+      const errorText = document.querySelector('.js-vacancies-error-text');
+      const errorClose = document.querySelector('.js-vacancies-error-close');
+
+      function openError(message) {
+        if (!errorModal || !errorText) {
+          window.alert(message);
+          return;
+        }
+        errorText.textContent = message;
+        errorModal.style.display = 'block';
+      }
+      function closeError() {
+        if (!errorModal) return;
+        errorModal.style.display = 'none';
+      }
+      if (errorClose) errorClose.addEventListener('click', function (e) { e.preventDefault(); closeError(); });
+      if (errorModal) errorModal.addEventListener('click', function (e) { if (e.target === errorModal) closeError(); });
+
+      function requiredVacanciesMessage() {
+        const ano = document.getElementById('ano');
+        const escola = document.getElementById('ref_cod_escola');
+        if (!ano || !String(ano.value || '').trim()) return 'Informe o ano letivo.';
+        if (!escola || !String(escola.value || '').trim()) return 'Informe a escola.';
+        return null;
+      }
+
       function openPreview() {
         const modal = document.getElementById('advancedReportsVacanciesPreviewModal');
         const iframe = document.querySelector('.js-vacancies-preview-iframe');
         if (!modal || !iframe || !form) return;
+        const msg = requiredVacanciesMessage();
+        if (msg) {
+          openError(msg);
+          return;
+        }
         const params = new URLSearchParams(new FormData(form));
         params.set('preview', '1');
         iframe.src = pdfBase + '?' + params.toString();
@@ -68,6 +100,11 @@
       if (emitPdf) {
         emitPdf.addEventListener('click', function (e) {
           e.preventDefault();
+          const msg = requiredVacanciesMessage();
+          if (msg) {
+            openError(msg);
+            return;
+          }
           const q = buildQuery();
           if (!q) return;
           window.open(pdfBase + '?' + q, '_blank');
@@ -78,6 +115,11 @@
       if (emitXls) {
         emitXls.addEventListener('click', function (e) {
           e.preventDefault();
+          const msg = requiredVacanciesMessage();
+          if (msg) {
+            openError(msg);
+            return;
+          }
           const q = buildQuery();
           if (!q) return;
           window.open(excelBase + '?' + q, '_blank');

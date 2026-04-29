@@ -21,14 +21,11 @@
   @endphp
 
   <style>
-    /* Evita sobreposição de múltiplos rodapés no mesmo PDF (o layout fixa .ar-official-footer). */
-    .ar-official-footer { position: relative !important; left: auto !important; right: auto !important; bottom: auto !important; }
-
     body { font-family: "Times New Roman", serif; color: #111827; }
     .diploma-page {
       width: 100%;
-      border: 1px solid #e5e7eb;
-      padding: 22px 30px 18px 30px;
+      border: 1px solid #ddd;
+      padding: 18px 18px 18px 18px;
       box-sizing: border-box;
       position: relative;
       min-height: 520px;
@@ -37,19 +34,19 @@
     .diploma-title { font-size: 30px; margin-top: 6px; margin-bottom: 4px; }
     .diploma-subtitle { font-size: 14px; color: #4b5563; }
     .diploma-body { font-size: 13px; line-height: 1.65; margin-top: 16px; text-align: justify; }
-    .diploma-sign-row {
-      margin-top: 34px;
-      display: flex;
-      justify-content: space-between;
-      gap: 18px;
-      font-size: 11px;
-    }
-    .diploma-sign { width: 46%; text-align: center; }
-    .diploma-line { border-top: 1px solid #111827; margin-top: 34px; padding-top: 4px; }
+    .diploma-sign-row { position: absolute; left: 18px; right: 18px; bottom: 150px; display: table; width: calc(100% - 36px); }
+    .diploma-sign { display: table-cell; width: 50%; text-align: center; font-size: 11px; vertical-align: bottom; }
+    .diploma-sign + .diploma-sign { padding-left: 18px; }
+    .diploma-line { border-top: 1px solid #111827; margin-top: 26px; padding-top: 4px; }
+    .diploma-footer-area { position: absolute; left: 18px; right: 18px; bottom: 18px; }
+    .diploma-issuer { margin-bottom: 8px; }
+    .diploma-issuer .line { border-top: 1px solid #111827; width: 320px; padding-top: 4px; }
+    .diploma-issuer .inep { font-size: 10px; color: #6b7280; margin-top: 2px; }
+    .ar-official-footer { position: relative !important; left: auto !important; right: auto !important; bottom: auto !important; }
     .badge-side {
       position: absolute;
       top: 18px;
-      right: 30px;
+      right: 18px;
       font-size: 10px;
       padding: 3px 8px;
       border-radius: 9999px;
@@ -77,15 +74,6 @@
 
         <div class="diploma-header">
           <div class="diploma-title">Diploma de Conclusão</div>
-          <div class="diploma-subtitle">
-            Modelo:
-            @switch($template)
-              @case('modern') Moderno minimalista @break
-              @case('seal') Oficial com brasão @break
-              @case('bilingual') Bilíngue @break
-              @default Clássico institucional
-            @endswitch
-          </div>
         </div>
 
         <div class="diploma-body">
@@ -106,42 +94,42 @@
         <div class="diploma-sign-row">
           <div class="diploma-sign">
             <div class="diploma-line">
-              <div><strong>Direção</strong></div>
-              <div>{{ $directorName ?: '' }}</div>
-              @if(!empty($schoolInep))
-                <div style="margin-top:4px;">INEP (escola): {{ $schoolInep }}</div>
-              @endif
+              <div><strong>Secretaria Escolar</strong></div>
+              <div>{{ $secretaryName ?: '' }}</div>
             </div>
           </div>
           <div class="diploma-sign">
             <div class="diploma-line">
-              <div><strong>Secretaria</strong></div>
-              <div>{{ $secretaryName ?: '' }}</div>
-              @if(!empty($schoolInep))
-                <div style="margin-top:4px;">INEP (escola): {{ $schoolInep }}</div>
-              @endif
+              <div><strong>Direção</strong></div>
+              <div>{{ $directorName ?: '' }}</div>
             </div>
           </div>
         </div>
+
+        <div class="diploma-footer-area">
+          @if(!empty($issuerName))
+            <div class="diploma-issuer">
+              <div class="line"><strong>{{ $issuerName }}</strong></div>
+              @if(!empty($schoolInep))
+                <div class="inep">INEP (escola): {{ $schoolInep }}</div>
+              @endif
+            </div>
+          @endif
+
+          @include('advanced-reports::student-documents._footer', [
+            'issuedAt' => $pIssuedAt,
+            'validationCode' => $pCode,
+            'validationUrl' => $pUrl,
+            'qrDataUri' => $pQr,
+            'issuerName' => $issuerName ?? null,
+            'issuerRole' => $issuerRole ?? null,
+            'cityUf' => $cityUf ?? null,
+            'book' => null,
+            'page' => null,
+            'record' => null,
+          ])
+        </div>
       </div>
-
-      @include('advanced-reports::pdf._issuer-signature', [
-        'issuerName' => $issuerName ?? null,
-        'schoolInep' => $schoolInep ?? null,
-      ])
-
-      @include('advanced-reports::student-documents._footer', [
-        'issuedAt' => $pIssuedAt,
-        'validationCode' => $pCode,
-        'validationUrl' => $pUrl,
-        'qrDataUri' => $pQr,
-        'issuerName' => $issuerName ?? null,
-        'issuerRole' => $issuerRole ?? null,
-        'cityUf' => $cityUf ?? null,
-        'book' => null,
-        'page' => null,
-        'record' => null,
-      ])
 
       @if($side === 'both')
         <div style="page-break-after: always;"></div>
@@ -158,25 +146,31 @@
             e da conformidade com normas locais da rede de ensino. Em caso de dúvidas, utilize o QR Code abaixo para validação.
           </p>
         </div>
+
+        <div class="diploma-footer-area">
+          @if(!empty($issuerName))
+            <div class="diploma-issuer">
+              <div class="line"><strong>{{ $issuerName }}</strong></div>
+              @if(!empty($schoolInep))
+                <div class="inep">INEP (escola): {{ $schoolInep }}</div>
+              @endif
+            </div>
+          @endif
+
+          @include('advanced-reports::student-documents._footer', [
+            'issuedAt' => $pIssuedAt,
+            'validationCode' => $pCode,
+            'validationUrl' => $pUrl,
+            'qrDataUri' => $pQr,
+            'issuerName' => $issuerName ?? null,
+            'issuerRole' => $issuerRole ?? null,
+            'cityUf' => $cityUf ?? null,
+            'book' => null,
+            'page' => null,
+            'record' => null,
+          ])
+        </div>
       </div>
-
-      @include('advanced-reports::pdf._issuer-signature', [
-        'issuerName' => $issuerName ?? null,
-        'schoolInep' => $schoolInep ?? null,
-      ])
-
-      @include('advanced-reports::student-documents._footer', [
-        'issuedAt' => $pIssuedAt,
-        'validationCode' => $pCode,
-        'validationUrl' => $pUrl,
-        'qrDataUri' => $pQr,
-        'issuerName' => $issuerName ?? null,
-        'issuerRole' => $issuerRole ?? null,
-        'cityUf' => $cityUf ?? null,
-        'book' => null,
-        'page' => null,
-        'record' => null,
-      ])
     @endif
 
     @if(!$loop->last)

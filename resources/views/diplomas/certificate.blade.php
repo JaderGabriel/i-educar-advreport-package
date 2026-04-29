@@ -12,8 +12,8 @@
   <style>
     body { font-family: "Times New Roman", serif; color: #111827; }
     .page {
-      border: 1px solid #e5e7eb;
-      padding: 24px 36px;
+      border: 1px solid #ddd;
+      padding: 18px 18px;
       box-sizing: border-box;
       position: relative;
       min-height: 100%;
@@ -22,13 +22,14 @@
     .title h1 { font-size: 30px; margin: 0; }
     .title p { margin: 6px 0 0; font-size: 14px; color: #4b5563; }
     .body { margin-top: 24px; font-size: 14px; line-height: 1.7; text-align: justify; }
-    .signatures { position: absolute; left: 36px; right: 36px; bottom: 120px; display: flex; justify-content: space-between; gap: 18px; }
-    .sig { width: 45%; text-align: center; font-size: 12px; }
+    .signatures { position: absolute; left: 18px; right: 18px; bottom: 120px; display: table; width: calc(100% - 36px); }
+    .sig { display: table-cell; width: 50%; text-align: center; font-size: 12px; vertical-align: bottom; }
+    .sig + .sig { padding-left: 18px; }
     .line { border-top: 1px solid #111827; margin-top: 42px; padding-top: 4px; }
     .doc-footer {
       position: absolute;
-      left: 36px;
-      right: 36px;
+      left: 18px;
+      right: 18px;
       bottom: 16px;
       font-size: 10px;
       color: #374151;
@@ -44,7 +45,6 @@
   <div class="page">
     <div class="title">
       <h1>Certificado</h1>
-      <p>Modelo para emissão e impressão</p>
     </div>
 
     <div class="body">
@@ -64,20 +64,14 @@
     <div class="signatures">
       <div class="sig">
         <div class="line">
-          <div><strong>Direção</strong></div>
-          <div>{{ $directorName ?: '' }}</div>
-          @if(!empty($schoolInep))
-            <div style="margin-top:4px;font-size:10px;">INEP (escola): {{ $schoolInep }}</div>
-          @endif
+          <div><strong>Secretaria Escolar</strong></div>
+          <div>{{ $secretaryName ?: '' }}</div>
         </div>
       </div>
       <div class="sig">
         <div class="line">
-          <div><strong>Secretaria</strong></div>
-          <div>{{ $secretaryName ?: '' }}</div>
-          @if(!empty($schoolInep))
-            <div style="margin-top:4px;font-size:10px;">INEP (escola): {{ $schoolInep }}</div>
-          @endif
+          <div><strong>Direção</strong></div>
+          <div>{{ $directorName ?: '' }}</div>
         </div>
       </div>
     </div>

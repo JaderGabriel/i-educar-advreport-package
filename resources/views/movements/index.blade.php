@@ -21,36 +21,18 @@
         'explainDictionary' => 'Movimentações = alterações de vínculo de matrícula; Escola = unidade escolar de oferta; Curso = etapa/modalidade do curso.'
     ])
 
-    <div class="advanced-report-card" style="margin-top: 12px;">
-        <strong class="advanced-report-card-title">Emissão</strong>
-        <p class="advanced-report-card-text">
-            Use os filtros acima e em seguida emita em PDF ou Excel.
-        </p>
-
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-            <select class="geral js-export-type" style="width: 180px;"
-                    data-pdf="{{ route('advanced-reports.movements.pdf', array_merge(request()->all(), ['data_inicial' => request('data_inicial'), 'data_final' => request('data_final')])) }}"
-                    data-excel="{{ route('advanced-reports.movements.excel', array_merge(request()->all(), ['data_inicial' => request('data_inicial'), 'data_final' => request('data_final')])) }}">
-                <option value="pdf">Gerar PDF</option>
-                <option value="excel">Exportar Excel</option>
-            </select>
-            <button type="button" class="btn-green js-export-run">Executar</button>
-        </div>
-    </div>
+    @include('advanced-reports::partials._post-filter-export-bar', [
+        'uid' => 'movements',
+        'heading' => 'Movimentações de matrícula',
+        'pdfRoute' => route('advanced-reports.movements.pdf'),
+        'excelRoute' => route('advanced-reports.movements.excel'),
+        'requiredFields' => ['ano', 'data_inicial', 'data_final'],
+        'requiredFieldMessages' => [
+            'ano' => 'Informe o ano letivo antes de exportar.',
+            'data_inicial' => 'Informe a data inicial do período.',
+            'data_final' => 'Informe a data final do período.',
+        ],
+        'cardTitle' => 'Exportar relatório',
+        'cardText' => 'Informe ano, instituição e o período (datas) nos filtros acima. Em seguida gere o PDF ou exporte em Excel.',
+    ])
 @endsection
-
-@push('scripts')
-    <script>
-        (function () {
-            const select = document.querySelector('.js-export-type');
-            const btn = document.querySelector('.js-export-run');
-            if (!select || !btn) return;
-
-            btn.addEventListener('click', function () {
-                const key = select.value === 'excel' ? 'excel' : 'pdf';
-                const url = key === 'excel' ? select.dataset.excel : select.dataset.pdf;
-                if (url) window.open(url, '_blank');
-            });
-        })();
-    </script>
-@endpush

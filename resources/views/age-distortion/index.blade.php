@@ -22,21 +22,19 @@
     ])
 
     @if(!empty($data))
-        <div class="advanced-report-card" style="margin-top: 12px;">
-            <strong class="advanced-report-card-title">Emissão</strong>
-            <p class="advanced-report-card-text">
-                Use os filtros e emita em PDF (opcionalmente com gráfico) ou exporte em Excel.
-            </p>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-                <select class="geral js-export-type" style="width: 180px;"
-                        data-pdf="{{ route('advanced-reports.age-distortion.pdf', array_merge(request()->all(), ['with_charts' => request('with_charts') ? 1 : 0])) }}"
-                        data-excel="{{ route('advanced-reports.age-distortion.excel', request()->all()) }}">
-                    <option value="pdf">Gerar PDF</option>
-                    <option value="excel">Exportar Excel</option>
-                </select>
-                <button type="button" class="btn-green js-export-run">Executar</button>
-            </div>
-        </div>
+        @include('advanced-reports::partials._post-filter-export-bar', [
+            'uid' => 'age-distortion',
+            'heading' => 'Distorção idade/série',
+            'pdfRoute' => route('advanced-reports.age-distortion.pdf'),
+            'excelRoute' => route('advanced-reports.age-distortion.excel'),
+            'requiredFields' => ['ano', 'ref_cod_curso'],
+            'requiredFieldMessages' => [
+                'ano' => 'Informe o ano letivo antes de exportar.',
+                'ref_cod_curso' => 'Informe o curso (obrigatório neste relatório) antes de exportar.',
+            ],
+            'cardTitle' => 'Exportar relatório',
+            'cardText' => 'Os dados abaixo refletem os filtros aplicados. Gere o PDF ou exporte em Excel.',
+        ])
 
         <h2 style="margin-top: 16px;">Resumo</h2>
         <table class="tablelistagem" style="width: 100%;" cellspacing="1" cellpadding="4" border="0">
@@ -81,20 +79,4 @@
         </table>
     @endif
 @endsection
-
-@push('scripts')
-    <script>
-        (function () {
-            const select = document.querySelector('.js-export-type');
-            const btn = document.querySelector('.js-export-run');
-            if (!select || !btn) return;
-
-            btn.addEventListener('click', function () {
-                const key = select.value === 'excel' ? 'excel' : 'pdf';
-                const url = key === 'excel' ? select.dataset.excel : select.dataset.pdf;
-                if (url) window.open(url, '_blank');
-            });
-        })();
-    </script>
-@endpush
 

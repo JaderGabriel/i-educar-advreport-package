@@ -155,6 +155,9 @@ class DiplomaReportController extends Controller
         }
 
         $requestedIds = array_values(array_filter(array_map('intval', (array) $request->get('matricula_ids', []))));
+        if (empty($requestedIds)) {
+            abort(422, 'Selecione ao menos um(a) aluno(a) para emitir o diploma/certificado.');
+        }
         $ids = $this->resolveMatriculaIdsForClass($ano, $turmaId, $requestedIds);
         if (empty($ids)) {
             abort(404, 'Nenhuma matrícula encontrada para a turma/ano informados.');

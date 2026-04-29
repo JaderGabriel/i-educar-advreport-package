@@ -33,9 +33,38 @@
     (function () {
       const typeSelect = document.querySelector('.js-export-type');
       const runBtn = document.querySelector('.js-export-run');
+      const errorModal = document.getElementById('advancedReportsStudentsSituationErrorModal');
+      const errorText = document.querySelector('.js-students-situation-error-text');
+      const errorClose = document.querySelector('.js-students-situation-error-close');
       if (!typeSelect || !runBtn) return;
 
+      function openError(message) {
+        if (!errorModal || !errorText) {
+          window.alert(message);
+          return;
+        }
+        errorText.textContent = message;
+        errorModal.style.display = 'block';
+      }
+      function closeError() {
+        if (!errorModal) return;
+        errorModal.style.display = 'none';
+      }
+      if (errorClose) errorClose.addEventListener('click', function (e) { e.preventDefault(); closeError(); });
+      if (errorModal) errorModal.addEventListener('click', function (e) { if (e.target === errorModal) closeError(); });
+
+      function requiredMessage() {
+        const ano = document.getElementById('ano');
+        if (!ano || !String(ano.value || '').trim()) return 'Informe o ano letivo antes de emitir.';
+        return null;
+      }
+
       runBtn.addEventListener('click', function () {
+        const msg = requiredMessage();
+        if (msg) {
+          openError(msg);
+          return;
+        }
         const v = typeSelect.value;
         const url = v === 'excel' ? typeSelect.dataset.excel : typeSelect.dataset.pdf;
         if (!url) return;
