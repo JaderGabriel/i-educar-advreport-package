@@ -205,7 +205,7 @@ class DiplomaReportController extends Controller
 
         $issuedAt = now();
         $issuedAtHuman = $issuedAt->format('d/m/Y H:i');
-        $issuedAtIso = $issuedAt->toISOString();
+        $issuedAtIso = DocumentSigningService::issuedAtForMac($issuedAt);
 
         $pages = [];
         foreach ($students as $stu) {

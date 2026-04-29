@@ -27,10 +27,14 @@
         <small class="js-student-docs-selected-count" style="color:#6b7280;white-space:nowrap;">0 selecionados</small>
         <button type="button" class="btn ar-btn ar-btn--ghost js-student-docs-clear-selected" title="Limpar seleção" aria-label="Limpar seleção">Limpar</button>
       </div>
+      <div class="js-student-docs-class-counters" style="display:none;padding:8px 10px;border-bottom:1px solid #e5e7eb;background:#fff;color:#6b7280;font-size:12px;">
+        <span style="color:#9ca3af;">Contadores da turma (documento restrito).</span>
+      </div>
       <select class="geral" id="studentDocumentsStudentsSelect" name="matricula_ids[]" multiple size="9" style="width:100%;border:0;border-radius:0;" disabled>
         <option value="">Selecione a turma para listar alunos</option>
       </select>
       <div style="padding:10px;color:#6b7280;font-size:11px;line-height:1.35;">
+        Para <strong>Declaração de conclusão</strong>, apenas matrículas <strong>concluídas/aprovadas/finalizadas</strong> aparecem na lista.
         Nenhuma seleção = emite em lote pelo filtro (limitado). Uma seleção = um PDF. Várias = lote só dos selecionados.
       </div>
     </div>

@@ -166,7 +166,7 @@ class VacanciesBySchoolClassController extends Controller
 
         $issuedAt = now();
         $issuedAtHuman = $issuedAt->format('d/m/Y H:i');
-        $issuedAtIso = $issuedAt->toISOString();
+        $issuedAtIso = DocumentSigningService::issuedAtForMac($issuedAt);
 
         $payload = [
             'report' => 'vacancies_by_school_class',

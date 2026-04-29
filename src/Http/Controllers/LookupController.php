@@ -30,12 +30,13 @@ class LookupController
     {
         $turmaId = (int) $request->get('turma_id');
         $escolaId = (int) $request->get('escola_id');
+        $instituicaoId = (int) $request->get('instituicao_id');
         $year = $request->get('ano') ? (int) $request->get('ano') : null;
         $cursoId = $request->get('curso_id') ? (int) $request->get('curso_id') : null;
         $serieId = $request->get('serie_id') ? (int) $request->get('serie_id') : null;
 
-        // Carregamento em nível de escola: exige ao menos ano + escola.
-        if (!$year || !$escolaId) {
+        // Carregamento em nível de escola: exige ao menos ano + instituição + escola.
+        if (!$year || !$escolaId || !$instituicaoId) {
             return response()->json([]);
         }
 
@@ -45,6 +46,9 @@ class LookupController
             ->where(function ($w) {
                 $w->whereNull('he.origem')->orWhere('he.origem', 0);
             })
+            ->where('he.ref_cod_escola', $escolaId)
+            ->where('he.ref_cod_instituicao', $instituicaoId)
+            ->where('he.ano', $year)
             ->selectRaw('DISTINCT ON (he.ref_cod_aluno) he.ref_cod_aluno')
             ->selectRaw('he.ano as ano_historico')
             ->selectRaw('he.registro as registro')
@@ -52,31 +56,45 @@ class LookupController
             ->selectRaw('he.folha as folha')
             ->orderByRaw('he.ref_cod_aluno, he.ano DESC, he.sequencial DESC');
 
-        $q = DB::table('pmieducar.matricula as m')
-            ->join('pmieducar.aluno as a', 'a.cod_aluno', '=', 'm.ref_cod_aluno')
+        // Base: alunos que possuem histórico escolar nativo (pmieducar.historico_escolar)
+        // para a instituição/escola/ano informados. Os filtros de curso/série/turma são
+        // refinamentos via matrícula (quando disponíveis).
+        $q = DB::table('pmieducar.aluno as a')
             ->join('cadastro.pessoa as p', 'p.idpes', '=', 'a.ref_idpes')
             ->joinSub($metaSub, 'hm', function ($j) {
                 $j->on('hm.ref_cod_aluno', '=', 'a.cod_aluno');
-            })
-            ->leftJoin('pmieducar.curso as c', function ($j) {
-                $j->on('c.cod_curso', '=', 'm.ref_cod_curso');
-            })
-            ->leftJoin('pmieducar.serie as s', function ($j) {
-                $j->on('s.cod_serie', '=', 'm.ref_ref_cod_serie');
-            })
-            ->where('m.ativo', 1)
-            ->where('m.dependencia', false)
-            ->where('m.ano', $year)
-            ->where('m.ref_ref_cod_escola', $escolaId)
-            ->when($cursoId, fn ($qq) => $qq->where('m.ref_cod_curso', $cursoId))
-            ->when($serieId, fn ($qq) => $qq->where('m.ref_ref_cod_serie', $serieId));
-
-        if ($turmaId) {
-            $q->join('pmieducar.matricula_turma as mt', function ($join) use ($turmaId) {
-                $join->on('mt.ref_cod_matricula', '=', 'm.cod_matricula')
-                    ->where('mt.ativo', 1)
-                    ->where('mt.ref_cod_turma', $turmaId);
             });
+
+        if ($cursoId || $serieId || $turmaId) {
+            $q->join('pmieducar.matricula as m', function ($j) use ($year, $escolaId) {
+                $j->on('m.ref_cod_aluno', '=', 'a.cod_aluno')
+                    ->where('m.ativo', 1)
+                    ->where('m.dependencia', false)
+                    ->where('m.ano', $year)
+                    ->where('m.ref_ref_cod_escola', $escolaId);
+            })
+                ->leftJoin('pmieducar.curso as c', 'c.cod_curso', '=', 'm.ref_cod_curso')
+                ->leftJoin('pmieducar.serie as s', 's.cod_serie', '=', 'm.ref_ref_cod_serie')
+                ->when($cursoId, fn ($qq) => $qq->where('m.ref_cod_curso', $cursoId))
+                ->when($serieId, fn ($qq) => $qq->where('m.ref_ref_cod_serie', $serieId));
+
+            if ($turmaId) {
+                $q->join('pmieducar.matricula_turma as mt', function ($join) use ($turmaId) {
+                    $join->on('mt.ref_cod_matricula', '=', 'm.cod_matricula')
+                        ->where('mt.ativo', 1)
+                        ->where('mt.ref_cod_turma', $turmaId);
+                });
+            }
+        } else {
+            $q->leftJoin('pmieducar.matricula as m', function ($j) use ($year, $escolaId) {
+                $j->on('m.ref_cod_aluno', '=', 'a.cod_aluno')
+                    ->where('m.ativo', 1)
+                    ->where('m.dependencia', false)
+                    ->where('m.ano', $year)
+                    ->where('m.ref_ref_cod_escola', $escolaId);
+            })
+                ->leftJoin('pmieducar.curso as c', 'c.cod_curso', '=', 'm.ref_cod_curso')
+                ->leftJoin('pmieducar.serie as s', 's.cod_serie', '=', 'm.ref_ref_cod_serie');
         }
 
         $rows = $q
@@ -285,6 +303,62 @@ class LookupController
         })->values();
 
         return response()->json($items);
+    }
+
+    public function classEnrollmentCounters(Request $request)
+    {
+        $turmaId = (int) $request->get('turma_id');
+        if (!$turmaId) {
+            return response()->json([]);
+        }
+
+        $document = (string) $request->get('document', '');
+        $year = $request->get('ano') ? (int) $request->get('ano') : null;
+
+        $eligibleStatuses = match ($document) {
+            'diploma', 'certificate', 'declaration_conclusion' => [1, 12, 13],
+            'transfer_guide' => [4],
+            default => null,
+        };
+
+        $base = DB::table('pmieducar.matricula_turma as mt')
+            ->join('pmieducar.matricula as m', 'm.cod_matricula', '=', 'mt.ref_cod_matricula')
+            ->where('mt.ref_cod_turma', $turmaId)
+            ->where('mt.ativo', 1)
+            ->where('m.ativo', 1)
+            ->where('m.dependencia', false)
+            ->when($year, fn ($qq) => $qq->where('m.ano', $year))
+            ->leftJoin('relatorio.view_situacao as vs', function ($j) {
+                $j->on('vs.cod_matricula', '=', 'm.cod_matricula')
+                    ->on('vs.cod_turma', '=', 'mt.ref_cod_turma')
+                    ->on('vs.sequencial', '=', 'mt.sequencial');
+            });
+
+        $total = (int) (clone $base)->distinct('m.cod_matricula')->count('m.cod_matricula');
+
+        $eligible = $eligibleStatuses
+            ? (int) (clone $base)->whereIn('vs.cod_situacao', $eligibleStatuses)->distinct('m.cod_matricula')->count('m.cod_matricula')
+            : $total;
+
+        $byStatusRows = (clone $base)
+            ->selectRaw('COALESCE(vs.cod_situacao, 0) as cod_situacao')
+            ->selectRaw('COUNT(DISTINCT m.cod_matricula) as total')
+            ->groupBy('cod_situacao')
+            ->orderBy('cod_situacao')
+            ->get();
+
+        $byStatus = [];
+        foreach ($byStatusRows as $r) {
+            $byStatus[(int) $r->cod_situacao] = (int) $r->total;
+        }
+
+        return response()->json([
+            'total' => $total,
+            'eligible' => $eligible,
+            'ineligible' => max(0, $total - $eligible),
+            'eligible_statuses' => $eligibleStatuses,
+            'by_status' => $byStatus,
+        ]);
     }
 
     public function schoolHistoryMeta(Request $request)

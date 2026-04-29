@@ -121,6 +121,7 @@ class SchoolHistoryController extends Controller
         }
 
         if ($request->boolean('preview')) {
+            $view = $this->resolveSingleView($template);
             $student = (object) [
                 'aluno_id' => 0,
                 'aluno_nome' => 'Aluno Exemplo (prévia)',
@@ -155,7 +156,7 @@ class SchoolHistoryController extends Controller
             ];
 
             return app(PdfRenderService::class)->download(
-                'advanced-reports::school-history.pdf',
+                $view,
                 [
                     'data' => $data,
                     'issuedAt' => now()->format('d/m/Y H:i'),
@@ -165,8 +166,8 @@ class SchoolHistoryController extends Controller
                     'book' => null,
                     'page' => null,
                     'record' => null,
-                    'template' => 'classic',
-                    'templateLabel' => 'Prévia (exemplo)',
+                    'template' => $template,
+                    'templateLabel' => 'Prévia (exemplo) — ' . ($templates[$template] ?? $template),
                 ],
                 'historico-previa.pdf',
                 'a4',
@@ -177,7 +178,7 @@ class SchoolHistoryController extends Controller
 
         $issuedAt = now();
         $issuedAtHuman = $issuedAt->format('d/m/Y H:i');
-        $issuedAtIso = $issuedAt->toISOString();
+        $issuedAtIso = DocumentSigningService::issuedAtForMac($issuedAt);
         $disposition = 'attachment';
 
         $signing = app(DocumentSigningService::class);

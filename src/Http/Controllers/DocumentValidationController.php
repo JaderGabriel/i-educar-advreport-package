@@ -18,34 +18,16 @@ class DocumentValidationController extends Controller
 
         if ($doc) {
             $payload = is_array($doc->payload) ? $doc->payload : [];
-            $issuedAtIso = optional($doc->issued_at)->toISOString() ?? '';
 
-            if (!empty($doc->mac) && $issuedAtIso !== '') {
+            if (!empty($doc->mac) && $doc->issued_at !== null) {
                 $signing = app(DocumentSigningService::class);
-
-                // Primeiro tenta validar com o payload salvo (padrão atual).
-                $isValid = $signing->verify(
+                $isValid = $signing->verifyStoredDocument(
                     (string) $doc->mac,
                     (string) $doc->code,
                     (string) $doc->type,
-                    $issuedAtIso,
+                    $doc->issued_at,
                     $payload
                 );
-
-                // Retrocompatibilidade: documentos antigos foram assinados sem incluir `validation_url`,
-                // mas ele foi persistido no payload. Nesse caso, revalida sem essa chave.
-                if (!$isValid && array_key_exists('validation_url', $payload)) {
-                    $payloadLegacy = $payload;
-                    unset($payloadLegacy['validation_url']);
-
-                    $isValid = $signing->verify(
-                        (string) $doc->mac,
-                        (string) $doc->code,
-                        (string) $doc->type,
-                        $issuedAtIso,
-                        $payloadLegacy
-                    );
-                }
             }
 
             $summary = $doc->publicSummary();

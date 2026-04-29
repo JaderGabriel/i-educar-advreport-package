@@ -98,7 +98,7 @@ class StudentsBySituationController extends Controller
 
         $issuedAt = now();
         $issuedAtHuman = $issuedAt->format('d/m/Y H:i');
-        $issuedAtIso = $issuedAt->toISOString();
+        $issuedAtIso = DocumentSigningService::issuedAtForMac($issuedAt);
 
         $payload = [
             'report' => 'students_by_situation',

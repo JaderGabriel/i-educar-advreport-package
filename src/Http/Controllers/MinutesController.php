@@ -130,7 +130,7 @@ class MinutesController extends Controller
 
         $issuedAt = now();
         $issuedAtHuman = $issuedAt->format('d/m/Y H:i');
-        $issuedAtIso = $issuedAt->toISOString();
+        $issuedAtIso = DocumentSigningService::issuedAtForMac($issuedAt);
 
         $payload = [
             'document' => $document,
@@ -172,7 +172,8 @@ class MinutesController extends Controller
             default => 'Ata de resultados finais',
         };
 
-        $disposition = $request->boolean('preview') ? 'inline' : 'attachment';
+        // Atas: manter visualização no navegador (inline), igual aos demais relatórios (abre em nova aba).
+        $disposition = 'inline';
 
         return app(PdfRenderService::class)->download($view, [
             'title' => $title,

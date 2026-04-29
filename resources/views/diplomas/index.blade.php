@@ -47,6 +47,7 @@
           const docSelect = document.getElementById('diplomasDocument');
           const countEl = document.querySelector('.js-diplomas-selected-count');
           const clearBtn = document.querySelector('.js-diplomas-clear-selected');
+          const countersEl = document.querySelector('.js-diplomas-class-counters');
           const errorModal = document.getElementById('advancedReportsDiplomasErrorModal');
           const errorText = document.querySelector('.js-diplomas-error-text');
           const errorClose = document.querySelector('.js-diplomas-error-close');
@@ -143,6 +144,34 @@
             return await res.json();
           }
 
+          async function loadClassCounters(turmaId) {
+            const params = new URLSearchParams();
+            params.set('turma_id', String(turmaId));
+            const ano = document.getElementById('ano');
+            if (ano && ano.value) params.set('ano', ano.value);
+            if (docSelect && docSelect.value) params.set('document', docSelect.value);
+            const url = "{{ route('advanced-reports.lookup.class-enrollment-counters') }}" + "?" + params.toString();
+            const res = await fetch(url, {headers: {'Accept': 'application/json'}});
+            if (!res.ok) return null;
+            return await res.json();
+          }
+
+          function renderCounters(data) {
+            if (!countersEl) return;
+            if (!data || typeof data.total === 'undefined') {
+              countersEl.innerHTML = '<span style="color:#9ca3af;">Não foi possível carregar os contadores.</span>';
+              return;
+            }
+            const total = Number(data.total || 0);
+            const eligible = Number(data.eligible || 0);
+            const ineligible = Number(data.ineligible || 0);
+            countersEl.innerHTML =
+              '<span><strong>Total:</strong> ' + total + '</span>' +
+              '<span style="margin-left:10px;"><strong style="color:#166534;">Aptos:</strong> ' + eligible + '</span>' +
+              '<span style="margin-left:10px;"><strong style="color:#991b1b;">Não aptos:</strong> ' + ineligible + '</span>' +
+              '<span style="margin-left:10px;color:#9ca3af;">(por situação da matrícula)</span>';
+          }
+
           async function refreshDiplomaStudents() {
             if (!turmaSelect || !studentsSelect) return;
             const turmaId = turmaSelect.value;
@@ -155,6 +184,7 @@
               opt.textContent = 'Selecione a turma para listar alunos';
               studentsSelect.appendChild(opt);
               if (countEl) countEl.textContent = '0 selecionados';
+              if (countersEl) countersEl.innerHTML = '<span style="color:#9ca3af;">Selecione a turma para ver os contadores.</span>';
               return;
             }
             studentsSelect.disabled = true;
@@ -162,6 +192,7 @@
             loading.value = '';
             loading.textContent = 'Carregando alunos...';
             studentsSelect.appendChild(loading);
+            renderCounters(await loadClassCounters(turmaId));
             const items = await loadStudentsByClass(turmaId);
             studentsSelect.innerHTML = '';
             (items || []).forEach(function (it) {

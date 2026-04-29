@@ -167,7 +167,7 @@ class StudentDocumentsController extends Controller
 
         $issuedAt = now();
         $issuedAtHuman = $issuedAt->format('d/m/Y H:i');
-        $issuedAtIso = $issuedAt->toISOString();
+        $issuedAtIso = DocumentSigningService::issuedAtForMac($issuedAt);
 
         $idsToEmit = [];
         if ($matriculaId) {

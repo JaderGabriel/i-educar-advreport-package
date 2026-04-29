@@ -97,7 +97,7 @@ class BoletimController extends Controller
 
         $issuedAt = now();
         $issuedAtHuman = $issuedAt->format('d/m/Y H:i');
-        $issuedAtIso = $issuedAt->toISOString();
+        $issuedAtIso = DocumentSigningService::issuedAtForMac($issuedAt);
 
         if ($matriculaId) {
             $data = $service->build($matriculaId, $etapa ? (string) $etapa : null);

@@ -44,6 +44,8 @@ Route::middleware([
         ->name('advanced-reports.lookup.users');
     Route::get('/relatorios-avancados/api/turma-matriculas', [LookupController::class, 'classEnrollments'])
         ->name('advanced-reports.lookup.class-enrollments');
+    Route::get('/relatorios-avancados/api/turma-contadores', [LookupController::class, 'classEnrollmentCounters'])
+        ->name('advanced-reports.lookup.class-enrollment-counters');
     Route::get('/relatorios-avancados/api/historico-meta', [LookupController::class, 'schoolHistoryMeta'])
         ->name('advanced-reports.lookup.school-history-meta');
     Route::get('/relatorios-avancados/api/historico-prontos', [LookupController::class, 'readySchoolHistories'])

@@ -64,6 +64,7 @@
         if (turmaSelect && turmaSelect.value) params.set('turma_id', String(turmaSelect.value));
         if (anoSelect && anoSelect.value) params.set('ano', String(anoSelect.value));
         if (escolaSelect && escolaSelect.value) params.set('escola_id', String(escolaSelect.value));
+        if (instSelect && instSelect.value) params.set('instituicao_id', String(instSelect.value));
         if (cursoSelect && cursoSelect.value) params.set('curso_id', String(cursoSelect.value));
         if (serieSelect && serieSelect.value) params.set('serie_id', String(serieSelect.value));
         const url = "{{ route('advanced-reports.lookup.ready-school-histories') }}" + "?" + params.toString();
