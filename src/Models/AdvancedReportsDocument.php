@@ -46,6 +46,7 @@ class AdvancedReportsDocument extends Model
             'vacancies_by_school_class' => 'Vagas por turma',
             'students_by_situation' => 'Alunos por situação',
             'movements_general' => 'Relatório de movimentações (geral)',
+            'diary_mirror' => 'Espelho de diário (chamada)',
             'diploma' => 'Diploma (modelo)',
             'certificate' => 'Certificado (modelo)',
             'declaration' => 'Declaração (modelo)',

@@ -33,6 +33,10 @@ class PedagogicalController extends Controller
             ));
         }
 
+        if ($slug === 'espelho-diario') {
+            return redirect()->route('advanced-reports.diary-mirror.index', $request->query());
+        }
+
         $pages = [
             'mapa-notas' => [
                 'title' => 'Mapa de notas (por turma/etapa)',
@@ -42,11 +46,6 @@ class PedagogicalController extends Controller
             'mapa-frequencia' => [
                 'title' => 'Mapa de frequência (por turma/etapa)',
                 'text' => 'Relatório pedagógico de frequência consolidada por turma/etapa.',
-                'status' => 'Em desenvolvimento/ajustes/melhorias. Envie sugestões no issue do projeto.',
-            ],
-            'espelho-diario' => [
-                'title' => 'Espelho de diário',
-                'text' => 'Modelo para impressão/arquivo do diário de classe.',
                 'status' => 'Em desenvolvimento/ajustes/melhorias. Envie sugestões no issue do projeto.',
             ],
             'pendencias-lancamento' => [

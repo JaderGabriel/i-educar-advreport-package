@@ -2,6 +2,7 @@
 
 use iEducar\Packages\AdvancedReports\Http\Controllers\SocioeconomicReportController;
 use iEducar\Packages\AdvancedReports\Http\Controllers\DiplomaReportController;
+use iEducar\Packages\AdvancedReports\Http\Controllers\DiaryMirrorController;
 use iEducar\Packages\AdvancedReports\Http\Controllers\MovementsReportController;
 use iEducar\Packages\AdvancedReports\Http\Controllers\InclusionIndicatorsController;
 use iEducar\Packages\AdvancedReports\Http\Controllers\AgeDistortionController;
@@ -122,6 +123,11 @@ Route::middleware([
         ->name('advanced-reports.minutes.index');
     Route::get('/relatorios-avancados/atas/pdf', [MinutesController::class, 'pdf'])
         ->name('advanced-reports.minutes.pdf');
+
+    Route::get('/relatorios-avancados/espelho-diario', [DiaryMirrorController::class, 'index'])
+        ->name('advanced-reports.diary-mirror.index');
+    Route::get('/relatorios-avancados/espelho-diario/pdf', [DiaryMirrorController::class, 'pdf'])
+        ->name('advanced-reports.diary-mirror.pdf');
 
     // Placeholders pedagógicos / atas adicionais (roadmap)
     Route::get('/relatorios-avancados/pedagogico/{slug}', [PedagogicalController::class, 'show'])
