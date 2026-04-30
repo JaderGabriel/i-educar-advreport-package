@@ -1,8 +1,9 @@
 @extends('advanced-reports::pdf.layout')
 
 @section('doc_title', 'Histórico escolar')
-@section('doc_subtitle', ($templateLabel ?? 'SIMADE: Modelo 1 (EF 9 anos — frente/verso)'))
+@section('doc_subtitle', ($templateLabel ?? 'SIMADE — Modelo 1 (frente/verso)'))
 @section('doc_year', '')
+@section('formal_header', '1')
 
 @section('content')
   @php($student = $data['student'])
@@ -39,7 +40,7 @@
     </tr>
   </table>
 
-  <p class="simade-subtitle">HISTÓRICO ESCOLAR - ENSINO MÉDIO</p>
+  <p class="simade-subtitle">HISTÓRICO ESCOLAR - EDUCAÇÃO BÁSICA</p>
 
   <table class="simade-row" style="margin-top: 8px;">
     <tr>
@@ -89,12 +90,9 @@
     </tr>
   </table>
 
-  <table class="simade-row simade-sign" style="margin-top: 10px;">
-    <tr>
-      <td>Assinatura do(a) Secretário(a) — nº reg. ou aut.</td>
-      <td>Assinatura do(a) Diretor(a) — nº reg. ou aut.</td>
-    </tr>
-  </table>
+  @include('advanced-reports::student-documents._authority-signatures', [
+    'authorities' => $authorities ?? [],
+  ])
 
   <table>
     <thead>
@@ -124,7 +122,7 @@
 
   <div style="page-break-before: always;"></div>
 
-  <p class="simade-title">HISTÓRICO ESCOLAR - ENSINO MÉDIO</p>
+  <p class="simade-title">HISTÓRICO ESCOLAR - EDUCAÇÃO BÁSICA</p>
   <p class="muted">ANVERSO E VERSO — componentes curriculares por etapa/ano (conforme registros existentes no i-Educar).</p>
 
   @foreach($items as $item)
@@ -173,12 +171,17 @@
     </table>
   @endforeach
 
+  @include('advanced-reports::pdf._issuer-signature', [
+    'issuerName' => $issuerName ?? null,
+    'schoolInep' => $schoolInep ?? null,
+  ])
+
   @include('advanced-reports::student-documents._footer', [
     'issuedAt' => $issuedAt,
     'validationCode' => $validationCode,
     'validationUrl' => $validationUrl,
     'qrDataUri' => $qrDataUri,
-    'issuerName' => null,
+    'issuerName' => $issuerName ?? null,
     'issuerRole' => null,
     'cityUf' => null,
     'book' => $book ?? null,

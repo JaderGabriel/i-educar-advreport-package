@@ -3,6 +3,7 @@
 @section('doc_title', 'Histórico escolar')
 @section('doc_subtitle', ($templateLabel ?? 'Emissão em lote • QR Code para validação'))
 @section('doc_year', '')
+@section('formal_header', '1')
 
 @section('content')
   @foreach(($items ?? []) as $it)
@@ -14,12 +15,21 @@
       @include('advanced-reports::school-history._pdf-classic-body')
     @endif
 
+    @include('advanced-reports::pdf._issuer-signature', [
+      'issuerName' => $issuerName ?? null,
+      'schoolInep' => $schoolInep ?? null,
+    ])
+
+    @include('advanced-reports::student-documents._authority-signatures', [
+      'authorities' => $authorities ?? [],
+    ])
+
     @include('advanced-reports::student-documents._footer', [
       'issuedAt' => $issuedAt,
       'validationCode' => $it['validationCode'] ?? '',
       'validationUrl' => $it['validationUrl'] ?? '',
       'qrDataUri' => $it['qrDataUri'] ?? null,
-      'issuerName' => null,
+      'issuerName' => $issuerName ?? null,
       'issuerRole' => null,
       'cityUf' => null,
       'book' => $it['book'] ?? null,

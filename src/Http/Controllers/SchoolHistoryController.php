@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use iEducar\Packages\AdvancedReports\Models\AdvancedReportsDocument;
 use iEducar\Packages\AdvancedReports\Services\AdvancedReportsFilterService;
 use iEducar\Packages\AdvancedReports\Services\DocumentSigningService;
+use iEducar\Packages\AdvancedReports\Services\IssuerSignatureDetails;
+use iEducar\Packages\AdvancedReports\Services\OfficialHeaderService;
 use iEducar\Packages\AdvancedReports\Services\PdfRenderService;
 use iEducar\Packages\AdvancedReports\Services\QrCodeService;
 use iEducar\Packages\AdvancedReports\Services\SchoolHistoryService;
@@ -60,14 +62,69 @@ class SchoolHistoryController extends Controller
         return [
             'classic' => 'Clássico (padrão)',
             'modern' => 'Moderno (limpo)',
-            'simade_model_1' => 'SIMADE: Modelo 1 (EF 9 anos — frente/verso)',
-            'simade_model_32' => 'SIMADE: Modelo 32 (Res. 2197/2012 — frente/verso)',
-            'simade_magisterio' => 'SIMADE: Magistério (Curso Normal — frente/verso)',
-            'mg_regular_eja_emti_prop' => 'MG: Regular/EJA/Correção de fluxo/EMTI propedêutico (ASIE 6/2021)',
-            'mg_nem_piloto' => 'MG: Novo Ensino Médio piloto (REANP)',
-            'mg_emti_prof' => 'MG: EMTI profissional (REANP)',
-            'mg_tecnico_semestral' => 'MG: Técnico semestral (Histórico + Diploma — REANP)',
-            'mg_normal_infantil' => 'MG: Normal nível médio Educação Infantil (Histórico + Diploma — REANP)',
+            'simade_model_1' => 'SIMADE — Modelo 1 (frente/verso)',
+            'simade_model_32' => 'SIMADE — Modelo 32 (frente/verso)',
+            'simade_magisterio' => 'SIMADE — Magistério / Curso Normal (frente/verso)',
+            'mg_regular_eja_emti_prop' => 'Modelo ASIE 6/2021 — Regular/EJA/Correção de fluxo/EMTI propedêutico',
+            'mg_nem_piloto' => 'Modelo REANP — Novo Ensino Médio (piloto)',
+            'mg_emti_prof' => 'Modelo REANP — EMTI profissional',
+            'mg_tecnico_semestral' => 'Modelo REANP — Técnico semestral (Histórico + Diploma)',
+            'mg_normal_infantil' => 'Modelo REANP — Normal nível médio (Educação Infantil) (Histórico + Diploma)',
+        ];
+    }
+
+    /**
+     * @return array{
+     *   director_idpes: ?int, director_name: string, director_inep: ?string, director_matricula_interna: ?string,
+     *   secretary_idpes: ?int, secretary_name: string, secretary_inep: ?string, secretary_matricula_interna: ?string,
+     *   school_inep: ?string
+     * }
+     */
+    private function resolveSchoolSigners(int $escolaId): array
+    {
+        $row = DB::table('pmieducar.escola as e')
+            ->leftJoin('modules.educacenso_cod_escola as ine', 'ine.cod_escola', '=', 'e.cod_escola')
+            ->leftJoin('cadastro.pessoa as pg', 'pg.idpes', '=', 'e.ref_idpes_gestor')
+            ->leftJoin('cadastro.pessoa as ps', 'ps.idpes', '=', 'e.ref_idpes_secretario_escolar')
+            ->where('e.cod_escola', $escolaId)
+            ->selectRaw('e.ref_idpes_gestor as director_idpes')
+            ->selectRaw('pg.nome as director_name')
+            ->selectRaw('e.ref_idpes_secretario_escolar as secretary_idpes')
+            ->selectRaw('ps.nome as secretary_name')
+            ->selectRaw('ine.cod_escola_inep::text as school_inep')
+            ->first();
+
+        if (! $row) {
+            return [
+                'director_idpes' => null,
+                'director_name' => '',
+                'director_inep' => null,
+                'director_matricula_interna' => null,
+                'secretary_idpes' => null,
+                'secretary_name' => '',
+                'secretary_inep' => null,
+                'secretary_matricula_interna' => null,
+                'school_inep' => null,
+            ];
+        }
+
+        $svc = app(IssuerSignatureDetails::class);
+        $directorIdpes = ! empty($row->director_idpes) ? (int) $row->director_idpes : null;
+        $secretaryIdpes = ! empty($row->secretary_idpes) ? (int) $row->secretary_idpes : null;
+
+        $dir = $directorIdpes ? $svc->forPersonId($directorIdpes) : ['issuerPersonInep' => null, 'issuerMatriculaFuncional' => null];
+        $sec = $secretaryIdpes ? $svc->forPersonId($secretaryIdpes) : ['issuerPersonInep' => null, 'issuerMatriculaFuncional' => null];
+
+        return [
+            'director_idpes' => $directorIdpes,
+            'director_name' => (string) ($row->director_name ?? ''),
+            'director_inep' => $dir['issuerPersonInep'] ?? null,
+            'director_matricula_interna' => $dir['issuerMatriculaFuncional'] ?? null,
+            'secretary_idpes' => $secretaryIdpes,
+            'secretary_name' => (string) ($row->secretary_name ?? ''),
+            'secretary_inep' => $sec['issuerPersonInep'] ?? null,
+            'secretary_matricula_interna' => $sec['issuerMatriculaFuncional'] ?? null,
+            'school_inep' => $row->school_inep ?? null,
         ];
     }
 
@@ -120,6 +177,39 @@ class SchoolHistoryController extends Controller
             $template = 'classic';
         }
 
+        $instituicaoId = $request->get('ref_cod_instituicao') ? (int) $request->get('ref_cod_instituicao') : null;
+        $escolaId = $request->get('ref_cod_escola') ? (int) $request->get('ref_cod_escola') : null;
+        $header = ($instituicaoId && $escolaId)
+            ? app(OfficialHeaderService::class)->forSchool($instituicaoId, $escolaId)
+            : ['municipality' => null, 'schoolName' => null, 'contact' => null];
+
+        $issuerName = auth()->user()?->name;
+        $issuerDetails = auth()->id()
+            ? app(IssuerSignatureDetails::class)->forPersonId((int) auth()->id())
+            : ['issuerPersonInep' => null, 'issuerMatriculaFuncional' => null, 'issuerPersonIdpes' => null];
+
+        $signers = $escolaId ? $this->resolveSchoolSigners($escolaId) : [
+            'director_name' => '',
+            'director_inep' => null,
+            'director_matricula_interna' => null,
+            'secretary_name' => '',
+            'secretary_inep' => null,
+            'secretary_matricula_interna' => null,
+            'school_inep' => null,
+        ];
+        $authorities = [
+            'secretary' => [
+                'name' => $signers['secretary_name'] ?? '',
+                'inep' => $signers['secretary_inep'] ?? null,
+                'matricula_interna' => $signers['secretary_matricula_interna'] ?? null,
+            ],
+            'director' => [
+                'name' => $signers['director_name'] ?? '',
+                'inep' => $signers['director_inep'] ?? null,
+                'matricula_interna' => $signers['director_matricula_interna'] ?? null,
+            ],
+        ];
+
         if ($request->boolean('preview')) {
             $view = $this->resolveSingleView($template);
             $student = (object) [
@@ -168,6 +258,15 @@ class SchoolHistoryController extends Controller
                     'record' => null,
                     'template' => $template,
                     'templateLabel' => 'Prévia (exemplo) — ' . ($templates[$template] ?? $template),
+                    'issuerName' => $issuerName,
+                    'issuerRole' => null,
+                    'issuerPersonInep' => $issuerDetails['issuerPersonInep'] ?? null,
+                    'issuerMatriculaFuncional' => $issuerDetails['issuerMatriculaFuncional'] ?? null,
+                    'schoolInep' => $signers['school_inep'] ?? null,
+                    'authorities' => $authorities,
+                    'municipality' => $header['municipality'] ?? null,
+                    'schoolName' => $header['schoolName'] ?? null,
+                    'contact' => $header['contact'] ?? null,
                 ],
                 'historico-previa.pdf',
                 'a4',
@@ -259,6 +358,15 @@ class SchoolHistoryController extends Controller
                 'issuedAt' => $issuedAtHuman,
                 'template' => $template,
                 'templateLabel' => $templates[$template] ?? null,
+                'issuerName' => $issuerName,
+                'issuerRole' => null,
+                'issuerPersonInep' => $issuerDetails['issuerPersonInep'] ?? null,
+                'issuerMatriculaFuncional' => $issuerDetails['issuerMatriculaFuncional'] ?? null,
+                'schoolInep' => $signers['school_inep'] ?? null,
+                'authorities' => $authorities,
+                'municipality' => $header['municipality'] ?? null,
+                'schoolName' => $header['schoolName'] ?? null,
+                'contact' => $header['contact'] ?? null,
             ], 'historico-escolar-lote.pdf', 'a4', 'portrait', $disposition);
         }
 
@@ -312,6 +420,15 @@ class SchoolHistoryController extends Controller
             'record' => $record,
             'template' => $template,
             'templateLabel' => $templates[$template] ?? null,
+            'issuerName' => $issuerName,
+            'issuerRole' => null,
+            'issuerPersonInep' => $issuerDetails['issuerPersonInep'] ?? null,
+            'issuerMatriculaFuncional' => $issuerDetails['issuerMatriculaFuncional'] ?? null,
+            'schoolInep' => $signers['school_inep'] ?? null,
+            'authorities' => $authorities,
+            'municipality' => $header['municipality'] ?? null,
+            'schoolName' => $header['schoolName'] ?? null,
+            'contact' => $header['contact'] ?? null,
         ], 'historico-escolar-' . $aid . '.pdf', 'a4', 'portrait', $disposition);
     }
 }

@@ -1,8 +1,9 @@
 @extends('advanced-reports::pdf.layout')
 
 @section('doc_title', 'Histórico escolar')
-@section('doc_subtitle', ($templateLabel ?? 'SIMADE: Modelo 32 (Res. 2197/2012 — frente/verso)'))
+@section('doc_subtitle', ($templateLabel ?? 'SIMADE — Modelo 32 (frente/verso)'))
 @section('doc_year', '')
+@section('formal_header', '1')
 
 @section('content')
   @php($student = $data['student'])
@@ -116,12 +117,21 @@
     </table>
   @endforeach
 
+  @include('advanced-reports::pdf._issuer-signature', [
+    'issuerName' => $issuerName ?? null,
+    'schoolInep' => $schoolInep ?? null,
+  ])
+
+  @include('advanced-reports::student-documents._authority-signatures', [
+    'authorities' => $authorities ?? [],
+  ])
+
   @include('advanced-reports::student-documents._footer', [
     'issuedAt' => $issuedAt,
     'validationCode' => $validationCode,
     'validationUrl' => $validationUrl,
     'qrDataUri' => $qrDataUri,
-    'issuerName' => null,
+    'issuerName' => $issuerName ?? null,
     'issuerRole' => null,
     'cityUf' => null,
     'book' => $book ?? null,
