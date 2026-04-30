@@ -34,10 +34,12 @@ class IssuerSignatureDetails
         $func = DB::table('portal.funcionario')
             ->where('ref_cod_pessoa_fj', $idpes)
             ->selectRaw('matricula_interna')
+            ->selectRaw('matricula_new')
             ->selectRaw('matricula')
             ->first();
 
         $matriculaInterna = $func?->matricula_interna ?? null;
+        $matriculaNew = $func?->matricula_new ?? null;
         $matriculaLegacy = $func?->matricula ?? null;
 
         // Preferir matrícula interna cadastrada na base (portal.funcionario.matricula_interna).
@@ -45,6 +47,8 @@ class IssuerSignatureDetails
         $matriculaStr = null;
         if ($matriculaInterna !== null && trim((string) $matriculaInterna) !== '') {
             $matriculaStr = trim((string) $matriculaInterna);
+        } elseif ($matriculaNew !== null && trim((string) $matriculaNew) !== '') {
+            $matriculaStr = trim((string) $matriculaNew);
         } elseif ($matriculaLegacy !== null && trim((string) $matriculaLegacy) !== '') {
             $matriculaStr = trim((string) $matriculaLegacy);
         }
