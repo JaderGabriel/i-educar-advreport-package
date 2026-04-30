@@ -45,6 +45,7 @@
           const studentsSelect = document.getElementById('diplomasStudentsSelect');
           const filterInput = document.querySelector('.js-diplomas-student-filter');
           const docSelect = document.getElementById('diplomasDocument');
+          const situacaoSelect = document.getElementById('diplomasSituacao');
           const countEl = document.querySelector('.js-diplomas-selected-count');
           const clearBtn = document.querySelector('.js-diplomas-clear-selected');
           const countersEl = document.querySelector('.js-diplomas-class-counters');
@@ -142,6 +143,7 @@
             const ano = document.getElementById('ano');
             if (ano && ano.value) params.set('ano', ano.value);
             if (docSelect && docSelect.value) params.set('document', docSelect.value);
+            if (situacaoSelect && situacaoSelect.value) params.set('situacao', situacaoSelect.value);
             const url = "{{ route('advanced-reports.lookup.class-enrollments') }}" + "?" + params.toString();
             const res = await fetch(url, {headers: {'Accept': 'application/json'}});
             if (!res.ok) return [];
@@ -154,6 +156,7 @@
             const ano = document.getElementById('ano');
             if (ano && ano.value) params.set('ano', ano.value);
             if (docSelect && docSelect.value) params.set('document', docSelect.value);
+            if (situacaoSelect && situacaoSelect.value) params.set('situacao', situacaoSelect.value);
             const url = "{{ route('advanced-reports.lookup.class-enrollment-counters') }}" + "?" + params.toString();
             const res = await fetch(url, {headers: {'Accept': 'application/json'}});
             if (!res.ok) return null;
@@ -215,6 +218,9 @@
           }
           if (docSelect) {
             docSelect.addEventListener('change', refreshDiplomaStudents);
+          }
+          if (situacaoSelect) {
+            situacaoSelect.addEventListener('change', refreshDiplomaStudents);
           }
 
           if (filterInput && studentsSelect) {

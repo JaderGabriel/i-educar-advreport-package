@@ -247,6 +247,8 @@ class LookupController
         $document = (string) $request->get('document', '');
         $year = $request->get('ano') ? (int) $request->get('ano') : null;
         $onlyWithHistory = $request->boolean('only_with_history');
+        $situacaoMatricula = $request->get('situacao');
+        $situacaoId = $situacaoMatricula !== null && $situacaoMatricula !== '' ? (int) $situacaoMatricula : null;
 
         $q = DB::table('pmieducar.matricula_turma as mt')
             ->join('pmieducar.matricula as m', 'm.cod_matricula', '=', 'mt.ref_cod_matricula')
@@ -284,7 +286,12 @@ class LookupController
                 $j->on('vs.cod_matricula', '=', 'm.cod_matricula')
                     ->on('vs.cod_turma', '=', 'mt.ref_cod_turma')
                     ->on('vs.sequencial', '=', 'mt.sequencial');
-            })->whereIn('vs.cod_situacao', [1, 12, 13]);
+            });
+            if ($situacaoId !== null && $situacaoId > 0) {
+                $q->where('vs.cod_situacao', $situacaoId);
+            } else {
+                $q->whereIn('vs.cod_situacao', [1, 12, 13]);
+            }
         } elseif ($document === 'declaration_conclusion') {
             $q->join('relatorio.view_situacao as vs', function ($j) {
                 $j->on('vs.cod_matricula', '=', 'm.cod_matricula')
@@ -321,6 +328,8 @@ class LookupController
 
         $document = (string) $request->get('document', '');
         $year = $request->get('ano') ? (int) $request->get('ano') : null;
+        $situacaoMatricula = $request->get('situacao');
+        $situacaoId = $situacaoMatricula !== null && $situacaoMatricula !== '' ? (int) $situacaoMatricula : null;
 
         $eligibleStatuses = match ($document) {
             'diploma', 'certificate', 'declaration_conclusion' => [1, 12, 13],
@@ -366,9 +375,15 @@ class LookupController
 
         $total = (int) (clone $base)->distinct('m.cod_matricula')->count('m.cod_matricula');
 
-        $eligible = $eligibleStatuses
-            ? (int) (clone $base)->whereIn('vs.cod_situacao', $eligibleStatuses)->distinct('m.cod_matricula')->count('m.cod_matricula')
-            : $total;
+        $eligibleBase = clone $base;
+        if (in_array($document, ['diploma', 'certificate'], true) && $situacaoId !== null && $situacaoId > 0) {
+            $eligibleBase->where('vs.cod_situacao', $situacaoId);
+            $eligible = (int) $eligibleBase->distinct('m.cod_matricula')->count('m.cod_matricula');
+        } else {
+            $eligible = $eligibleStatuses
+                ? (int) (clone $base)->whereIn('vs.cod_situacao', $eligibleStatuses)->distinct('m.cod_matricula')->count('m.cod_matricula')
+                : $total;
+        }
 
         $byStatusRows = (clone $base)
             ->selectRaw('COALESCE(vs.cod_situacao, 0) as cod_situacao')

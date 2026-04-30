@@ -41,8 +41,8 @@
             <th>Curso</th>
             <th>Turma</th>
             <th style="width: 64px;">Turno</th>
-            <th style="width: 120px;">Situação</th>
-            <th>Componentes curriculares (turma)</th>
+            <th style="width: 128px;">Situação</th>
+            <th style="width: 32%;">Componentes curriculares (turma)</th>
         </tr>
         </thead>
         <tbody>
@@ -50,7 +50,11 @@
             @php
               $rawComp = (string) ($r['componentes'] ?? '');
               $compParts = $rawComp !== '' ? preg_split('/\s*\|\s*/', $rawComp) : [];
-              $compColors = ['#b91c1c', '#1d4ed8', '#047857', '#a16207', '#7c3aed'];
+              $compColors = [
+                '#b91c1c', '#1d4ed8', '#047857', '#a16207', '#7c3aed',
+                '#be185d', '#0f766e', '#c2410c', '#4338ca', '#15803d',
+                '#9d174d', '#0369a1',
+              ];
             @endphp
             <tr>
                 <td>{{ $r['matricula_id'] ?? '' }}</td>
@@ -58,10 +62,18 @@
                 <td>{{ $r['curso'] ?? '' }}</td>
                 <td>{{ $r['turma'] ?? '' }}</td>
                 <td>{{ $r['turno'] ?? '' }}</td>
-                <td>{{ $r['situacao'] ?? '' }}</td>
-                <td style="font-size: 8px; line-height: 1.35;">
+                <td style="vertical-align: top;">
+                    <div>{{ $r['situacao'] ?? '' }}</div>
+                    @if((int) ($r['situacao_id'] ?? 0) !== 3 && !empty($r['data_fato']))
+                        <div class="muted" style="font-size: 8px; margin-top: 3px; line-height: 1.3;">
+                            Data do fato: <strong>{{ $r['data_fato'] }}</strong>
+                        </div>
+                    @endif
+                </td>
+                <td style="font-size: 8px; line-height: 1.45; vertical-align: top; word-wrap: break-word; overflow-wrap: break-word;">
                     @forelse($compParts as $i => $piece)
-                        <span style="color: {{ $compColors[$i % count($compColors)] }};">{{ trim($piece) }}</span>@if(!$loop->last)<span style="color:#64748b;"> · </span>@endif
+                        @php($c = $compColors[$i % count($compColors)])
+                        <span style="display: inline-block; margin: 1px 3px 2px 0; padding: 2px 5px; border-radius: 3px; border: 1px solid {{ $c }}; color: {{ $c }}; background-color: #f8fafc; font-weight: 600;">{{ trim($piece) }}</span>
                     @empty
                         <span class="muted">—</span>
                     @endforelse

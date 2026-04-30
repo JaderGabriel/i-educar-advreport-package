@@ -2,6 +2,7 @@
 
 namespace iEducar\Packages\AdvancedReports\Services;
 
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -28,6 +29,19 @@ class StudentsBySituationService
         ];
     }
 
+    private function humanizeDatePt(?string $ymd): ?string
+    {
+        if ($ymd === null || $ymd === '') {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($ymd)->locale('pt_BR')->isoFormat('D [de] MMMM [de] YYYY');
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
     /**
      * @return array{summary: array<int,int>, rows: Collection<int,array<string,mixed>>}
      */
@@ -41,20 +55,35 @@ class StudentsBySituationService
         ?int $situation = null,
         int $limit = 5000,
     ): array {
-        // Uma linha por matrícula: evita duplicar quando há mais de um vínculo em matricula_turma
-        // (ex.: remanejamentos); usa o vínculo ativo com maior sequencial.
+        // Com turma filtrada: último vínculo da matrícula naquela turma (inclui transferidos, abandono etc., mesmo com mt.ativo = 0).
+        // Sem turma: último vínculo ativo (comportamento anterior, uma linha por matrícula na enturmação vigente).
         $base = DB::table('pmieducar.matricula as m')
             ->join('pmieducar.aluno as a', 'a.cod_aluno', '=', 'm.ref_cod_aluno')
             ->join('cadastro.pessoa as p', 'p.idpes', '=', 'a.ref_idpes')
-            ->join('pmieducar.matricula_turma as mt', function ($j) {
-                $j->on('mt.ref_cod_matricula', '=', 'm.cod_matricula')
-                    ->where('mt.ativo', 1)
-                    ->whereRaw('mt.sequencial = (
-                        SELECT MAX(mt2.sequencial)
-                        FROM pmieducar.matricula_turma mt2
-                        WHERE mt2.ref_cod_matricula = m.cod_matricula
-                          AND mt2.ativo = 1
-                    )');
+            ->join('pmieducar.matricula_turma as mt', function ($j) use ($schoolClassId) {
+                $j->on('mt.ref_cod_matricula', '=', 'm.cod_matricula');
+                if ($schoolClassId) {
+                    $j->where('mt.ref_cod_turma', '=', (int) $schoolClassId)
+                        ->whereRaw(
+                            'mt.sequencial = (
+                                SELECT MAX(mt2.sequencial)
+                                FROM pmieducar.matricula_turma mt2
+                                WHERE mt2.ref_cod_matricula = m.cod_matricula
+                                  AND mt2.ref_cod_turma = ?
+                            )',
+                            [(int) $schoolClassId]
+                        );
+                } else {
+                    $j->where('mt.ativo', 1)
+                        ->whereRaw(
+                            'mt.sequencial = (
+                                SELECT MAX(mt2.sequencial)
+                                FROM pmieducar.matricula_turma mt2
+                                WHERE mt2.ref_cod_matricula = m.cod_matricula
+                                  AND mt2.ativo = 1
+                            )'
+                        );
+                }
             })
             ->leftJoin('pmieducar.turma as t', 't.cod_turma', '=', 'mt.ref_cod_turma')
             ->leftJoin('pmieducar.turma_turno as tt', 'tt.id', '=', 't.turma_turno_id')
@@ -78,24 +107,13 @@ class StudentsBySituationService
             ->when($schoolClassId, fn ($q) => $q->where('t.cod_turma', $schoolClassId))
             ->when($situation, fn ($q) => $q->where('vs.cod_situacao', $situation));
 
-        $compByTurma = DB::table('modules.componente_curricular_turma as cct')
-            ->join('modules.componente_curricular as cc', 'cc.id', '=', 'cct.componente_curricular_id')
-            ->groupBy('cct.turma_id')
-            ->select('cct.turma_id')
-            ->selectRaw("string_agg(cc.nome::text, ' | ' ORDER BY cc.nome) as componentes");
+        // Disciplinas da turma: mesma lógica do relatório (view considera cct x série/escola).
+        $compByTurma = DB::table('relatorio.view_componente_curricular as vcc')
+            ->selectRaw('vcc.cod_turma as turma_id')
+            ->selectRaw("string_agg(DISTINCT vcc.nome::text, ' | ' ORDER BY vcc.nome) as componentes")
+            ->groupBy('vcc.cod_turma');
 
-        $summaryRows = (clone $base)
-            ->selectRaw('vs.cod_situacao as situacao, COUNT(DISTINCT m.cod_matricula) as total')
-            ->groupBy('vs.cod_situacao')
-            ->orderBy('vs.cod_situacao')
-            ->get();
-
-        $summary = [];
-        foreach ($summaryRows as $r) {
-            $summary[(int) $r->situacao] = (int) $r->total;
-        }
-
-        $rows = (clone $base)
+        $rawRows = (clone $base)
             ->leftJoinSub($compByTurma, 'comp', function ($j) {
                 $j->on('comp.turma_id', '=', 't.cod_turma');
             })
@@ -109,22 +127,41 @@ class StudentsBySituationService
             ->selectRaw('vs.cod_situacao as situacao_id')
             ->selectRaw('vs.texto_situacao as situacao')
             ->selectRaw('COALESCE(comp.componentes, \'\') as componentes')
+            ->selectRaw(
+                'CASE WHEN vs.cod_situacao = 3 THEN NULL ELSE (COALESCE(mt.data_exclusao::date, m.data_cancel::date))::text END as situacao_data'
+            )
             ->orderByRaw('LOWER(COALESCE(t.nm_turma, \'\'))')
             ->orderByRaw('LOWER(p.nome)')
             ->limit($limit)
-            ->get()
-            ->map(fn ($r) => [
-                'matricula_id' => (int) $r->matricula_id,
-                'aluno' => (string) $r->aluno,
-                'escola' => (string) $r->escola,
-                'curso' => (string) $r->curso,
-                'serie' => (string) $r->serie,
-                'turma' => (string) $r->turma,
-                'turno' => (string) ($r->turno ?? ''),
-                'situacao_id' => (int) $r->situacao_id,
-                'situacao' => (string) $r->situacao,
-                'componentes' => (string) ($r->componentes ?? ''),
-            ]);
+            ->get();
+
+        $rows = $rawRows
+            ->map(function ($r) {
+                $dataYmd = $r->situacao_data ?? null;
+
+                return [
+                    'matricula_id' => (int) $r->matricula_id,
+                    'aluno' => (string) $r->aluno,
+                    'escola' => (string) $r->escola,
+                    'curso' => (string) $r->curso,
+                    'serie' => (string) $r->serie,
+                    'turma' => (string) $r->turma,
+                    'turno' => (string) ($r->turno ?? ''),
+                    'situacao_id' => (int) $r->situacao_id,
+                    'situacao' => (string) $r->situacao,
+                    'componentes' => (string) ($r->componentes ?? ''),
+                    'data_fato' => $dataYmd ? $this->humanizeDatePt($dataYmd) : null,
+                    'data_fato_curta' => $dataYmd ? Carbon::parse($dataYmd)->format('d/m/Y') : null,
+                ];
+            })
+            ->unique('matricula_id')
+            ->values();
+
+        $summary = [];
+        foreach ($rows as $r) {
+            $sid = (int) $r['situacao_id'];
+            $summary[$sid] = ($summary[$sid] ?? 0) + 1;
+        }
 
         return compact('summary', 'rows');
     }

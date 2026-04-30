@@ -8,6 +8,19 @@
   </td>
 </tr>
 <tr>
+  <td class="formmdtd"><span class="form">Situação (matrícula)</span></td>
+  <td class="formmdtd">
+    <select id="diplomasSituacao" name="situacao" class="geral" style="width: 320px;">
+      @foreach(($situacaoOptions ?? []) as $sid => $slabel)
+        <option value="{{ $sid === '' ? '' : $sid }}" @selected((string) old('situacao', request('situacao', '')) === (string) ($sid === '' ? '' : $sid))>{{ $slabel }}</option>
+      @endforeach
+    </select>
+    <div class="formhint" style="margin-top:4px;font-size:11px;color:#555;">
+      Afeta a lista de alunos e a emissão do PDF. O padrão limita a situações aptas a diploma/certificado; ao escolher uma situação específica, só ela será considerada.
+    </div>
+  </td>
+</tr>
+<tr>
   <td class="formlttd"><span class="form">Tipo</span></td>
   <td class="formlttd">
     <select id="diplomasTemplate" name="template" class="geral" style="width: 320px;">

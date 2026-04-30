@@ -31,13 +31,23 @@ class IssuerSignatureDetails
             ->orderByDesc('cod_docente_inep')
             ->value('cod_docente_inep');
 
-        $matricula = DB::table('portal.funcionario')
+        $func = DB::table('portal.funcionario')
             ->where('ref_cod_pessoa_fj', $idpes)
-            ->value('matricula');
+            ->selectRaw('matricula_interna')
+            ->selectRaw('matricula')
+            ->first();
 
-        $matriculaStr = $matricula !== null && trim((string) $matricula) !== ''
-            ? trim((string) $matricula)
-            : null;
+        $matriculaInterna = $func?->matricula_interna ?? null;
+        $matriculaLegacy = $func?->matricula ?? null;
+
+        // Preferir matrícula interna cadastrada na base (portal.funcionario.matricula_interna).
+        // "matricula" costuma refletir credencial/identificação antiga de login em algumas instalações.
+        $matriculaStr = null;
+        if ($matriculaInterna !== null && trim((string) $matriculaInterna) !== '') {
+            $matriculaStr = trim((string) $matriculaInterna);
+        } elseif ($matriculaLegacy !== null && trim((string) $matriculaLegacy) !== '') {
+            $matriculaStr = trim((string) $matriculaLegacy);
+        }
 
         return [
             'issuerPersonInep' => $inep !== null ? (string) $inep : null,

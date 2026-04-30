@@ -42,6 +42,12 @@
       const errorClose = document.querySelector('.js-minutes-error-close');
       if (!form || !modal || !pdfRoot || !closeBtn) return;
 
+      const minutesDoc = document.getElementById('minutesDocument');
+      if (minutesDoc) {
+        minutesDoc.addEventListener('change', syncMinutesDocumentUi);
+        syncMinutesDocumentUi();
+      }
+
       function openError(message) {
         if (!errorModal || !errorText) {
           window.alert(message);
@@ -57,6 +63,40 @@
       if (errorClose) errorClose.addEventListener('click', function (e) { e.preventDefault(); closeError(); });
       if (errorModal) errorModal.addEventListener('click', function (e) { if (e.target === errorModal) closeError(); });
 
+      function populateCouncilTurmasFromFilter() {
+        const src = document.getElementById('ref_cod_turma');
+        const dst = document.getElementById('minutesCouncilTurmas');
+        if (!src || !dst) return;
+        const prev = new Set(Array.from(dst.selectedOptions || []).map(function (o) { return o.value; }));
+        dst.innerHTML = '';
+        Array.from(src.options || []).forEach(function (o) {
+          if (!o.value) return;
+          const n = document.createElement('option');
+          n.value = o.value;
+          n.textContent = o.textContent;
+          if (prev.has(o.value)) n.selected = true;
+          dst.appendChild(n);
+        });
+      }
+
+      function syncMinutesDocumentUi() {
+        const doc = document.getElementById('minutesDocument');
+        const etapasReq = document.getElementById('minutesEtapasRequired');
+        const etapasInput = document.getElementById('minutesEtapas');
+        const detailsRow = document.getElementById('minutesWithDetailsRow');
+        const councilRow = document.getElementById('minutesCouncilTurmasRow');
+        const isDelivery = doc && doc.value === 'delivery_results';
+        const isCouncil = doc && doc.value === 'council_class';
+        const needEtapas = isDelivery || isCouncil;
+        if (etapasReq) etapasReq.style.display = needEtapas ? 'inline' : 'none';
+        if (etapasInput) etapasInput.classList.toggle('obrigatorio', !!needEtapas);
+        if (detailsRow) detailsRow.style.display = (isDelivery || isCouncil) ? 'none' : '';
+        if (councilRow) {
+          councilRow.style.display = isCouncil ? '' : 'none';
+          if (isCouncil) populateCouncilTurmasFromFilter();
+        }
+      }
+
       function requiredMessage() {
         const ano = document.getElementById('ano');
         const inst = document.getElementById('ref_cod_instituicao');
@@ -64,14 +104,30 @@
         const curso = document.getElementById('ref_cod_curso');
         const serie = document.getElementById('ref_cod_serie');
         const turma = document.getElementById('ref_cod_turma');
+        const doc = document.getElementById('minutesDocument');
+        const etapas = document.getElementById('minutesEtapas');
         if (!ano || !ano.value) return 'Informe o ano letivo.';
         if (!inst || !inst.value) return 'Informe a instituição.';
         if (!escola || !escola.value) return 'Informe a escola.';
         if (!curso || !curso.value) return 'Informe o curso.';
         if (!serie || !serie.value) return 'Informe a série.';
         if (!turma || !turma.value) return 'Informe a turma.';
+        if (doc && (doc.value === 'delivery_results' || doc.value === 'council_class')) {
+          if (!etapas || !String(etapas.value || '').trim()) {
+            return 'Informe ao menos um período avaliativo (etapas separadas por vírgula, ex.: 1, 2).';
+          }
+        }
         return null;
       }
+
+      const turmaSelect = document.getElementById('ref_cod_turma');
+      const serieSelect = document.getElementById('ref_cod_serie');
+      if (turmaSelect) turmaSelect.addEventListener('change', function () {
+        if (minutesDoc && minutesDoc.value === 'council_class') populateCouncilTurmasFromFilter();
+      });
+      if (serieSelect) serieSelect.addEventListener('change', function () {
+        if (minutesDoc && minutesDoc.value === 'council_class') populateCouncilTurmasFromFilter();
+      });
 
       function buildPdfUrl() {
         const params = new URLSearchParams(new FormData(form));

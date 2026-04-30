@@ -15,7 +15,7 @@
   <div class="box">
     <table>
       <tr><th>Aluno(a)</th><td>{{ $matricula->aluno_nome }}</td></tr>
-      <tr><th>Matrícula (ID)</th><td>{{ $matricula->matricula_id }}</td></tr>
+      <tr><th>Matrícula interna (i-Educar)</th><td>{{ $matricula->matricula_id }}</td></tr>
       <tr><th>Ano letivo</th><td>{{ $matricula->ano_letivo }}</td></tr>
       <tr><th>Escola</th><td>{{ $matricula->escola }}</td></tr>
       <tr><th>Curso/Série/Turma</th><td>{{ $matricula->curso }} — {{ $matricula->serie }} — {{ $matricula->turma }}</td></tr>

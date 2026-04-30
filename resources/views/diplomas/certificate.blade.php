@@ -1,104 +1,170 @@
-@extends('advanced-reports::pdf.layout-landscape')
+@extends('advanced-reports::pdf.diploma-shell')
 
-@section('doc_title', 'Certificado (modelo)')
-@section('doc_subtitle', 'Documento oficial — modelo para impressão')
-@section('doc_year', (string) ($year ?: date('Y')))
-@section('formal_header', '1')
-@section('doc_municipality', (string) ($municipality ?? ''))
-@section('doc_school', (string) ($schoolName ?? ''))
-@section('doc_contact', (string) ($contact ?? ''))
+@php($pageTitle = 'Certificado — ' . ($year ?? date('Y')))
+
+@push('styles')
+  <style>
+    @page { size: A4 landscape; margin: 0; }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: "DejaVu Serif", "Times New Roman", Times, serif;
+      color: #1a1a1a;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .cert-sheet {
+      width: 297mm;
+      height: 210mm;
+      max-width: 100%;
+      margin: 0;
+      padding: 10mm 12mm 12mm 12mm;
+      position: relative;
+      overflow: hidden;
+      page-break-inside: avoid;
+    }
+    .cert-frame {
+      position: relative;
+      height: 100%;
+      padding: 7mm 9mm 6mm 9mm;
+      border: 3px double #6b4c1b;
+      outline: 1px solid #2c1810;
+      outline-offset: 2mm;
+      background: #fffef8;
+    }
+    .cert-entity {
+      text-align: center;
+      font-family: DejaVu Sans, sans-serif;
+      font-size: 11px;
+      color: #4a3728;
+      line-height: 1.35;
+      margin-bottom: 4mm;
+      max-width: 100%;
+      word-wrap: break-word;
+    }
+    .cert-title {
+      text-align: center;
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      margin: 2mm 0 2mm;
+      color: #2c1810;
+      text-transform: uppercase;
+    }
+    .cert-body {
+      margin-top: 5mm;
+      font-size: 16px;
+      line-height: 1.8;
+      text-align: justify;
+      max-width: 100%;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+    .cert-body p { margin: 0 0 4mm 0; }
+    .cert-signatures {
+      margin-top: 8mm;
+      width: 100%;
+      display: table;
+      table-layout: fixed;
+    }
+    .cert-signatures .cell {
+      display: table-cell;
+      width: 50%;
+      vertical-align: bottom;
+      text-align: center;
+      padding: 0 4mm;
+    }
+    .cert-signatures .line {
+      border-top: 2px solid #2c1810;
+      padding-top: 3mm;
+      margin-top: 16mm;
+      font-size: 12px;
+    }
+    .cert-signatures .role { font-weight: 700; font-size: 13px; margin-bottom: 1mm; }
+    .cert-signatures .name { font-size: 12px; color: #374151; min-height: 14px; }
+    .cert-footer {
+      position: absolute;
+      left: 14mm;
+      right: 14mm;
+      bottom: 8mm;
+      font-family: DejaVu Sans, sans-serif;
+      font-size: 8px;
+      color: #374151;
+      border-top: 1px dashed #b8a88a;
+      padding-top: 2mm;
+    }
+    .cert-footer table { width: 100%; border-collapse: collapse; }
+    .cert-footer td { vertical-align: top; word-break: break-word; }
+    .cert-footer .qr { width: 64px; height: 64px; border: 1px solid #d1c4b0; padding: 2px; background: #fff; }
+  </style>
+@endpush
 
 @section('content')
-  <style>
-    body { font-family: "Times New Roman", serif; color: #111827; }
-    .page {
-      border: 1px solid #ddd;
-      padding: 18px 18px;
-      box-sizing: border-box;
-      position: relative;
-      min-height: 100%;
-    }
-    .title { text-align: center; margin-top: 18px; }
-    .title h1 { font-size: 30px; margin: 0; }
-    .title p { margin: 6px 0 0; font-size: 14px; color: #4b5563; }
-    .body { margin-top: 24px; font-size: 14px; line-height: 1.7; text-align: justify; }
-    .signatures { position: absolute; left: 18px; right: 18px; bottom: 120px; display: table; width: calc(100% - 36px); }
-    .sig { display: table-cell; width: 50%; text-align: center; font-size: 12px; vertical-align: bottom; }
-    .sig + .sig { padding-left: 18px; }
-    .line { border-top: 1px solid #111827; margin-top: 42px; padding-top: 4px; }
-    .doc-footer {
-      position: absolute;
-      left: 18px;
-      right: 18px;
-      bottom: 16px;
-      font-size: 10px;
-      color: #374151;
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      background: #fff;
-    }
-    .code { font-family: DejaVu Sans, Arial, sans-serif; font-size: 10px; }
-    .qr { width: 78px; height: 78px; border: 1px solid #e5e7eb; padding: 4px; background: #fff; }
-  </style>
-
-  <div class="page">
-    <div class="title">
-      <h1>Certificado</h1>
-    </div>
-
-    <div class="body">
-      <p>
-        Certificamos que <strong>{{ $studentName ?? 'ALUNO(A) EXEMPLO' }}</strong> concluiu, no ano letivo de
-        <strong>{{ $year ?: '__________' }}</strong>, o curso/etapa <strong>{{ $course ?: '__________' }}</strong>,
-        atendendo às exigências legais e regimentais aplicáveis.
-      </p>
-      <p>
-        Este certificado é emitido para fins de comprovação de escolaridade, em conformidade com a legislação vigente.
-      </p>
-      @if(!empty($enrollment))
-        <p>Matrícula selecionada: <strong>{{ $enrollment }}</strong>.</p>
+  <div class="cert-sheet">
+    <div class="cert-frame">
+      @if(!empty($municipality) || !empty($schoolName))
+        <div class="cert-entity">
+          @if(!empty($municipality))<div>{{ $municipality }}</div>@endif
+          @if(!empty($schoolName))<div><strong>{{ $schoolName }}</strong></div>@endif
+          @if(!empty($contact))<div>{{ $contact }}</div>@endif
+        </div>
       @endif
-    </div>
 
-    <div class="signatures">
-      <div class="sig">
-        <div class="line">
-          <div><strong>Secretaria Escolar</strong></div>
-          <div>{{ $secretaryName ?: '' }}</div>
-        </div>
-      </div>
-      <div class="sig">
-        <div class="line">
-          <div><strong>Direção</strong></div>
-          <div>{{ $directorName ?: '' }}</div>
-        </div>
-      </div>
-    </div>
+      <div class="cert-title">Certificado</div>
 
-    <div class="doc-footer">
-      <div style="max-width: 58%;">
-        <div><strong>Emissão</strong>: {{ $issuedAt ?? date('d/m/Y H:i') }}</div>
-        @if(!empty($issuerName) || !empty($issuerRole))
-          <div><strong>Emissor</strong>: {{ trim(($issuerName ?? '') . ' ' . (!empty($issuerRole) ? ('(' . $issuerRole . ')') : '')) }}</div>
-          <div style="margin-top: 4px;">
-            @include('advanced-reports::pdf._issuer-person-lines')
+      <div class="cert-body">
+        <p>
+          Certificamos que <strong>{{ $studentName ?? 'ALUNO(A) EXEMPLO' }}</strong> concluiu, no ano letivo de
+          <strong>{{ $year ?: '__________' }}</strong>, o curso/etapa <strong>{{ $course ?: '__________' }}</strong>,
+          atendendo às exigências legais e regimentais aplicáveis.
+        </p>
+        <p>
+          Este certificado é emitido para fins de comprovação de escolaridade, em conformidade com a legislação vigente.
+        </p>
+        @if(!empty($enrollment))
+          <p>Registro de matrícula (i-Educar): <strong>{{ $enrollment }}</strong>.</p>
+        @endif
+      </div>
+
+      <div class="cert-signatures">
+        <div class="cell">
+          <div class="line">
+            <div class="role">Secretário(a) escolar</div>
+            <div class="name">{{ $secretaryName ?: ' ' }}</div>
           </div>
-        @endif
-        @if(!empty($cityUf))
-          <div><strong>Cidade/UF</strong>: {{ $cityUf }}</div>
-        @endif
-        <div class="code"><strong>Código</strong>: {{ $validationCode ?? '__________' }}</div>
-        @if(!empty($validationUrl))
-          <div class="code"><strong>Validação</strong>: {{ $validationUrl }}</div>
-        @endif
+        </div>
+        <div class="cell">
+          <div class="line">
+            <div class="role">Diretor(a)</div>
+            <div class="name">{{ $directorName ?: ' ' }}</div>
+          </div>
+        </div>
       </div>
-      <div style="text-align: right;">
-        @if(!empty($qrDataUri))
-          <img class="qr" src="{{ $qrDataUri }}" alt="QR Code validação">
-        @endif
+
+      <div class="cert-footer">
+        <table>
+          <tr>
+            <td>
+              <div><strong>Emissão</strong>: {{ $issuedAt ?? date('d/m/Y H:i') }}</div>
+              @if(!empty($issuerName))
+                <div><strong>Responsável pela emissão (sistema)</strong>: {{ $issuerName }}</div>
+              @endif
+              @if(!empty($validationCode))
+                <div><strong>Código de validação</strong>: {{ $validationCode }}</div>
+              @endif
+              @if(!empty($validationUrl))
+                <div style="word-break: break-all;"><strong>Validação</strong>: {{ $validationUrl }}</div>
+              @endif
+            </td>
+            <td style="width: 72px; text-align: right;">
+              @if(!empty($qrDataUri))
+                <img class="qr" src="{{ $qrDataUri }}" alt="QR">
+              @endif
+            </td>
+          </tr>
+        </table>
       </div>
     </div>
   </div>
 @endsection
-

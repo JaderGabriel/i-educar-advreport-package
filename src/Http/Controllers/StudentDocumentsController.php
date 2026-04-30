@@ -3,6 +3,8 @@
 namespace iEducar\Packages\AdvancedReports\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\LegacySchoolHistory;
+use App\Models\LegacySchoolHistoryDiscipline;
 use iEducar\Packages\AdvancedReports\Models\AdvancedReportsDocument;
 use iEducar\Packages\AdvancedReports\Services\AdvancedReportsFilterService;
 use iEducar\Packages\AdvancedReports\Services\DocumentSigningService;
@@ -16,6 +18,48 @@ use Symfony\Component\HttpFoundation\Response;
 
 class StudentDocumentsController extends Controller
 {
+    /**
+     * @return list<array{nome: string, nota: mixed, faltas: mixed, carga_horaria: mixed}>
+     */
+    private function schoolHistoryDisciplinesForMatricula(int $alunoId, int $matriculaId, int $anoLetivo): array
+    {
+        $history = LegacySchoolHistory::query()
+            ->where('ref_cod_aluno', $alunoId)
+            ->where('ativo', 1)
+            ->where('ref_cod_matricula', $matriculaId)
+            ->orderByDesc('sequencial')
+            ->first();
+
+        if (!$history) {
+            $history = LegacySchoolHistory::query()
+                ->where('ref_cod_aluno', $alunoId)
+                ->where('ativo', 1)
+                ->where('ano', $anoLetivo)
+                ->orderByDesc('sequencial')
+                ->first();
+        }
+
+        if (!$history) {
+            return [];
+        }
+
+        return LegacySchoolHistoryDiscipline::query()
+            ->where('ref_ref_cod_aluno', $alunoId)
+            ->where('ref_sequencial', $history->sequencial)
+            ->orderByRaw('COALESCE(ordenamento, 999999) ASC')
+            ->orderBy('nm_disciplina')
+            ->get()
+            ->map(static function (LegacySchoolHistoryDiscipline $d): array {
+                return [
+                    'nome' => (string) $d->nm_disciplina,
+                    'nota' => $d->score() ?? $d->nota ?? '—',
+                    'faltas' => $d->faltas,
+                    'carga_horaria' => $d->carga_horaria_disciplina,
+                ];
+            })
+            ->all();
+    }
+
     /**
      * @return array<int, array{month:int,label:string,percent:float|null}>
      */
@@ -65,6 +109,7 @@ class StudentDocumentsController extends Controller
         if ($request->boolean('preview')) {
             $fake = (object) [
                 'matricula_id' => 12345,
+                'aluno_id' => 999001,
                 'ano_letivo' => (int) ($request->get('ano') ?: date('Y')),
                 'aluno_nome' => 'ALUNO(A) EXEMPLO',
                 'instituicao_id' => null,
@@ -83,6 +128,7 @@ class StudentDocumentsController extends Controller
                 'declaration_frequency' => 'advanced-reports::student-documents.declaration-frequency',
                 'transfer_guide' => 'advanced-reports::student-documents.transfer-guide',
                 'transfer_packet' => 'advanced-reports::student-documents.transfer-packet',
+                'approval_packet' => 'advanced-reports::student-documents.approval-packet',
                 'declaration_conclusion' => 'advanced-reports::student-documents.declaration-conclusion',
                 'declaration_nada_consta' => 'advanced-reports::student-documents.declaration-nada-consta',
                 default => 'advanced-reports::student-documents.declaration-enrollment',
@@ -92,6 +138,7 @@ class StudentDocumentsController extends Controller
                 'declaration_frequency' => 'Declaração de frequência',
                 'transfer_guide' => 'Guia/Declaração de transferência',
                 'transfer_packet' => 'Comprovante de matrícula e declaração de transferência',
+                'approval_packet' => 'Declaração de matrícula e declaração de conclusão',
                 'declaration_conclusion' => 'Declaração de conclusão',
                 'declaration_nada_consta' => 'Declaração de escolaridade / Nada consta',
                 default => 'Declaração de matrícula',
@@ -104,6 +151,14 @@ class StudentDocumentsController extends Controller
             }
             if ($document === 'declaration_conclusion') {
                 $extra['historico_emissao_dias'] = (int) ($request->get('historico_emissao_dias') ?: 30);
+            }
+            if ($document === 'approval_packet') {
+                $extra['historico_emissao_dias'] = (int) ($request->get('historico_emissao_dias') ?: 30);
+                $extra['ficha_individual'] = true;
+                $extra['disciplinas'] = [
+                    ['nome' => 'Língua Portuguesa', 'nota' => '8,0', 'faltas' => 2, 'carga_horaria' => '200h'],
+                    ['nome' => 'Matemática', 'nota' => '9,0', 'faltas' => 0, 'carga_horaria' => '200h'],
+                ];
             }
 
             return app(PdfRenderService::class)->download($view, [
@@ -165,6 +220,7 @@ SQL;
                 ->leftJoin(DB::raw($mtPriorizada), 'mt.ref_cod_matricula', '=', 'm.cod_matricula')
                 ->leftJoin('pmieducar.turma as t', 't.cod_turma', '=', 'mt.ref_cod_turma')
                 ->selectRaw('m.cod_matricula as matricula_id')
+                ->selectRaw('a.cod_aluno as aluno_id')
                 ->selectRaw('m.ano as ano_letivo')
                 ->selectRaw('m.aprovado as matricula_aprovado')
                 ->selectRaw('p.nome as aluno_nome')
@@ -234,6 +290,16 @@ SQL;
             if ($document === 'declaration_conclusion') {
                 $extra['historico_emissao_dias'] = (int) ($request->get('historico_emissao_dias') ?: 0);
             }
+            if ($document === 'approval_packet') {
+                $extra['historico_emissao_dias'] = (int) ($request->get('historico_emissao_dias') ?: 0);
+                $extra['ficha_individual'] = true;
+                $alunoId = (int) ($matricula->aluno_id ?? 0);
+                $extra['disciplinas'] = $this->schoolHistoryDisciplinesForMatricula(
+                    $alunoId,
+                    $id,
+                    (int) $matricula->ano_letivo
+                );
+            }
 
             $items[] = [
                 'matricula_id' => (int) $id,
@@ -294,6 +360,7 @@ SQL;
             'declaration_frequency' => 'advanced-reports::student-documents.declaration-frequency',
             'transfer_guide' => 'advanced-reports::student-documents.transfer-guide',
             'transfer_packet' => 'advanced-reports::student-documents.transfer-packet',
+            'approval_packet' => 'advanced-reports::student-documents.approval-packet',
             'declaration_conclusion' => 'advanced-reports::student-documents.declaration-conclusion',
             'declaration_nada_consta' => 'advanced-reports::student-documents.declaration-nada-consta',
             default => 'advanced-reports::student-documents.declaration-enrollment',
@@ -303,6 +370,7 @@ SQL;
             'declaration_frequency' => 'Declaração de frequência',
             'transfer_guide' => 'Guia/Declaração de transferência',
             'transfer_packet' => 'Comprovante de matrícula e declaração de transferência',
+            'approval_packet' => 'Declaração de matrícula e declaração de conclusão',
             'declaration_conclusion' => 'Declaração de conclusão',
             'declaration_nada_consta' => 'Declaração de escolaridade / Nada consta',
             default => 'Declaração de matrícula',
@@ -326,6 +394,7 @@ SQL;
                 'municipality' => $header['municipality'] ?? null,
                 'schoolName' => $header['schoolName'] ?? null,
                 'contact' => $header['contact'] ?? null,
+                'matriculaInternaAluno' => (int) $one['matricula']->matricula_id,
             ], str_replace(' ', '-', strtolower($title)) . '-' . (int) $one['matricula_id'] . '.pdf');
         }
 

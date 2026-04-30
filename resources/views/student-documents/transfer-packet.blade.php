@@ -1,35 +1,24 @@
 @extends('advanced-reports::pdf.layout')
 
 @section('doc_title', 'Comprovante de matrícula e declaração de transferência')
-@section('doc_subtitle', 'Documento oficial — duas folhas')
+@section('doc_subtitle', 'Documento oficial — dois documentos')
 @section('doc_year', (string) ($matricula->ano_letivo ?? ''))
 @section('formal_header', '1')
 
 @section('content')
+  {{-- Documento 1: comprovante / folha de matrícula (folha completa com assinaturas e rodapé) --}}
   <h1>FOLHA DE MATRÍCULA / COMPROVANTE</h1>
 
   <p class="muted">
-    Primeira folha: período de permanência na turma conforme registros do i-Educar.
+    Comprovante de permanência na turma conforme registros do i-Educar.
   </p>
 
-  <div class="box">
-    <table>
-      <tr><th>Aluno(a)</th><td>{{ $matricula->aluno_nome }}</td></tr>
-      <tr><th>Matrícula (ID)</th><td>{{ $matricula->matricula_id }}</td></tr>
-      <tr><th>Ano letivo</th><td>{{ $matricula->ano_letivo }}</td></tr>
-      <tr><th>Instituição</th><td>{{ $matricula->instituicao }}</td></tr>
-      <tr><th>Escola</th><td>{{ $matricula->escola }}</td></tr>
-      <tr><th>Curso</th><td>{{ $matricula->curso }}</td></tr>
-      <tr><th>Série</th><td>{{ $matricula->serie }}</td></tr>
-      <tr><th>Turma</th><td>{{ $matricula->turma }}</td></tr>
-      @if(!empty($matricula->data_entrada_turma_br))
-        <tr><th>Início na turma</th><td>{{ $matricula->data_entrada_turma_br }}</td></tr>
-      @endif
-      @if(!empty($matricula->data_fim_turma_br))
-        <tr><th>Permaneceu até</th><td>{{ $matricula->data_fim_turma_br }}</td></tr>
-      @endif
-    </table>
-  </div>
+  @include('advanced-reports::student-documents._matricula-data-box', [
+    'matricula' => $matricula,
+    'showInstituicao' => true,
+    'entradaLabel' => 'Início na turma',
+    'saidaLabel' => 'Permaneceu até',
+  ])
 
   <p>
     Declaramos, para os devidos fins, que o(a) aluno(a) acima identificado(a) esteve regularmente matriculado(a) nesta unidade escolar,
@@ -44,37 +33,44 @@
     no ano letivo informado.
   </p>
 
+  @include('advanced-reports::student-documents._authority-signatures')
+
+  @include('advanced-reports::student-documents._footer', [
+    'matriculaInternaAluno' => $matricula->matricula_id,
+    'footerInline' => true,
+  ])
+
   <div style="page-break-after: always;"></div>
 
+  {{-- Documento 2: guia de transferência (nova folha completa) --}}
   <h1>GUIA / DECLARAÇÃO DE TRANSFERÊNCIA</h1>
 
   <p class="muted">
-    Segunda folha: declaração para fins de transferência / continuidade dos estudos.
+    Declaração para fins de transferência / continuidade dos estudos.
   </p>
 
-  <div class="box">
-    <table>
-      <tr><th>Aluno(a)</th><td>{{ $matricula->aluno_nome }}</td></tr>
-      <tr><th>Matrícula (ID)</th><td>{{ $matricula->matricula_id }}</td></tr>
-      <tr><th>Ano letivo</th><td>{{ $matricula->ano_letivo }}</td></tr>
-      <tr><th>Escola de origem</th><td>{{ $matricula->escola }}</td></tr>
-      <tr><th>Curso/Série/Turma</th><td>{{ $matricula->curso }} — {{ $matricula->serie }} — {{ $matricula->turma }}</td></tr>
-    </table>
-  </div>
+  @include('advanced-reports::student-documents._matricula-data-box', [
+    'matricula' => $matricula,
+    'showInstituicao' => false,
+    'entradaLabel' => 'Início na turma',
+    'saidaLabel' => 'Permaneceu até',
+  ])
 
   <p>
     Declaramos que o(a) aluno(a) acima identificado(a) está vinculado(a) à escola de origem indicada, para fins de
     transferência/continuidade dos estudos, conforme registros no i-Educar.
   </p>
 
+  @include('advanced-reports::student-documents._transfer-documentos-adicionais-observacao')
+
   <p class="muted">
     Recomenda-se incluir, quando exigido pela rede: destino, data efetiva, motivo e responsáveis.
   </p>
 
-  @include('advanced-reports::pdf._issuer-signature', [
-    'issuerName' => $issuerName ?? null,
-    'schoolInep' => $schoolInep ?? null,
-  ])
+  @include('advanced-reports::student-documents._authority-signatures')
 
-  @include('advanced-reports::student-documents._footer')
+  @include('advanced-reports::student-documents._footer', [
+    'matriculaInternaAluno' => $matricula->matricula_id,
+    'footerInline' => true,
+  ])
 @endsection

@@ -16,9 +16,9 @@ use Symfony\Component\HttpFoundation\Response;
 class SchoolHistoryController extends Controller
 {
     /**
-     * Critério conservador para “histórico gerado pela rotina nativa”:
+     * Critério alinhado à listagem de históricos prontos (LookupController):
      * - ativo = 1
-     * - origem interno (NULL/false/0)
+     * - origem NULL, 0 ou 1 (núcleo e legados tratados como nativos na listagem)
      * - vinculado a uma matrícula (ref_cod_matricula preenchido)
      *
      * @return array{book:?string,page:?string,record:?string,year:?int}
@@ -30,7 +30,7 @@ class SchoolHistoryController extends Controller
             ->where('he.ativo', 1)
             ->whereNotNull('he.ref_cod_matricula')
             ->where(function ($w) {
-                $w->whereNull('he.origem')->orWhere('he.origem', 0);
+                $w->whereNull('he.origem')->orWhereIn('he.origem', [0, 1]);
             })
             ->orderByDesc('he.ano')
             ->orderByDesc('he.sequencial')

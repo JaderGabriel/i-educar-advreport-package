@@ -12,24 +12,7 @@
     Emitida com base nos registros do i-Educar para fins de comprovação.
   </p>
 
-  <div class="box">
-    <table>
-      <tr><th>Aluno(a)</th><td>{{ $matricula->aluno_nome }}</td></tr>
-      <tr><th>Matrícula (ID)</th><td>{{ $matricula->matricula_id }}</td></tr>
-      <tr><th>Ano letivo</th><td>{{ $matricula->ano_letivo }}</td></tr>
-      <tr><th>Instituição</th><td>{{ $matricula->instituicao }}</td></tr>
-      <tr><th>Escola</th><td>{{ $matricula->escola }}</td></tr>
-      <tr><th>Curso</th><td>{{ $matricula->curso }}</td></tr>
-      <tr><th>Série</th><td>{{ $matricula->serie }}</td></tr>
-      <tr><th>Turma</th><td>{{ $matricula->turma }}</td></tr>
-      @if(!empty($matricula->data_entrada_turma_br))
-        <tr><th>Início na turma</th><td>{{ $matricula->data_entrada_turma_br }}</td></tr>
-      @endif
-      @if(!empty($matricula->data_fim_turma_br))
-        <tr><th>Até (registro)</th><td>{{ $matricula->data_fim_turma_br }}</td></tr>
-      @endif
-    </table>
-  </div>
+  @include('advanced-reports::student-documents._matricula-data-box', ['matricula' => $matricula])
 
   <p>
     Declaramos, para os devidos fins, que o(a) aluno(a) acima identificado(a) encontra-se regularmente matriculado(a)

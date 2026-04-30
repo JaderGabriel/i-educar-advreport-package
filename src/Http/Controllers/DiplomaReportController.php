@@ -3,6 +3,7 @@
 namespace iEducar\Packages\AdvancedReports\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\RegistrationStatus;
 use iEducar\Packages\AdvancedReports\Models\AdvancedReportsDocument;
 use iEducar\Packages\AdvancedReports\Services\AdvancedReportsFilterService;
 use iEducar\Packages\AdvancedReports\Services\DocumentSigningService;
@@ -32,13 +33,19 @@ class DiplomaReportController extends Controller
             $cursoId ? (int) $cursoId : null
         );
 
+        $situacaoOptions = array_merge(
+            ['' => 'Padrão (Aprovado, aprov. c/ dependência, aprov. conselho)'],
+            (new RegistrationStatus)->getDescriptiveValues()
+        );
+
         return view('advanced-reports::diplomas.index', array_merge($filterData, compact(
             'ano',
             'instituicaoId',
             'escolaId',
             'cursoId',
             'serieId',
-            'turmaId'
+            'turmaId',
+            'situacaoOptions'
         )));
     }
 
@@ -60,6 +67,44 @@ class DiplomaReportController extends Controller
             ->where('m.ano', $year)
             ->orderBy('m.cod_matricula')
             ->limit(200)
+            ->pluck('m.cod_matricula')
+            ->map(fn ($v) => (int) $v)
+            ->all();
+    }
+
+    /**
+     * Garante que as matrículas emitidas respeitam o filtro de situação (view_situacao na turma).
+     *
+     * @param  array<int, int>  $matriculaIds
+     * @return array<int, int>
+     */
+    private function filterMatriculasByDiplomaSituacao(array $matriculaIds, int $turmaId, int $year, ?int $situacaoId): array
+    {
+        if ($matriculaIds === []) {
+            return [];
+        }
+
+        $q = DB::table('pmieducar.matricula as m')
+            ->join('pmieducar.matricula_turma as mt', 'mt.ref_cod_matricula', '=', 'm.cod_matricula')
+            ->join('relatorio.view_situacao as vs', function ($j) {
+                $j->on('vs.cod_matricula', '=', 'm.cod_matricula')
+                    ->on('vs.cod_turma', '=', 'mt.ref_cod_turma')
+                    ->on('vs.sequencial', '=', 'mt.sequencial');
+            })
+            ->whereIn('m.cod_matricula', $matriculaIds)
+            ->where('mt.ref_cod_turma', $turmaId)
+            ->where('mt.ativo', 1)
+            ->where('m.ativo', 1)
+            ->where('m.ano', $year)
+            ->where('m.dependencia', false);
+
+        if ($situacaoId !== null && $situacaoId > 0) {
+            $q->where('vs.cod_situacao', $situacaoId);
+        } else {
+            $q->whereIn('vs.cod_situacao', [1, 12, 13]);
+        }
+
+        return $q->orderBy('m.cod_matricula')
             ->pluck('m.cod_matricula')
             ->map(fn ($v) => (int) $v)
             ->all();
@@ -163,6 +208,13 @@ class DiplomaReportController extends Controller
             abort(404, 'Nenhuma matrícula encontrada para a turma/ano informados.');
         }
 
+        $situacaoFiltro = $request->get('situacao');
+        $situacaoId = $situacaoFiltro !== null && $situacaoFiltro !== '' ? (int) $situacaoFiltro : null;
+        $ids = $this->filterMatriculasByDiplomaSituacao($ids, $turmaId, $ano, $situacaoId);
+        if (empty($ids)) {
+            abort(422, 'Nenhuma das matrículas selecionadas está na situação filtrada para esta turma.');
+        }
+
         if ($document === 'certificate' && count($ids) > 1) {
             abort(422, 'Para certificado (modelo), selecione apenas um(a) aluno(a).');
         }
@@ -221,6 +273,7 @@ class DiplomaReportController extends Controller
                 'matricula_id' => $stu['matricula_id'],
                 'course' => $courseName,
                 'class' => $className,
+                'situacao' => $situacaoId,
             ];
 
             $signing = app(DocumentSigningService::class);

@@ -3,6 +3,7 @@
 namespace iEducar\Packages\AdvancedReports\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -16,8 +17,22 @@ class PedagogicalController extends Controller
     /**
      * Tela placeholder para itens pedagógicos ainda não implementados.
      */
-    public function show(Request $request, string $slug): View
+    public function show(Request $request, string $slug): View|RedirectResponse
     {
+        if ($slug === 'ata-entrega-resultados') {
+            return redirect()->route('advanced-reports.minutes.index', array_merge(
+                $request->query(),
+                ['document' => 'delivery_results']
+            ));
+        }
+
+        if ($slug === 'ata-conselho') {
+            return redirect()->route('advanced-reports.minutes.index', array_merge(
+                $request->query(),
+                ['document' => 'council_class']
+            ));
+        }
+
         $pages = [
             'mapa-notas' => [
                 'title' => 'Mapa de notas (por turma/etapa)',
@@ -37,16 +52,6 @@ class PedagogicalController extends Controller
             'pendencias-lancamento' => [
                 'title' => 'Pendências de lançamento (notas/frequência)',
                 'text' => 'Este item foi promovido para implementação real. Use o menu para acessar o relatório em: Relatórios Avançados → Pendências de lançamento.',
-            ],
-            'ata-conselho' => [
-                'title' => 'Ata de conselho de classe (por etapa)',
-                'text' => 'Documento formal (arquivo) com variação por rede.',
-                'status' => 'Em desenvolvimento/ajustes/melhorias. Envie sugestões no issue do projeto.',
-            ],
-            'ata-entrega-resultados' => [
-                'title' => 'Ata de entrega de resultados (assinaturas)',
-                'text' => 'Documento formal (arquivo) para registro de entrega/ciência.',
-                'status' => 'Em desenvolvimento/ajustes/melhorias. Envie sugestões no issue do projeto.',
             ],
         ];
 

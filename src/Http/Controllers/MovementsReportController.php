@@ -4,10 +4,15 @@ namespace iEducar\Packages\AdvancedReports\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use iEducar\Packages\AdvancedReports\Exports\SimpleArraySheet;
+use iEducar\Packages\AdvancedReports\Models\AdvancedReportsDocument;
 use iEducar\Packages\AdvancedReports\Services\AdvancedReportsFilterService;
+use iEducar\Packages\AdvancedReports\Services\DocumentSigningService;
 use iEducar\Packages\AdvancedReports\Services\MovementsGeneralReportService;
+use iEducar\Packages\AdvancedReports\Services\OfficialHeaderService;
 use iEducar\Packages\AdvancedReports\Services\PdfRenderService;
+use iEducar\Packages\AdvancedReports\Services\QrCodeService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -33,6 +38,7 @@ class MovementsReportController extends Controller
     {
         $ano = (int) $request->get('ano');
         $instituicaoId = $request->get('ref_cod_instituicao') ? (int) $request->get('ref_cod_instituicao') : null;
+        $escolaId = $request->get('ref_cod_escola') ? (int) $request->get('ref_cod_escola') : null;
         $courseIds = $request->get('ref_cod_curso') ? [(int) $request->get('ref_cod_curso')] : null;
 
         $startDate = (string) $request->get('data_inicial', '');
@@ -45,20 +51,79 @@ class MovementsReportController extends Controller
         $filterData = $filters->getFilters($ano, $instituicaoId, null, $courseIds ? $courseIds[0] : null);
         $data = $service->buildData($ano, $instituicaoId, $courseIds, $startDate, $endDate);
 
-        $payload = array_merge($filterData, [
+        if (!$instituicaoId && $escolaId) {
+            $instituicaoId = (int) (DB::table('pmieducar.escola')->where('cod_escola', $escolaId)->value('ref_cod_instituicao') ?: 0) ?: null;
+        }
+
+        $header = $escolaId
+            ? app(OfficialHeaderService::class)->forSchool($instituicaoId, $escolaId)
+            : ['municipality' => null, 'schoolName' => null, 'contact' => null];
+
+        $issuedAt = now();
+        $issuedAtHuman = $issuedAt->format('d/m/Y H:i');
+        $issuedAtIso = DocumentSigningService::issuedAtForMac($issuedAt);
+
+        $payload = [
+            'report' => 'movements_general',
             'ano' => $ano,
+            'year' => (string) $ano,
+            'instituicao_id' => $instituicaoId,
+            'escola_id' => $escolaId,
+            'curso_id' => $courseIds ? (int) $courseIds[0] : null,
+            'data_inicial' => $startDate,
+            'data_final' => $endDate,
+        ];
+
+        $signing = app(DocumentSigningService::class);
+        $code = $signing->generateCode(8);
+        $validationUrl = route('advanced-reports.documents.validate', ['code' => $code]);
+        $qrDataUri = app(QrCodeService::class)->pngDataUri($validationUrl, 4);
+        $payloadToStore = array_merge($payload, [
+            'validation_url' => $validationUrl,
+            'issuer_name' => auth()->user()?->name,
+        ]);
+        $mac = $signing->mac($code, 'movements_general', $issuedAtIso, $payloadToStore);
+
+        AdvancedReportsDocument::query()->create([
+            'code' => $code,
+            'type' => 'movements_general',
+            'issued_at' => $issuedAt,
+            'issued_by_user_id' => auth()->id(),
+            'issued_ip' => $request->ip(),
+            'issued_user_agent' => substr((string) $request->userAgent(), 0, 255),
+            'version' => DocumentSigningService::VERSION,
+            'mac' => $mac,
+            'payload' => $payloadToStore,
+        ]);
+
+        $viewData = array_merge($filterData, [
+            'ano' => $ano,
+            'year' => (string) $ano,
             'instituicaoId' => $instituicaoId,
+            'escolaId' => $escolaId,
             'data_inicial' => $startDate,
             'data_final' => $endDate,
             'data' => $data,
+            'issuedAt' => $issuedAtHuman,
+            'validationCode' => $code,
+            'validationUrl' => $validationUrl,
+            'qrDataUri' => $qrDataUri,
+            'issuerName' => auth()->user()?->name,
+            'issuerRole' => null,
+            'cityUf' => null,
+            'municipality' => $header['municipality'] ?? null,
+            'schoolName' => $header['schoolName'] ?? null,
+            'contact' => $header['contact'] ?? null,
+            'schoolInep' => null,
         ]);
 
         return app(PdfRenderService::class)->download(
             'advanced-reports::movements.pdf',
-            $payload,
+            $viewData,
             'relatorio-movimentacoes-' . $ano . '.pdf',
             'a4',
-            'landscape'
+            'landscape',
+            'inline'
         );
     }
 

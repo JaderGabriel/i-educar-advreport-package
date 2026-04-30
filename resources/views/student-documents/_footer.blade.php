@@ -1,10 +1,14 @@
-<div class="ar-official-footer" style="border-top: 1px dashed #cbd5e1; padding-top: 10px; font-size: 10px; color: #374151; background: #fff;">
+@php($footerInline = $footerInline ?? false)
+<div @class(['ar-official-footer' => ! $footerInline]) style="border-top: 1px dashed #cbd5e1; padding-top: 10px; font-size: 10px; color: #374151; background: #fff; @if($footerInline) position: relative; margin-top: 22px; clear: both; @endif">
   <table style="width:100%; border-collapse: collapse; margin:0;">
     <tr>
       <td style="vertical-align: top; padding: 0; border: 0;">
         <div><strong>Emissão</strong>: {{ $issuedAt }}</div>
     @if(!empty($issuerName) || !empty($issuerRole))
           <div><strong>Emissor</strong>: {{ trim(($issuerName ?? '') . (!empty($issuerRole) ? (' (' . $issuerRole . ')') : '')) }}</div>
+    @endif
+    @if(!empty($matriculaInternaAluno))
+          <div><strong>Matrícula interna (i-Educar)</strong>: {{ $matriculaInternaAluno }}</div>
     @endif
     @if(!empty($cityUf))
           <div><strong>Cidade/UF</strong>: {{ $cityUf }}</div>

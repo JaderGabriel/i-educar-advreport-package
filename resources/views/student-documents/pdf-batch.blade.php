@@ -16,7 +16,7 @@
       <div class="box">
         <table>
           <tr><th>Aluno(a)</th><td>{{ $m->aluno_nome ?? '' }}</td></tr>
-          <tr><th>Matrícula (ID)</th><td>{{ $m->matricula_id ?? '' }}</td></tr>
+          <tr><th>Matrícula interna (i-Educar)</th><td>{{ $m->matricula_id ?? '' }}</td></tr>
           <tr><th>Ano letivo</th><td>{{ $m->ano_letivo ?? '' }}</td></tr>
           <tr><th>Escola</th><td>{{ $m->escola ?? '' }}</td></tr>
           <tr><th>Curso/Série/Turma</th><td>{{ ($m->curso ?? '') . ' — ' . ($m->serie ?? '') . ' — ' . ($m->turma ?? '') }}</td></tr>
@@ -50,40 +50,23 @@
       <p>Declaramos, para os devidos fins, que o(a) aluno(a) acima identificado(a) possui frequência conforme percentual informado.</p>
     @elseif(($document ?? '') === 'transfer_guide')
       <h1>GUIA / DECLARAÇÃO DE TRANSFERÊNCIA</h1>
-      <p class="muted">Modelo inicial. Pode ser ajustado para seguir política local (rede) e incluir campos adicionais.</p>
-      <div class="box">
-        <table>
-          <tr><th>Aluno(a)</th><td>{{ $m->aluno_nome ?? '' }}</td></tr>
-          <tr><th>Matrícula (ID)</th><td>{{ $m->matricula_id ?? '' }}</td></tr>
-          <tr><th>Ano letivo</th><td>{{ $m->ano_letivo ?? '' }}</td></tr>
-          <tr><th>Escola de origem</th><td>{{ $m->escola ?? '' }}</td></tr>
-          <tr><th>Curso/Série/Turma</th><td>{{ ($m->curso ?? '') . ' — ' . ($m->serie ?? '') . ' — ' . ($m->turma ?? '') }}</td></tr>
-        </table>
-      </div>
+      <p class="muted">Modelo para fins de transferência / continuidade dos estudos, conforme registros do i-Educar.</p>
+      @include('advanced-reports::student-documents._matricula-data-box', [
+        'matricula' => $m,
+        'showInstituicao' => false,
+        'entradaLabel' => 'Início na turma',
+        'saidaLabel' => 'Permaneceu até',
+      ])
       <p>Declaramos que o(a) aluno(a) acima identificado(a) está vinculado(a) à escola de origem indicada, para fins de transferência/continuidade dos estudos, conforme registros no i-Educar.</p>
-      <p class="muted">Recomenda-se incluir: destino, data efetiva, motivo, responsáveis, e eventuais pendências/documentos anexos (por rede).</p>
+      @include('advanced-reports::student-documents._transfer-documentos-adicionais-observacao')
+      @include('advanced-reports::student-documents._authority-signatures')
     @elseif(($document ?? '') === 'declaration_conclusion')
-      <h1 style="text-align:center;">DECLARAÇÃO DE CONCLUSÃO</h1>
-      <p class="muted">Emitida com base nos registros do i-Educar para fins de comprovação.</p>
-      <div class="box">
-        <table>
-          <tr><th>Aluno(a)</th><td>{{ $m->aluno_nome ?? '' }}</td></tr>
-          <tr><th>Matrícula (ID)</th><td>{{ $m->matricula_id ?? '' }}</td></tr>
-          <tr><th>Ano letivo</th><td>{{ $m->ano_letivo ?? '' }}</td></tr>
-          <tr><th>Instituição</th><td>{{ $m->instituicao ?? '' }}</td></tr>
-          <tr><th>Escola</th><td>{{ $m->escola ?? '' }}</td></tr>
-          <tr><th>Curso</th><td>{{ $m->curso ?? '' }}</td></tr>
-          <tr><th>Série</th><td>{{ $m->serie ?? '' }}</td></tr>
-          <tr><th>Turma</th><td>{{ $m->turma ?? '' }}</td></tr>
-          @if(!empty($extra['historico_emissao_dias']))
-            <tr><th>Prazo informado (histórico)</th><td><strong>{{ (int) $extra['historico_emissao_dias'] }} dia(s)</strong></td></tr>
-          @endif
-        </table>
-      </div>
-      <p>Declaramos, para os devidos fins, que o(a) aluno(a) acima identificado(a) concluiu a etapa/cursamento conforme registros desta unidade escolar no ano letivo informado.</p>
-      @if(!empty($extra['historico_emissao_dias']))
-        <p><strong>Observação:</strong> prazo informado de <strong>{{ (int) $extra['historico_emissao_dias'] }} dia(s)</strong> para emissão/entrega do histórico escolar.</p>
-      @endif
+      @include('advanced-reports::student-documents._declaration-conclusion-inner', [
+        'matricula' => $m,
+        'extra' => $extra,
+        'issuerName' => $issuerName ?? null,
+        'schoolInep' => $schoolInep ?? null,
+      ])
     @elseif(($document ?? '') === 'declaration_nada_consta')
       <h1>DECLARAÇÃO DE ESCOLARIDADE / NADA CONSTA</h1>
       <p>
@@ -98,25 +81,18 @@
     @else
       <h1>DECLARAÇÃO DE MATRÍCULA</h1>
       <p class="muted">Emitida com base nos registros do i-Educar para fins de comprovação.</p>
-      <div class="box">
-        <table>
-          <tr><th>Aluno(a)</th><td>{{ $m->aluno_nome ?? '' }}</td></tr>
-          <tr><th>Matrícula (ID)</th><td>{{ $m->matricula_id ?? '' }}</td></tr>
-          <tr><th>Ano letivo</th><td>{{ $m->ano_letivo ?? '' }}</td></tr>
-          <tr><th>Instituição</th><td>{{ $m->instituicao ?? '' }}</td></tr>
-          <tr><th>Escola</th><td>{{ $m->escola ?? '' }}</td></tr>
-          <tr><th>Curso</th><td>{{ $m->curso ?? '' }}</td></tr>
-          <tr><th>Série</th><td>{{ $m->serie ?? '' }}</td></tr>
-          <tr><th>Turma</th><td>{{ $m->turma ?? '' }}</td></tr>
-        </table>
-      </div>
+      @include('advanced-reports::student-documents._matricula-data-box', ['matricula' => $m])
       <p>Declaramos, para os devidos fins, que o(a) aluno(a) acima identificado(a) encontra-se regularmente matriculado(a) nesta unidade escolar no ano letivo informado.</p>
     @endif
 
-    @include('advanced-reports::pdf._issuer-signature', [
-      'issuerName' => $issuerName ?? null,
-      'schoolInep' => $schoolInep ?? null,
-    ])
+    @if(in_array(($document ?? ''), ['declaration_conclusion', 'transfer_guide'], true))
+      {{-- assinaturas: conclusão (partial) ou transferência (acima) --}}
+    @else
+      @include('advanced-reports::pdf._issuer-signature', [
+        'issuerName' => $issuerName ?? null,
+        'schoolInep' => $schoolInep ?? null,
+      ])
+    @endif
 
     @include('advanced-reports::student-documents._footer', [
       'issuedAt' => $issuedAt ?? now()->format('d/m/Y H:i'),
@@ -129,6 +105,8 @@
       'book' => null,
       'page' => null,
       'record' => null,
+      'matriculaInternaAluno' => $m->matricula_id ?? null,
+      'footerInline' => ($document ?? '') === 'transfer_guide',
     ])
 
     @if(!$loop->last)
