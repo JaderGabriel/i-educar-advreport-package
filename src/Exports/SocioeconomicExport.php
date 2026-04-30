@@ -15,8 +15,8 @@ class SocioeconomicExport implements WithMultipleSheets
     public function sheets(): array
     {
         return [
-            new SimpleArraySheet('Raça/Cor', ['Raça/Cor', 'Total'], $this->rows('race', fn ($r) => [$r->raca ?? 'Não informada', (int) ($r->total ?? 0)])),
-            new SimpleArraySheet('Gênero', ['Gênero', 'Total'], $this->rows('gender', fn ($r) => [$r->sexo ?? 'N', (int) ($r->total ?? 0)])),
+            new SimpleArraySheet('Raça/Cor', ['Raça/Cor', 'Total'], $this->rows('race', fn ($r) => [$r->raca_label ?? ($r->raca ?? 'Não informada'), (int) ($r->total ?? 0)])),
+            new SimpleArraySheet('Gênero', ['Gênero', 'Total'], $this->rows('gender', fn ($r) => [$r->sexo_label ?? ($r->sexo ?? 'Não informado'), (int) ($r->total ?? 0)])),
             new SimpleArraySheet('Benefícios', ['Benefício', 'Total'], $this->rows('benefits', fn ($r) => [$r->beneficio ?? 'Sem benefício', (int) ($r->total ?? 0)])),
             new SimpleArraySheet('Escolas', ['Escola', 'Total'], $this->rows('schools', fn ($r) => [$r->nome ?? 'Escola', (int) ($r->total ?? 0)])),
         ];

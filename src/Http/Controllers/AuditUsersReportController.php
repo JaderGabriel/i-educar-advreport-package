@@ -125,7 +125,7 @@ class AuditUsersReportController extends Controller
             'data' => $data,
             'filters' => $filters,
             'operationOptions' => $service->operationOptions(),
-        ], 'auditoria-acessos-acoes.pdf', 'a4', 'portrait', 'attachment');
+        ], 'auditoria-acessos-acoes.pdf', 'a4', 'portrait', 'inline');
     }
 
     public function excel(Request $request, AuditUsersReportService $service)

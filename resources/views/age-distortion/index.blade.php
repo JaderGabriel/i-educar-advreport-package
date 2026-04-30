@@ -27,9 +27,11 @@
             'heading' => 'Distorção idade/série',
             'pdfRoute' => route('advanced-reports.age-distortion.pdf'),
             'excelRoute' => route('advanced-reports.age-distortion.excel'),
-            'requiredFields' => ['ano', 'ref_cod_curso'],
+            'requiredFields' => ['ano', 'ref_cod_instituicao', 'ref_cod_escola', 'ref_cod_curso'],
             'requiredFieldMessages' => [
                 'ano' => 'Informe o ano letivo antes de exportar.',
+                'ref_cod_instituicao' => 'Informe a instituição antes de exportar.',
+                'ref_cod_escola' => 'Informe a escola antes de exportar.',
                 'ref_cod_curso' => 'Informe o curso (obrigatório neste relatório) antes de exportar.',
             ],
             'cardTitle' => 'Exportar relatório',

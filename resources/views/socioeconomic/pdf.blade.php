@@ -27,7 +27,7 @@
         <tbody>
         @foreach($data['race'] as $row)
             <tr>
-                <td>{{ $row->raca ?? 'Não informada' }}</td>
+                <td>{{ $row->raca_label ?? ($row->raca ?? 'Não informada') }}</td>
                 <td>{{ $row->total }}</td>
             </tr>
         @endforeach
@@ -50,7 +50,7 @@
         <tbody>
         @foreach($data['gender'] as $row)
             <tr>
-                <td>{{ $row->sexo }}</td>
+                <td>{{ $row->sexo_label ?? ($row->sexo ?? 'Não informado') }}</td>
                 <td>{{ $row->total }}</td>
             </tr>
         @endforeach

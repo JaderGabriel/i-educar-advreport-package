@@ -82,7 +82,7 @@ Route::middleware([
 
     // Indicadores (desempenho/resultado) — entradas iniciais
     Route::get('/relatorios-avancados/indicadores/{slug}', [IndicatorsPlaceholderController::class, 'show'])
-        ->where('slug', '(avaliacao-frequencia|baixo-desempenho|alto-desempenho|sem-nota|nao-enturmados|comparativo-turma)')
+        ->where('slug', '(baixo-desempenho|alto-desempenho|sem-nota|nao-enturmados|comparativo-turma)')
         ->name('advanced-reports.indicators.placeholder');
 
     Route::get('/relatorios-avancados/movimentacoes', [MovementsReportController::class, 'index'])

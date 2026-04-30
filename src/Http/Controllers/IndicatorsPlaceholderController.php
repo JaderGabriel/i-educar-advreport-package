@@ -37,10 +37,6 @@ class IndicatorsPlaceholderController extends Controller
                 'title' => 'Comparativo de médias da turma',
                 'text' => 'Indicador comparativo de médias/resultado por turma, componente e etapa.',
             ],
-            'avaliacao-frequencia' => [
-                'title' => 'Avaliação e frequência',
-                'text' => 'Conjunto de relatórios e indicadores pedagógicos (notas, médias, frequência e pendências).',
-            ],
         ];
 
         if (!isset($pages[$slug])) {

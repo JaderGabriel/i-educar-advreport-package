@@ -79,13 +79,34 @@ class SocioeconomicReportService
 
         // cadastro.fisica_raca não tem coluna "raca", e sim "ref_cod_raca"
         $raceStats = (clone $baseQuery)
-            ->selectRaw('COALESCE(fisica_raca.ref_cod_raca, 0) as raca, COUNT(DISTINCT aluno.cod_aluno) as total')
+            ->selectRaw('COALESCE(fisica_raca.ref_cod_raca, 0) as raca')
+            ->selectRaw("
+              CASE COALESCE(fisica_raca.ref_cod_raca, 0)
+                WHEN 1 THEN 'Branca'
+                WHEN 2 THEN 'Preta'
+                WHEN 3 THEN 'Parda'
+                WHEN 4 THEN 'Amarela'
+                WHEN 5 THEN 'Indígena'
+                ELSE 'Não informada'
+              END as raca_label
+            ")
+            ->selectRaw('COUNT(DISTINCT aluno.cod_aluno) as total')
             ->groupBy('fisica_raca.ref_cod_raca')
+            ->orderBy('raca')
             ->get();
 
         $genderStats = (clone $baseQuery)
-            ->selectRaw('COALESCE(fisica.sexo, \'N\') as sexo, COUNT(DISTINCT aluno.cod_aluno) as total')
+            ->selectRaw('COALESCE(fisica.sexo, \'N\') as sexo')
+            ->selectRaw("
+              CASE COALESCE(fisica.sexo, 'N')
+                WHEN 'M' THEN 'Masculino'
+                WHEN 'F' THEN 'Feminino'
+                ELSE 'Não informado'
+              END as sexo_label
+            ")
+            ->selectRaw('COUNT(DISTINCT aluno.cod_aluno) as total')
             ->groupBy('fisica.sexo')
+            ->orderByRaw("CASE COALESCE(fisica.sexo, 'N') WHEN 'F' THEN 1 WHEN 'M' THEN 2 ELSE 3 END")
             ->get();
 
         $benefitStats = (clone $baseQuery)

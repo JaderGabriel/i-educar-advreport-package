@@ -94,12 +94,12 @@ class SocioeconomicReportController extends Controller
     {
         $race = [];
         foreach (($data['race'] ?? []) as $row) {
-            $race[(string) ($row->raca ?? 'Não inf.')] = (int) ($row->total ?? 0);
+            $race[(string) ($row->raca_label ?? ($row->raca ?? 'Não informada'))] = (int) ($row->total ?? 0);
         }
 
         $gender = [];
         foreach (($data['gender'] ?? []) as $row) {
-            $gender[(string) ($row->sexo ?? 'N')] = (int) ($row->total ?? 0);
+            $gender[(string) ($row->sexo_label ?? ($row->sexo ?? 'Não informado'))] = (int) ($row->total ?? 0);
         }
 
         $benefits = [];
