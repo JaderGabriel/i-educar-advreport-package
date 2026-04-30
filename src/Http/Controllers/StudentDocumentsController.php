@@ -8,6 +8,7 @@ use App\Models\LegacySchoolHistoryDiscipline;
 use iEducar\Packages\AdvancedReports\Models\AdvancedReportsDocument;
 use iEducar\Packages\AdvancedReports\Services\AdvancedReportsFilterService;
 use iEducar\Packages\AdvancedReports\Services\DocumentSigningService;
+use iEducar\Packages\AdvancedReports\Services\IssuerSignatureDetails;
 use iEducar\Packages\AdvancedReports\Services\OfficialHeaderService;
 use iEducar\Packages\AdvancedReports\Services\PdfRenderService;
 use iEducar\Packages\AdvancedReports\Services\QrCodeService;
@@ -324,6 +325,46 @@ SQL;
                 ->value('cod_escola_inep');
         }
 
+        $authorities = [
+            'secretary' => ['idpes' => null, 'name' => null, 'inep' => null, 'matricula_interna' => null],
+            'director' => ['idpes' => null, 'name' => null, 'inep' => null, 'matricula_interna' => null],
+        ];
+        if (!empty($first->escola_id)) {
+            $authRow = DB::table('pmieducar.escola as e')
+                ->leftJoin('cadastro.pessoa as ps', 'ps.idpes', '=', 'e.ref_idpes_secretario_escolar')
+                ->leftJoin('cadastro.pessoa as pg', 'pg.idpes', '=', 'e.ref_idpes_gestor')
+                ->where('e.cod_escola', (int) $first->escola_id)
+                ->selectRaw('e.ref_idpes_secretario_escolar as secretary_idpes')
+                ->selectRaw('ps.nome as secretary_name')
+                ->selectRaw('e.ref_idpes_gestor as director_idpes')
+                ->selectRaw('pg.nome as director_name')
+                ->first();
+
+            $sigSvc = app(IssuerSignatureDetails::class);
+
+            $sid = (int) ($authRow->secretary_idpes ?? 0);
+            if ($sid > 0) {
+                $d = $sigSvc->forPersonId($sid);
+                $authorities['secretary'] = [
+                    'idpes' => $sid,
+                    'name' => (string) ($authRow->secretary_name ?? ''),
+                    'inep' => $d['issuerPersonInep'] ?? null,
+                    'matricula_interna' => $d['issuerMatriculaFuncional'] ?? null,
+                ];
+            }
+
+            $did = (int) ($authRow->director_idpes ?? 0);
+            if ($did > 0) {
+                $d = $sigSvc->forPersonId($did);
+                $authorities['director'] = [
+                    'idpes' => $did,
+                    'name' => (string) ($authRow->director_name ?? ''),
+                    'inep' => $d['issuerPersonInep'] ?? null,
+                    'matricula_interna' => $d['issuerMatriculaFuncional'] ?? null,
+                ];
+            }
+        }
+
         $payload = [
             'mode' => count($items) > 1 ? 'batch' : 'single',
             'document' => $document,
@@ -395,6 +436,7 @@ SQL;
                 'schoolName' => $header['schoolName'] ?? null,
                 'contact' => $header['contact'] ?? null,
                 'matriculaInternaAluno' => (int) $one['matricula']->matricula_id,
+                'authorities' => $authorities,
             ], str_replace(' ', '-', strtolower($title)) . '-' . (int) $one['matricula_id'] . '.pdf');
         }
 
@@ -413,6 +455,7 @@ SQL;
             'municipality' => $header['municipality'] ?? null,
             'schoolName' => $header['schoolName'] ?? null,
             'contact' => $header['contact'] ?? null,
+            'authorities' => $authorities,
         ], str_replace(' ', '-', strtolower($title)) . '-lote.pdf');
     }
 }

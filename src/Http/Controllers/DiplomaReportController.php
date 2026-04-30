@@ -7,6 +7,7 @@ use App\Models\RegistrationStatus;
 use iEducar\Packages\AdvancedReports\Models\AdvancedReportsDocument;
 use iEducar\Packages\AdvancedReports\Services\AdvancedReportsFilterService;
 use iEducar\Packages\AdvancedReports\Services\DocumentSigningService;
+use iEducar\Packages\AdvancedReports\Services\IssuerSignatureDetails;
 use iEducar\Packages\AdvancedReports\Services\OfficialHeaderService;
 use iEducar\Packages\AdvancedReports\Services\PdfRenderService;
 use iEducar\Packages\AdvancedReports\Services\QrCodeService;
@@ -111,7 +112,11 @@ class DiplomaReportController extends Controller
     }
 
     /**
-     * @return array{director_name: string, secretary_name: string, school_inep: ?string}
+     * @return array{
+     *   director_idpes: ?int, director_name: string, director_inep: ?string, director_matricula_interna: ?string,
+     *   secretary_idpes: ?int, secretary_name: string, secretary_inep: ?string, secretary_matricula_interna: ?string,
+     *   school_inep: ?string
+     * }
      */
     private function resolveSchoolSigners(int $escolaId): array
     {
@@ -120,22 +125,43 @@ class DiplomaReportController extends Controller
             ->leftJoin('cadastro.pessoa as pg', 'pg.idpes', '=', 'e.ref_idpes_gestor')
             ->leftJoin('cadastro.pessoa as ps', 'ps.idpes', '=', 'e.ref_idpes_secretario_escolar')
             ->where('e.cod_escola', $escolaId)
+            ->selectRaw('e.ref_idpes_gestor as director_idpes')
             ->selectRaw('pg.nome as director_name')
+            ->selectRaw('e.ref_idpes_secretario_escolar as secretary_idpes')
             ->selectRaw('ps.nome as secretary_name')
             ->selectRaw('ine.cod_escola_inep::text as school_inep')
             ->first();
 
         if (!$row) {
             return [
+                'director_idpes' => null,
                 'director_name' => '',
+                'director_inep' => null,
+                'director_matricula_interna' => null,
+                'secretary_idpes' => null,
                 'secretary_name' => '',
+                'secretary_inep' => null,
+                'secretary_matricula_interna' => null,
                 'school_inep' => null,
             ];
         }
 
+        $svc = app(IssuerSignatureDetails::class);
+        $directorIdpes = !empty($row->director_idpes) ? (int) $row->director_idpes : null;
+        $secretaryIdpes = !empty($row->secretary_idpes) ? (int) $row->secretary_idpes : null;
+
+        $dir = $directorIdpes ? $svc->forPersonId($directorIdpes) : ['issuerPersonInep' => null, 'issuerMatriculaFuncional' => null];
+        $sec = $secretaryIdpes ? $svc->forPersonId($secretaryIdpes) : ['issuerPersonInep' => null, 'issuerMatriculaFuncional' => null];
+
         return [
+            'director_idpes' => $directorIdpes,
             'director_name' => (string) ($row->director_name ?? ''),
+            'director_inep' => $dir['issuerPersonInep'] ?? null,
+            'director_matricula_interna' => $dir['issuerMatriculaFuncional'] ?? null,
+            'secretary_idpes' => $secretaryIdpes,
             'secretary_name' => (string) ($row->secretary_name ?? ''),
+            'secretary_inep' => $sec['issuerPersonInep'] ?? null,
+            'secretary_matricula_interna' => $sec['issuerMatriculaFuncional'] ?? null,
             'school_inep' => $row->school_inep ?? null,
         ];
     }
@@ -222,6 +248,10 @@ class DiplomaReportController extends Controller
         $signers = $this->resolveSchoolSigners($escolaId);
         $directorName = $signers['director_name'];
         $secretaryName = $signers['secretary_name'];
+        $directorInep = $signers['director_inep'] ?? null;
+        $secretaryInep = $signers['secretary_inep'] ?? null;
+        $directorMatriculaInterna = $signers['director_matricula_interna'] ?? null;
+        $secretaryMatriculaInterna = $signers['secretary_matricula_interna'] ?? null;
         $schoolInep = $signers['school_inep'];
 
         $header = app(OfficialHeaderService::class)->forSchool($instituicaoId, $escolaId);
@@ -342,6 +372,10 @@ class DiplomaReportController extends Controller
             'contact' => $header['contact'] ?? null,
             'directorName' => $directorName ?: null,
             'secretaryName' => $secretaryName ?: null,
+            'directorInep' => $directorInep,
+            'secretaryInep' => $secretaryInep,
+            'directorMatriculaInterna' => $directorMatriculaInterna,
+            'secretaryMatriculaInterna' => $secretaryMatriculaInterna,
             'schoolInep' => $schoolInep,
         ], $filename, 'a4', 'landscape', 'inline');
     }

@@ -239,12 +239,26 @@
               <div class="line">
                 <div class="role">Secretário(a) escolar</div>
                 <div class="name">{{ $secretaryName ?: ' ' }}</div>
+                @if(!empty($secretaryInep) || !empty($secretaryMatriculaInterna))
+                  <div class="muted" style="margin-top: 2px; font-size: 9px;">
+                    @if(!empty($secretaryInep))INEP: {{ $secretaryInep }}@endif
+                    @if(!empty($secretaryInep) && !empty($secretaryMatriculaInterna)) • @endif
+                    @if(!empty($secretaryMatriculaInterna))Matrícula interna: {{ $secretaryMatriculaInterna }}@endif
+                  </div>
+                @endif
               </div>
             </div>
             <div class="cell">
               <div class="line">
                 <div class="role">Diretor(a)</div>
                 <div class="name">{{ $directorName ?: ' ' }}</div>
+                @if(!empty($directorInep) || !empty($directorMatriculaInterna))
+                  <div class="muted" style="margin-top: 2px; font-size: 9px;">
+                    @if(!empty($directorInep))INEP: {{ $directorInep }}@endif
+                    @if(!empty($directorInep) && !empty($directorMatriculaInterna)) • @endif
+                    @if(!empty($directorMatriculaInterna))Matrícula interna: {{ $directorMatriculaInterna }}@endif
+                  </div>
+                @endif
               </div>
             </div>
           </div>
