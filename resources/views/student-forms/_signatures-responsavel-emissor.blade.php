@@ -1,6 +1,6 @@
 {{-- Duas assinaturas na mesma linha: responsável (esq.) e emissor (dir.), padrão de tabela como demais documentos do pacote. --}}
 @php($respNome = $responsavelExibicao ?? null)
-<div style="margin-top: 16px; margin-bottom: 6px;">
+<div style="margin-top: 10px; margin-bottom: 4px;">
   <table style="width: 100%; border-collapse: collapse;">
     <tr>
       <td style="width: 48%; text-align: center; vertical-align: top; border: 0; padding: 0 10px;">

@@ -61,6 +61,7 @@ class AdvancedReportsDocument extends Model
                 'students_by_situation' => 'Alunos por situação',
                 'movements_general' => 'Relatório de movimentações (geral)',
                 'diary_mirror' => 'Espelho de diário (chamada)',
+                'socioeconomic_report' => 'Relatório socioeconômico',
                 'diploma' => 'Diploma (modelo)',
                 'certificate' => 'Certificado (modelo)',
                 'declaration' => 'Declaração (modelo)',
@@ -104,6 +105,13 @@ class AdvancedReportsDocument extends Model
                     (string) ($p['batch_index'] ?? '') . ' de ' . (string) ($p['batch_total'] ?? '')
                 );
             }
+        }
+
+        if ($typeStr === 'socioeconomic_report') {
+            $summary['Instituição'] = (string) ($p['institution'] ?? '');
+            $summary['Escola'] = (string) ($p['school_display'] ?? '');
+            $summary['Curso (filtro)'] = (string) ($p['course'] ?? '');
+            $summary['Gráficos'] = !empty($p['with_charts']) ? 'Sim' : 'Não';
         }
 
         // Remove chaves vazias (sem expor payload completo)

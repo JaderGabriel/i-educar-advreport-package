@@ -14,12 +14,15 @@ Itens abaixo já foram implementados e ficam aqui apenas para histórico/visibil
 - **Atas**:
   - Ata de entrega de resultados (assinaturas de responsáveis);
   - Ata de conselho de classe por turma (com quebra de página e assinaturas).
-- **Espelho de diário** (primeira entrega) com presença `•` e falta `F`.
+- **Espelho de diário** (evoluído): presença `•` / falta `F`; **dias úteis** + **calendário escolar** (não letivo / extra letivo) quando vinculado à turma; **paginação** de dias e alunos; **PDF por docente+componente** (ZIP com **código de validação por arquivo**); cabeçalho com componente e professor(a).
 - **Movimentações (geral)**: PDF/Excel com padronização de cabeçalho/rodapé/validação e correções de contadores.
-- **Auditoria**: tela + PDF + Excel e entrada de menu em “Escola → Relatórios”.
+- **Auditoria** (acessos e ações): tela + PDF + Excel; menu em “Escola → Relatórios”; **PDF/HTML** com tabelas **sem vazamento** (URLs longas com `table-layout: fixed` e quebra de linha).
 - **Indicadores socioeconômicos**:
   - gráficos com **UTF‑8/acentos** e **paleta de cores** consistente;
-  - rótulos humanizados (raça/cor e gênero) em PDF/Excel.
+  - rótulos humanizados (raça/cor e gênero) em PDF/Excel;
+  - **PDF** com **cabeçalho formal** do pacote, **rodapé com QR/código de validação** e registro em `advanced_reports_documents` (`socioeconomic_report`).
+- **Ficha de matrícula (PDF)**: quadros em **duas colunas** (dados do aluno/filiação/matrícula) e checklist de documentos em **três colunas**, para reduzir altura e número de páginas.
+- **`student-documents/_footer`**: defaults para `book` / `page` / `record`, evitando erro em PDFs que não enviam esses campos (ex.: espelho de diário).
 - **Diploma/Certificado/Declaração (modelos)**:
   - refatoração do CSS para evitar **texto cortado**, **vazamento lateral** e **páginas em branco** (Dompdf).
 
@@ -58,12 +61,12 @@ Itens abaixo já foram implementados e ficam aqui apenas para histórico/visibil
     - compatibilidade com diário, períodos encerrados e permissões;
     - definição do que é “pendência” em cenários de RC/recuperação.
 
-- **Espelho de diário — completar versão “por componente/etapa”**
-  - **Objetivo**: evoluir o espelho para contemplar componentes/etapas e regras de diário (a primeira entrega é mais simples).
-  - **Estimativa**: 2–4 semanas.
+- **Espelho de diário — refinamentos (etapas / frequência real / regras por rede)**
+  - **Objetivo**: além do espelho atual (chamada por turma, componente e docente, calendário letivo e ZIP), evoluir para etapas do diário, frequência real ou integrações específicas da rede.
+  - **Estimativa**: 2–4 semanas (conforme escopo acordado).
   - **Fatores/decisões**:
-    - depende fortemente do modelo de diário ativo na rede;
-    - exige performance e paginação robustas.
+    - depende do modelo de diário e permissões;
+    - performance com volume alto de turmas/dias.
 
 ## 3) Atas e registros formais (Prioridade 1/2)
 

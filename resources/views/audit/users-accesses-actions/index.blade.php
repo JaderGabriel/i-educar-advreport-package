@@ -126,8 +126,8 @@
         <div class="advanced-report-card" style="margin-top: 12px;">
             <strong class="advanced-report-card-title">Acessos (login)</strong>
             <p class="advanced-report-card-text">Fonte: <code>portal.acesso</code>. Listagem limitada para performance.</p>
-            <div style="overflow:auto;">
-                <table class="tablelistagem" width="100%" cellspacing="1" cellpadding="4" border="0">
+            <div style="overflow:auto; max-width:100%;">
+                <table class="tablelistagem" width="100%" cellspacing="1" cellpadding="4" border="0" style="table-layout:fixed; word-wrap:break-word;">
                     <tr>
                         <th class="formdktd" style="width: 160px;">Data/hora</th>
                         <th class="formdktd" style="width: 90px;">Usuário ID</th>
@@ -140,10 +140,10 @@
                         <tr>
                             <td class="formlttd">{{ $r['date'] ?? '' }}</td>
                             <td class="formlttd">{{ $r['user_id'] ?? '' }}</td>
-                            <td class="formlttd">{{ $r['user_name'] ?? '-' }}</td>
+                            <td class="formlttd" style="word-break:break-word;">{{ $r['user_name'] ?? '-' }}</td>
                             <td class="formlttd">{{ !empty($r['success']) ? 'Sucesso' : 'Falha' }}</td>
-                            <td class="formlttd">{{ $r['internal_ip'] ?? '' }}</td>
-                            <td class="formlttd">{{ $r['external_ip'] ?? '' }}</td>
+                            <td class="formlttd" style="word-break:break-all;">{{ $r['internal_ip'] ?? '' }}</td>
+                            <td class="formlttd" style="word-break:break-all;">{{ $r['external_ip'] ?? '' }}</td>
                         </tr>
                     @empty
                         <tr><td class="formlttd" colspan="6">Nenhum acesso no período/filtros.</td></tr>
@@ -155,17 +155,17 @@
         <div class="advanced-report-card" style="margin-top: 12px;">
             <strong class="advanced-report-card-title">Alterações de dados (trilha de auditoria)</strong>
             <p class="advanced-report-card-text">Fonte: <code>ieducar_audit</code>. Mostra origem (URL), IP e operação. Listagem limitada para performance.</p>
-            <div style="overflow:auto;">
-                <table class="tablelistagem" width="100%" cellspacing="1" cellpadding="4" border="0">
+            <div style="overflow:auto; max-width:100%;">
+                <table class="tablelistagem" width="100%" cellspacing="1" cellpadding="4" border="0" style="table-layout:fixed; word-wrap:break-word;">
                     <tr>
-                        <th class="formdktd" style="width: 160px;">Data/hora</th>
-                        <th class="formdktd" style="width: 70px;">ID</th>
-                        <th class="formdktd" style="width: 70px;">Op.</th>
-                        <th class="formdktd" style="width: 90px;">Usuário ID</th>
-                        <th class="formdktd" style="width: 220px;">Usuário</th>
-                        <th class="formdktd" style="width: 180px;">Tabela</th>
-                        <th class="formdktd" style="width: 120px;">IP</th>
-                        <th class="formdktd">Origem (URL)</th>
+                        <th class="formdktd" style="width: 14%;">Data/hora</th>
+                        <th class="formdktd" style="width: 6%;">ID</th>
+                        <th class="formdktd" style="width: 7%;">Op.</th>
+                        <th class="formdktd" style="width: 7%;">Usuário ID</th>
+                        <th class="formdktd" style="width: 14%;">Usuário</th>
+                        <th class="formdktd" style="width: 16%;">Tabela</th>
+                        <th class="formdktd" style="width: 10%;">IP</th>
+                        <th class="formdktd" style="width: 26%;">Origem (URL)</th>
                     </tr>
                     @forelse($changes as $r)
                         <tr>
@@ -173,10 +173,10 @@
                             <td class="formlttd">{{ $r['id'] ?? '' }}</td>
                             <td class="formlttd">{{ $r['operation'] ?? '' }}</td>
                             <td class="formlttd">{{ $r['user_id'] ?? '' }}</td>
-                            <td class="formlttd">{{ $r['user_name'] ?? '-' }}</td>
-                            <td class="formlttd">{{ ($r['schema'] ?? '') . '.' . ($r['table'] ?? '') }}</td>
-                            <td class="formlttd">{{ $r['ip'] ?? '' }}</td>
-                            <td class="formlttd">{{ $r['origin'] ?? '' }}</td>
+                            <td class="formlttd" style="word-break:break-word;">{{ $r['user_name'] ?? '-' }}</td>
+                            <td class="formlttd" style="word-break:break-all;">{{ ($r['schema'] ?? '') . '.' . ($r['table'] ?? '') }}</td>
+                            <td class="formlttd" style="word-break:break-all;">{{ $r['ip'] ?? '' }}</td>
+                            <td class="formlttd" style="word-break:break-all;">{{ $r['origin'] ?? '' }}</td>
                         </tr>
                     @empty
                         <tr><td class="formlttd" colspan="8">Nenhuma alteração no período/filtros.</td></tr>

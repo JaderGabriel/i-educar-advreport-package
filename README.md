@@ -92,15 +92,17 @@ php artisan advanced-reports:flush-menus
 
 ## Validação pública (QR Code)
 
-Documentos emitidos pelo módulo de **modelos** (ex.: certificados/declarações) incluem:
+Documentos e relatórios que passam pelo fluxo de **emissão assinada** incluem:
 
 - **código de validação**
 - **URL de validação pública** (sem login)
 - **QR Code** apontando para a URL
 
+Exemplos: modelos (certificados/declarações), **espelho de diário**, **relatório socioeconômico (PDF)** e demais itens que persistem em `advanced_reports_documents`.
+
 Rota de validação:
 
-- `/documentos/validar/{codigo}`
+- `/documentos/validar/{codigo}` (nome da rota no pacote: `advanced-reports.documents.validate`)
 
 ## Comportamento do PDF (prévia no navegador)
 
@@ -112,7 +114,9 @@ Ao emitir PDF, o pacote retorna o arquivo com `Content-Disposition: inline`, abr
 
 - **Rota (UI)**: `/relatorios-avancados/socioeconomicos`
 - **PDF**: `/relatorios-avancados/socioeconomicos/pdf`
-  - filtro `with_charts=1` inclui **gráficos** no PDF.
+  - filtro `with_charts=1` inclui **gráficos** no PDF;
+  - **cabeçalho formal** (instituição/escola/contato quando houver filtro);
+  - **rodapé com código + URL + QR** e registro em `advanced_reports_documents` (tipo `socioeconomic_report`).
 - **Excel**: `/relatorios-avancados/socioeconomicos/excel`
 - **Objetivo**: visão agregada de distribuição por raça/cor, sexo, benefícios e concentração por escola, no recorte filtrado.
 

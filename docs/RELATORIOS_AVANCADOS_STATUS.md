@@ -17,7 +17,7 @@
 - [x] Menu criado
 - [x] Rota `/relatorios-avancados/auditoria/acessos-acoes`
 - [x] View com filtros + resumo + listagens (acessos + alterações)
-- [x] PDF
+- [x] PDF (tabelas com largura fixa / quebra de texto para não vazar da página)
 - [x] Excel
 - [x] Autocomplete de usuário (lookup)
   - [x] Entrada no menu “Escola → Relatórios” após Indicadores (ajuste de ordem/compatibilidade)
@@ -61,6 +61,7 @@
 - [x] Serviço `SocioeconomicReportService` (agregações básicas)
 - [ ] Ajustar métricas para espelhar exatamente o report oficial
 - [x] PDF com gráficos (opção `with_charts=1`)
+- [x] PDF com cabeçalho formal + rodapé de validação (QR) + registro `socioeconomic_report`
 - [x] Excel
 
 ### Vagas por turma

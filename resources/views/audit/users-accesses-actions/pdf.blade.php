@@ -10,6 +10,27 @@
     @php($filters = $filters ?? [])
     @php($operationOptions = $operationOptions ?? [])
 
+    <style>
+      /* Dompdf: URLs e nomes longos não podem expandir a tabela além da folha */
+      table.audit-pdf-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+        font-size: 7.5px;
+        margin-bottom: 10px;
+      }
+      table.audit-pdf-table th,
+      table.audit-pdf-table td {
+        word-wrap: break-word;
+        overflow-wrap: anywhere;
+        vertical-align: top;
+        padding: 2px 3px;
+      }
+      table.audit-pdf-table td.audit-pdf-breakall {
+        word-break: break-all;
+      }
+    </style>
+
     <h1>AUDITORIA — ACESSOS E AÇÕES DE USUÁRIOS</h1>
 
     <div class="box">
@@ -86,15 +107,23 @@
 
     <h2 style="margin-top: 14px;">Acessos (login)</h2>
     <p class="muted">Fonte: <code>portal.acesso</code>. Listagem limitada.</p>
-    <table>
+    <table class="audit-pdf-table">
+        <colgroup>
+            <col style="width: 15%;">
+            <col style="width: 7%;">
+            <col style="width: 28%;">
+            <col style="width: 7%;">
+            <col style="width: 21%;">
+            <col style="width: 22%;">
+        </colgroup>
         <thead>
         <tr>
-            <th style="width: 120px;">Data/hora</th>
-            <th style="width: 55px;">ID</th>
+            <th>Data/hora</th>
+            <th>ID</th>
             <th>Usuário</th>
-            <th style="width: 55px;">OK?</th>
-            <th style="width: 90px;">IP int.</th>
-            <th style="width: 90px;">IP ext.</th>
+            <th>OK?</th>
+            <th>IP int.</th>
+            <th>IP ext.</th>
         </tr>
         </thead>
         <tbody>
@@ -102,10 +131,10 @@
             <tr>
                 <td>{{ $r['date'] ?? '' }}</td>
                 <td>{{ $r['user_id'] ?? '' }}</td>
-                <td>{{ $r['user_name'] ?? '-' }}</td>
+                <td class="audit-pdf-breakall">{{ $r['user_name'] ?? '-' }}</td>
                 <td>{{ !empty($r['success']) ? 'Sim' : 'Não' }}</td>
-                <td>{{ $r['internal_ip'] ?? '' }}</td>
-                <td>{{ $r['external_ip'] ?? '' }}</td>
+                <td class="audit-pdf-breakall">{{ $r['internal_ip'] ?? '' }}</td>
+                <td class="audit-pdf-breakall">{{ $r['external_ip'] ?? '' }}</td>
             </tr>
         @endforeach
         </tbody>
@@ -113,15 +142,26 @@
 
     <h2 style="margin-top: 14px;">Alterações de dados (trilha)</h2>
     <p class="muted">Fonte: <code>ieducar_audit</code>. Listagem limitada.</p>
-    <table>
+    <table class="audit-pdf-table">
+        <colgroup>
+            <col style="width: 14%;">
+            <col style="width: 6%;">
+            <col style="width: 8%;">
+            <col style="width: 7%;">
+            <col style="width: 10%;">
+            <col style="width: 18%;">
+            <col style="width: 9%;">
+            <col style="width: 28%;">
+        </colgroup>
         <thead>
         <tr>
-            <th style="width: 120px;">Data/hora</th>
-            <th style="width: 45px;">ID</th>
-            <th style="width: 55px;">Op.</th>
-            <th style="width: 55px;">Usuário</th>
-            <th style="width: 120px;">Tabela</th>
-            <th style="width: 85px;">IP</th>
+            <th>Data/hora</th>
+            <th>ID</th>
+            <th>Op.</th>
+            <th>Usuário ID</th>
+            <th>Usuário</th>
+            <th>Tabela</th>
+            <th>IP</th>
             <th>Origem (URL)</th>
         </tr>
         </thead>
@@ -132,9 +172,10 @@
                 <td>{{ $r['id'] ?? '' }}</td>
                 <td>{{ $r['operation'] ?? '' }}</td>
                 <td>{{ $r['user_id'] ?? '' }}</td>
-                <td>{{ ($r['schema'] ?? '') . '.' . ($r['table'] ?? '') }}</td>
-                <td>{{ $r['ip'] ?? '' }}</td>
-                <td>{{ $r['origin'] ?? '' }}</td>
+                <td class="audit-pdf-breakall">{{ $r['user_name'] ?? '-' }}</td>
+                <td class="audit-pdf-breakall">{{ ($r['schema'] ?? '') . '.' . ($r['table'] ?? '') }}</td>
+                <td class="audit-pdf-breakall">{{ $r['ip'] ?? '' }}</td>
+                <td class="audit-pdf-breakall">{{ $r['origin'] ?? '' }}</td>
             </tr>
         @endforeach
         </tbody>
