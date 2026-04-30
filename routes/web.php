@@ -19,6 +19,8 @@ use iEducar\Packages\AdvancedReports\Http\Controllers\PendingEntriesController;
 use iEducar\Packages\AdvancedReports\Http\Controllers\StudentsBySituationController;
 use iEducar\Packages\AdvancedReports\Http\Controllers\AuditUsersReportController;
 use iEducar\Packages\AdvancedReports\Http\Controllers\IndicatorsPlaceholderController;
+use iEducar\Packages\AdvancedReports\Http\Controllers\StudentFormsController;
+use iEducar\Packages\AdvancedReports\Http\Controllers\CommunicationsController;
 use Illuminate\Support\Facades\Route;
 
 // Validação pública (sem login)
@@ -119,6 +121,11 @@ Route::middleware([
     Route::get('/relatorios-avancados/vagas-turmas/excel', [VacanciesBySchoolClassController::class, 'excel'])
         ->name('advanced-reports.vacancies.excel');
 
+    // Comunicados oficiais (modelos — item 8.6, exceto ocorrências)
+    Route::get('/relatorios-avancados/comunicados/{slug}', [CommunicationsController::class, 'show'])
+        ->where('slug', '(convocacao|reuniao|advertencia|comunicado-geral)')
+        ->name('advanced-reports.communications.show');
+
     Route::get('/relatorios-avancados/atas', [MinutesController::class, 'index'])
         ->name('advanced-reports.minutes.index');
     Route::get('/relatorios-avancados/atas/pdf', [MinutesController::class, 'pdf'])
@@ -155,5 +162,16 @@ Route::middleware([
         ->name('advanced-reports.audit.users.pdf');
     Route::get('/relatorios-avancados/auditoria/acessos-acoes/excel', [AuditUsersReportController::class, 'excel'])
         ->name('advanced-reports.audit.users.excel');
+
+    // Fichas (Documentos do aluno → Fichas)
+    Route::get('/relatorios-avancados/fichas/ficha-individual', [StudentFormsController::class, 'individualIndex'])
+        ->name('advanced-reports.student-forms.individual.index');
+    Route::get('/relatorios-avancados/fichas/ficha-individual/pdf', [StudentFormsController::class, 'individualPdf'])
+        ->name('advanced-reports.student-forms.individual.pdf');
+
+    Route::get('/relatorios-avancados/fichas/ficha-matricula', [StudentFormsController::class, 'enrollmentIndex'])
+        ->name('advanced-reports.student-forms.enrollment.index');
+    Route::get('/relatorios-avancados/fichas/ficha-matricula/pdf', [StudentFormsController::class, 'enrollmentPdf'])
+        ->name('advanced-reports.student-forms.enrollment.pdf');
 });
 

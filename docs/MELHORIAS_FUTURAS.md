@@ -181,7 +181,7 @@ Os itens abaixo são **sugestões** com base em documentos frequentemente emitid
 
 - **Ficha de matrícula (formulário completo)**: export/print da ficha com dados do aluno/responsáveis/contatos/saúde/NEE.
   - Referência (conceito/uso): `https://gestaoescolar.org.br/conteudo/557/como-usar-as-informacoes-das-fichas-de-matricula`
-  - **Status**: **não implementado**
+  - **Status**: **parcial** (menu **Escola → Documentos → Documentos do aluno → Fichas → Ficha de matrícula**; PDF com bloco de autorização imagem/voz, assinaturas e emissão em lote; ainda faltam variações ricas por rede, foto e campos adicionais de saúde/NEE)
   - **Prioridade**: **P2**
   - **Dificuldade**: **Média** (foto, layout, validação e variações por rede)
   - **Estimativa**: **3–7 dias**
@@ -262,7 +262,7 @@ Os itens abaixo são **sugestões** com base em documentos frequentemente emitid
 
 - **Comunicados oficiais** (modelo): convocações, reuniões, advertências, comunicado geral (com cabeçalho padrão).
   - Referência (ideias): `https://blog.clipescola.com/dicas-e-modelos-de-comunicados-escolares/`
-  - **Status**: **não implementado**
+  - **Status**: **parcial** (menu **Escola → Documentos → Comunicados** com quatro entradas; telas placeholder em `/relatorios-avancados/comunicados/{convocacao|reuniao|advertencia|comunicado-geral}`; PDF com cabeçalho oficial e envio/registro ainda não)
   - **Prioridade**: **P3**
   - **Dificuldade**: **Baixa/Média** (modelo; pode evoluir para envio/registro)
   - **Estimativa**: **2–5 dias**

@@ -32,8 +32,9 @@ Fonte: `docs/DOC-EXECUTIVO-PACOTE-RELATORIOS-PORTABILIS.md` seção **8.4**.
 ### 3.1 Prioridade 1 (núcleo)
 
 - **Documentos do aluno (Oficiais)** (8.4.1)
-  - **Implementado**: Boletim, Histórico (múltiplos modelos), Declarações oficiais (matrícula/frequência) e Guia/Transferência.
-  - **Faltando**: Escolaridade / vida escolar / “nada consta” (definir escopo e LGPD).
+  - **Implementado**: Boletim, Histórico (múltiplos modelos), Declarações oficiais (matrícula/frequência) e Guia/Transferência; submenu **Fichas** (ficha individual e ficha de matrícula, PDF em lote).
+  - **Implementado (parcial / roadmap)**: grupo **Comunicados** (convocações, reuniões, advertências, comunicado geral — telas placeholder; sem livro de ocorrências).
+  - **Faltando**: Escolaridade / vida escolar / “nada consta” (definir escopo e LGPD); PDF final dos comunicados com parametrização por rede.
 - **Avaliação e frequência (Pedagógico)** (8.4.2)
   - **Implementado (orientação)**: placeholders de menu/tela para mapas, espelho e pendências (para fluxo claro ao usuário leigo).
   - **Faltando**: implementação completa (regras por rede: etapas, diários, alocações docentes e lançamentos).
@@ -102,6 +103,9 @@ Validação pública:
 
 - `/relatorios-avancados/documentos` (UI)
 - `/relatorios-avancados/documentos/pdf` (PDF: matrícula, frequência, guia/transferência)
+- `/relatorios-avancados/fichas/ficha-individual` (+ PDF; lote; prévia `preview=1` sem gravar validação)
+- `/relatorios-avancados/fichas/ficha-matricula` (+ PDF; lote; termo imagem/voz em destaque)
+- `/relatorios-avancados/comunicados/{convocacao|reuniao|advertencia|comunicado-geral}` (placeholders até modelo PDF)
 
 ### 4.5 Boletim e Histórico (com validação)
 

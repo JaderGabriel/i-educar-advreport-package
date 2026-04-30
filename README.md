@@ -13,7 +13,7 @@ Pacote de **Relatórios e Documentos** para o i-Educar, com emissão em **PDF** 
 
 ## Instalação (plug-and-play)
 
-1. Garanta o pacote em `packages/buriti/i-educar-advanced-reports-package`.
+1. Garanta o pacote em `packages/buriti/i-educar-advanced-reports-package` (ou o caminho equivalente da sua organização, ex.: `packages/serventec/i-educar-advanced-reports-package`).
 1. Ative via plug-and-play:
 
 ```bash
@@ -68,6 +68,7 @@ php artisan package:discover --ansi
 
 ```bash
 php artisan migrate --path=packages/buriti/i-educar-advanced-reports-package/database/migrations --force
+# (ajuste o path se o pacote estiver em outro vendor, ex.: packages/serventec/i-educar-advanced-reports-package)
 ```
 
 1. Republique os assets (CSS) do pacote com `--force` (recomendado em updates):
@@ -177,6 +178,22 @@ Ao emitir PDF, o pacote retorna o arquivo com `Content-Disposition: inline`, abr
   - Declaração de frequência
   - Guia/Declaração de transferência
   - Declaração de escolaridade / Nada consta
+
+### 4.1) Fichas (Documentos do aluno — menu **Fichas**)
+
+- **Ficha individual (UI)**: `/relatorios-avancados/fichas/ficha-individual`
+- **Ficha individual (PDF)**: `/relatorios-avancados/fichas/ficha-individual/pdf` (em lote por filtros ou matrículas selecionadas; prévia com `preview=1` não grava validação)
+- **Ficha de matrícula (UI)**: `/relatorios-avancados/fichas/ficha-matricula`
+- **Ficha de matrícula (PDF)**: `/relatorios-avancados/fichas/ficha-matricula/pdf`
+- **Objetivo**: ficha pedagógica/resumo (individual) e ficha para conferência/assinatura (matrícula), com cabeçalho/rodapé do pacote.
+
+### 4.2) Comunicados (Escola → Documentos — menu **Comunicados**)
+
+- **Convocações**: `/relatorios-avancados/comunicados/convocacao`
+- **Reuniões**: `/relatorios-avancados/comunicados/reuniao`
+- **Advertências**: `/relatorios-avancados/comunicados/advertencia`
+- **Comunicado geral**: `/relatorios-avancados/comunicados/comunicado-geral`
+- **Objetivo**: modelos de comunicado oficial (roadmap; telas placeholder até emissão PDF parametrizada).
 
 ### 5) Boletim do aluno (PDF)
 

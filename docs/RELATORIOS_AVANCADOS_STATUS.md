@@ -133,12 +133,6 @@
 - [ ] Controller + Service
 - [ ] View filtros/resultados
 
-### Fichas
-
-- [x] Menu criado
-- [ ] Controller + Service
-- [ ] View filtros/resultados
-
 ### Históricos
 
 - [x] Menu criado
@@ -154,6 +148,18 @@
 - [x] Menu criado
 - [x] Rota `/relatorios-avancados/documentos`
 - [x] PDF (matrícula, frequência, guia/transferência) com QR/HMAC
+- [x] Submenu **Fichas** (primeiro item do grupo): **Ficha individual** e **Ficha de matrícula**
+  - [x] Rotas UI: `/relatorios-avancados/fichas/ficha-individual`, `/relatorios-avancados/fichas/ficha-matricula`
+  - [x] PDF: `/relatorios-avancados/fichas/ficha-individual/pdf`, `/relatorios-avancados/fichas/ficha-matricula/pdf` (individual e lote; prévia sem persistir registro)
+  - [x] Ficha individual: assinaturas secretário(a) e diretor(a) da escola (quando cadastrados)
+  - [x] Ficha de matrícula: bloco destacado de autorização imagem/voz + assinaturas responsável/emissor
+
+### Comunicados (Escola → Documentos)
+
+- [x] Menu criado (antes de **Atas e registros formais**)
+- [x] Submenus: Convocações, Reuniões, Advertências, Comunicado geral (item 8.6 do backlog; **sem** livro/ficha de ocorrências)
+- [x] Rotas placeholder: `/relatorios-avancados/comunicados/{convocacao|reuniao|advertencia|comunicado-geral}`
+- [ ] PDF modelo + parametrização por rede
 
 ### Diplomas/Certificados (modelos)
 

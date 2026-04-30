@@ -42,6 +42,8 @@ class AdvancedReportsDocument extends Model
             'transfer_guide' => 'Guia/Declaração de transferência',
             'transfer_packet' => 'Comprovante de matrícula + declaração de transferência',
             'approval_packet' => 'Declaração de matrícula + declaração de conclusão (ficha individual)',
+            'student_form:individual' => 'Ficha individual',
+            'student_form:enrollment' => 'Ficha de matrícula',
             'declaration_nada_consta' => 'Declaração de escolaridade / Nada consta',
             'vacancies_by_school_class' => 'Vagas por turma',
             'students_by_situation' => 'Alunos por situação',
