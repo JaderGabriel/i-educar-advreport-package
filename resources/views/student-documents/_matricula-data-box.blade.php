@@ -1,28 +1,28 @@
-@php($m = $matricula)
-@php($showInstituicao = $showInstituicao ?? true)
-@php($compactTwoCol = $compactTwoCol ?? false)
+<?php
+$m = $matricula;
+$showInstituicao = $showInstituicao ?? true;
+$compactTwoCol = $compactTwoCol ?? false;
+$pairs = [
+    ['Aluno(a)', $m->aluno_nome],
+    ['Matrícula interna (i-Educar)', (string) $m->matricula_id],
+    ['Ano letivo', (string) $m->ano_letivo],
+];
+if ($showInstituicao) {
+    $pairs[] = ['Instituição', $m->instituicao];
+}
+$pairs[] = ['Escola', $m->escola];
+$pairs[] = ['Curso', $m->curso];
+$pairs[] = ['Série', $m->serie];
+$pairs[] = ['Turma', $m->turma];
+if (!empty($m->data_entrada_turma_br)) {
+    $pairs[] = [$entradaLabel ?? 'Início na turma', $m->data_entrada_turma_br];
+}
+if (!empty($m->data_fim_turma_br)) {
+    $pairs[] = [$saidaLabel ?? 'Até (registro)', $m->data_fim_turma_br];
+}
+?>
 <div class="box">
   @if($compactTwoCol)
-    @php
-      $pairs = [
-        ['Aluno(a)', $m->aluno_nome],
-        ['Matrícula interna (i-Educar)', (string) $m->matricula_id],
-        ['Ano letivo', (string) $m->ano_letivo],
-      ];
-      if ($showInstituicao) {
-        $pairs[] = ['Instituição', $m->instituicao];
-      }
-      $pairs[] = ['Escola', $m->escola];
-      $pairs[] = ['Curso', $m->curso];
-      $pairs[] = ['Série', $m->serie];
-      $pairs[] = ['Turma', $m->turma];
-      if (!empty($m->data_entrada_turma_br)) {
-        $pairs[] = [$entradaLabel ?? 'Início na turma', $m->data_entrada_turma_br];
-      }
-      if (!empty($m->data_fim_turma_br)) {
-        $pairs[] = [$saidaLabel ?? 'Até (registro)', $m->data_fim_turma_br];
-      }
-    @endphp
     <table class="fm-kv2" style="width:100%; border-collapse:collapse; font-size:9px;">
       @for($i = 0; $i < count($pairs); $i += 2)
         <tr>
@@ -38,7 +38,9 @@
         </tr>
       @endfor
     </table>
-  @else
+  @endif
+
+  @if(! $compactTwoCol)
     <table>
       <tr><th>Aluno(a)</th><td>{{ $m->aluno_nome }}</td></tr>
       <tr><th>Matrícula interna (i-Educar)</th><td>{{ $m->matricula_id }}</td></tr>
