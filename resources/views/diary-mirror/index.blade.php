@@ -72,6 +72,18 @@
         return null;
       }
 
+      function requiredMessageFinal() {
+        const ano = document.getElementById('ano');
+        const turma = document.getElementById('ref_cod_turma');
+        const di = document.querySelector('input[name=\"data_inicial\"]');
+        const df = document.querySelector('input[name=\"data_final\"]');
+        if (!ano || !ano.value) return 'Informe o ano letivo.';
+        if (!turma || !turma.value) return 'Informe a turma.';
+        if (!di || !di.value) return 'Informe a data inicial.';
+        if (!df || !df.value) return 'Informe a data final.';
+        return null;
+      }
+
       const modal = document.getElementById('advancedReportsDiaryMirrorPreviewModal');
       const pdfRoot = modal ? modal.querySelector('.js-diary-mirror-preview-pdf') : null;
       const closeBtn = document.querySelector('.js-diary-mirror-preview-close');
@@ -106,7 +118,7 @@
       if (emitBtn) {
         emitBtn.addEventListener('click', function (e) {
           e.preventDefault();
-          const msg = requiredMessage();
+          const msg = requiredMessageFinal();
           if (msg) return openError(msg);
           const q = buildQuery();
           if (!q) return;
@@ -118,10 +130,11 @@
       if (helpBtn && form && modal && pdfRoot) {
         helpBtn.addEventListener('click', function (e) {
           e.preventDefault();
-          const msg = requiredMessage();
-          if (msg) return openError(msg);
           const params = new URLSearchParams(new FormData(form));
           params.set('preview', '1');
+          if (!params.get('ano')) params.set('ano', String(new Date().getFullYear()));
+          if (!params.get('data_inicial')) params.set('data_inicial', String(new Date().getFullYear()) + '-01-01');
+          if (!params.get('data_final')) params.set('data_final', String(new Date().getFullYear()) + '-01-15');
           const url = pdfBase + '?' + params.toString();
           modal.style.display = 'block';
           if (window.AdvancedReportsPdfPreview) {

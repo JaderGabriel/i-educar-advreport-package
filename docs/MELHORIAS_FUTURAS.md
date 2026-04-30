@@ -4,6 +4,25 @@ Este backlog complementa o `docs/RELATORIOS_AVANCADOS_STATUS.md` com itens estru
 
 As estimativas abaixo assumem **1 dev** com domínio do i-Educar e acesso a uma base de homologação representativa. Variam bastante conforme **regras da rede**, **qualidade dos dados** e **exigências legais**.
 
+## 0) Entregas recentes (já implementado no pacote)
+
+Itens abaixo já foram implementados e ficam aqui apenas para histórico/visibilidade (o status detalhado está em `docs/RELATORIOS_AVANCADOS_STATUS.md`):
+
+- **Histórico escolar (modelos)**:
+  - modelos `classic`, `modern` e SIMADE (1/32/magistério);
+  - **cabeçalho oficial** (formal_header) e **assinaturas** padronizadas (emissor + diretor/secretário quando aplicável).
+- **Atas**:
+  - Ata de entrega de resultados (assinaturas de responsáveis);
+  - Ata de conselho de classe por turma (com quebra de página e assinaturas).
+- **Espelho de diário** (primeira entrega) com presença `•` e falta `F`.
+- **Movimentações (geral)**: PDF/Excel com padronização de cabeçalho/rodapé/validação e correções de contadores.
+- **Auditoria**: tela + PDF + Excel e entrada de menu em “Escola → Relatórios”.
+- **Indicadores socioeconômicos**:
+  - gráficos com **UTF‑8/acentos** e **paleta de cores** consistente;
+  - rótulos humanizados (raça/cor e gênero) em PDF/Excel.
+- **Diploma/Certificado/Declaração (modelos)**:
+  - refatoração do CSS para evitar **texto cortado**, **vazamento lateral** e **páginas em branco** (Dompdf).
+
 ## 1) Documentos oficiais do aluno (Prioridade 1)
 
 - **Escolaridade / vida escolar / “nada consta”**
@@ -39,8 +58,8 @@ As estimativas abaixo assumem **1 dev** com domínio do i-Educar e acesso a uma 
     - compatibilidade com diário, períodos encerrados e permissões;
     - definição do que é “pendência” em cenários de RC/recuperação.
 
-- **Espelho de diário**
-  - **Objetivo**: emitir um espelho do diário consolidando lançamentos e frequências por componente/etapa.
+- **Espelho de diário — completar versão “por componente/etapa”**
+  - **Objetivo**: evoluir o espelho para contemplar componentes/etapas e regras de diário (a primeira entrega é mais simples).
   - **Estimativa**: 2–4 semanas.
   - **Fatores/decisões**:
     - depende fortemente do modelo de diário ativo na rede;
@@ -50,14 +69,14 @@ As estimativas abaixo assumem **1 dev** com domínio do i-Educar e acesso a uma 
 
 - **Ata de conselho de classe**
   - **Objetivo**: documento formal de deliberações, geralmente com pautas/encaminhamentos.
-  - **Estimativa**: 1–2 semanas.
+  - **Estimativa**: 1–2 semanas (para evoluir conteúdo livre/pautas/encaminhamentos).
   - **Fatores/decisões**:
     - conteúdo varia por rede; pode exigir campos “livres” e anexos;
     - definir se terá validação pública (QR) ou somente autenticação interna.
 
 - **Ata de entrega de resultados (assinaturas)**
   - **Objetivo**: lista formal para coleta de assinaturas dos responsáveis.
-  - **Estimativa**: 3–5 dias (reaproveita base de lista/ata).
+  - **Estimativa**: 3–5 dias (para refinamentos de regra/paginação/observações por rede).
   - **Fatores/decisões**:
     - regras de exibição (responsáveis, 1 por aluno, observações);
     - paginação e quebras de página.
@@ -77,6 +96,17 @@ As estimativas abaixo assumem **1 dev** com domínio do i-Educar e acesso a uma 
   - **Fatores/decisões**:
     - definir padrão e permitir override por rede;
     - impacto em performance (joins adicionais).
+
+## 4.1) Indicadores (Prioridade 2)
+
+- **Indicadores de desempenho/resultado (placeholders)**:
+  - baixo desempenho; alto desempenho; sem nota; não enturmados; comparativo de médias da turma.
+  - **Objetivo**: sair de “orientação” e entregar relatório real (UI + PDF + Excel) no padrão do pacote.
+  - **Estimativa**: 1–3 semanas (varia conforme regra de avaliação e volume de dados).
+  - **Fatores/decisões**:
+    - definir recortes (ano/instituição/escola/curso/série/turma, etapa, componente);
+    - regra de média/limiar e como tratar RC/recuperação;
+    - performance e paginação (UI e export).
 
 ## 5) Auditoria / Validação / Autenticidade (evolução)
 

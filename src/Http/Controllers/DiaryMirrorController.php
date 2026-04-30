@@ -45,22 +45,18 @@ class DiaryMirrorController extends Controller
 
     public function pdf(Request $request, DiaryMirrorService $service): Response
     {
-        $ano = (int) $request->get('ano');
         $instituicaoId = $request->get('ref_cod_instituicao') ? (int) $request->get('ref_cod_instituicao') : null;
         $escolaId = $request->get('ref_cod_escola') ? (int) $request->get('ref_cod_escola') : null;
         $cursoId = $request->get('ref_cod_curso') ? (int) $request->get('ref_cod_curso') : null;
         $serieId = $request->get('ref_cod_serie') ? (int) $request->get('ref_cod_serie') : null;
-        $turmaId = (int) $request->get('ref_cod_turma');
 
-        $startDate = (string) $request->get('data_inicial', '');
-        $endDate = (string) $request->get('data_final', '');
-
-        if (!$ano || !$turmaId || $startDate === '' || $endDate === '') {
-            abort(422, 'Informe ano, turma, data inicial e data final.');
-        }
-
-        // Preview: usa turma real (id), mas dados mínimos são suficientes.
+        // Preview: não exige filtros completos; usa template real com dados fake (rápido).
         if ($request->boolean('preview')) {
+            $ano = (int) ($request->get('ano') ?: date('Y'));
+            $turmaId = $request->get('ref_cod_turma') ? (int) $request->get('ref_cod_turma') : 0;
+            $startDate = (string) ($request->get('data_inicial') ?: date('Y-m-01'));
+            $endDate = (string) ($request->get('data_final') ?: date('Y-m-15'));
+
             $data = [
                 'class' => (object) [
                     'turma_id' => $turmaId,
@@ -86,6 +82,15 @@ class DiaryMirrorController extends Controller
                     'data_final' => $endDate,
                 ],
             ], 'espelho-diario-previa.pdf', 'a4', 'landscape', 'inline');
+        }
+
+        $ano = (int) $request->get('ano');
+        $turmaId = (int) $request->get('ref_cod_turma');
+        $startDate = (string) $request->get('data_inicial', '');
+        $endDate = (string) $request->get('data_final', '');
+
+        if (!$ano || !$turmaId || $startDate === '' || $endDate === '') {
+            abort(422, 'Informe ano, turma, data inicial e data final.');
         }
 
         $data = $service->build($turmaId, $startDate, $endDate);

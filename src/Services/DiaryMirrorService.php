@@ -54,7 +54,7 @@ class DiaryMirrorService
             ->selectRaw('t.cod_turma as turma_id')
             ->selectRaw('t.nm_turma as turma')
             ->selectRaw('t.ano as ano_letivo')
-            ->selectRaw('COALESCE(ej.fantasia, ec.nm_escola, e.nome, \'\') as escola')
+            ->selectRaw('COALESCE(ej.fantasia, ec.nm_escola, ep.nome, \'\') as escola')
             ->selectRaw('e.ref_cod_instituicao as instituicao_id')
             ->selectRaw('e.cod_escola as escola_id')
             ->selectRaw('COALESCE(i.nm_instituicao, \'\') as instituicao')
