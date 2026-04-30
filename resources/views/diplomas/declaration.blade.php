@@ -85,6 +85,9 @@
         <div><strong>Emissão</strong>: {{ $issuedAt ?? date('d/m/Y H:i') }}</div>
         @if(!empty($issuerName) || !empty($issuerRole))
           <div><strong>Emissor</strong>: {{ trim(($issuerName ?? '') . ' ' . (!empty($issuerRole) ? ('(' . $issuerRole . ')') : '')) }}</div>
+          <div style="margin-top: 4px;">
+            @include('advanced-reports::pdf._issuer-person-lines')
+          </div>
         @endif
         @if(!empty($cityUf))
           <div><strong>Cidade/UF</strong>: {{ $cityUf }}</div>

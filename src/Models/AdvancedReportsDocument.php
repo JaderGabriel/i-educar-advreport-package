@@ -40,6 +40,7 @@ class AdvancedReportsDocument extends Model
             'declaration_frequency' => 'Declaração de frequência',
             'declaration_conclusion' => 'Declaração de conclusão',
             'transfer_guide' => 'Guia/Declaração de transferência',
+            'transfer_packet' => 'Comprovante de matrícula + declaração de transferência',
             'declaration_nada_consta' => 'Declaração de escolaridade / Nada consta',
             'vacancies_by_school_class' => 'Vagas por turma',
             'students_by_situation' => 'Alunos por situação',
@@ -75,4 +76,3 @@ class AdvancedReportsDocument extends Model
         return array_filter($summary, fn ($v) => !is_null($v) && $v !== '');
     }
 }
-

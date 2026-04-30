@@ -4,11 +4,11 @@ namespace iEducar\Packages\AdvancedReports\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use iEducar\Packages\AdvancedReports\Models\AdvancedReportsDocument;
+use iEducar\Packages\AdvancedReports\Services\AdvancedReportsFilterService;
 use iEducar\Packages\AdvancedReports\Services\DocumentSigningService;
 use iEducar\Packages\AdvancedReports\Services\OfficialHeaderService;
 use iEducar\Packages\AdvancedReports\Services\PdfRenderService;
 use iEducar\Packages\AdvancedReports\Services\QrCodeService;
-use iEducar\Packages\AdvancedReports\Services\AdvancedReportsFilterService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
@@ -33,6 +33,7 @@ class StudentDocumentsController extends Controller
 
         return $out;
     }
+
     public function index(Request $request, AdvancedReportsFilterService $filters): View
     {
         $ano = $request->get('ano');
@@ -73,11 +74,15 @@ class StudentDocumentsController extends Controller
                 'curso' => 'Curso (Exemplo)',
                 'serie' => 'Série (Exemplo)',
                 'turma' => 'Turma (Exemplo)',
+                'matricula_aprovado' => 4,
+                'data_entrada_turma_br' => '10/02/2026',
+                'data_fim_turma_br' => '28/04/2026',
             ];
 
             $view = match ($document) {
                 'declaration_frequency' => 'advanced-reports::student-documents.declaration-frequency',
                 'transfer_guide' => 'advanced-reports::student-documents.transfer-guide',
+                'transfer_packet' => 'advanced-reports::student-documents.transfer-packet',
                 'declaration_conclusion' => 'advanced-reports::student-documents.declaration-conclusion',
                 'declaration_nada_consta' => 'advanced-reports::student-documents.declaration-nada-consta',
                 default => 'advanced-reports::student-documents.declaration-enrollment',
@@ -86,6 +91,7 @@ class StudentDocumentsController extends Controller
             $title = match ($document) {
                 'declaration_frequency' => 'Declaração de frequência',
                 'transfer_guide' => 'Guia/Declaração de transferência',
+                'transfer_packet' => 'Comprovante de matrícula e declaração de transferência',
                 'declaration_conclusion' => 'Declaração de conclusão',
                 'declaration_nada_consta' => 'Declaração de escolaridade / Nada consta',
                 default => 'Declaração de matrícula',
@@ -131,7 +137,21 @@ class StudentDocumentsController extends Controller
             abort(422, 'Informe ao menos ano, escola e curso (alunos são opcionais).');
         }
 
-        $loadMatricula = static function (int $id) {
+        $mtPriorizada = <<<'SQL'
+(
+  SELECT DISTINCT ON (mtz.ref_cod_matricula)
+    mtz.ref_cod_matricula,
+    mtz.ref_cod_turma,
+    mtz.data_enturmacao,
+    mtz.data_exclusao
+  FROM pmieducar.matricula_turma mtz
+  ORDER BY mtz.ref_cod_matricula,
+    (CASE WHEN mtz.transferido IS TRUE THEN 1 ELSE 0 END) DESC,
+    mtz.sequencial DESC
+) as mt
+SQL;
+
+        $loadMatricula = static function (int $id) use ($mtPriorizada) {
             return DB::table('pmieducar.matricula as m')
                 ->join('pmieducar.aluno as a', 'a.cod_aluno', '=', 'm.ref_cod_aluno')
                 ->join('cadastro.pessoa as p', 'p.idpes', '=', 'a.ref_idpes')
@@ -142,13 +162,11 @@ class StudentDocumentsController extends Controller
                 ->leftJoin('pmieducar.instituicao as i', 'i.cod_instituicao', '=', 'e.ref_cod_instituicao')
                 ->leftJoin('pmieducar.curso as c', 'c.cod_curso', '=', 'm.ref_cod_curso')
                 ->leftJoin('pmieducar.serie as s', 's.cod_serie', '=', 'm.ref_ref_cod_serie')
-                ->leftJoin('pmieducar.matricula_turma as mt', function ($join) {
-                    $join->on('mt.ref_cod_matricula', '=', 'm.cod_matricula');
-                    $join->where('mt.ativo', 1);
-                })
+                ->leftJoin(DB::raw($mtPriorizada), 'mt.ref_cod_matricula', '=', 'm.cod_matricula')
                 ->leftJoin('pmieducar.turma as t', 't.cod_turma', '=', 'mt.ref_cod_turma')
                 ->selectRaw('m.cod_matricula as matricula_id')
                 ->selectRaw('m.ano as ano_letivo')
+                ->selectRaw('m.aprovado as matricula_aprovado')
                 ->selectRaw('p.nome as aluno_nome')
                 ->selectRaw('e.ref_cod_instituicao as instituicao_id')
                 ->selectRaw('e.cod_escola as escola_id')
@@ -157,6 +175,8 @@ class StudentDocumentsController extends Controller
                 ->selectRaw('c.nm_curso as curso')
                 ->selectRaw('s.nm_serie as serie')
                 ->selectRaw('t.nm_turma as turma')
+                ->selectRaw("to_char(mt.data_enturmacao::date, 'DD/MM/YYYY') as data_entrada_turma_br")
+                ->selectRaw("to_char(COALESCE(mt.data_exclusao::date, m.data_cancel::date), 'DD/MM/YYYY') as data_fim_turma_br")
                 ->where('m.cod_matricula', $id)
                 ->first();
         };
@@ -273,6 +293,7 @@ class StudentDocumentsController extends Controller
         $view = match ($document) {
             'declaration_frequency' => 'advanced-reports::student-documents.declaration-frequency',
             'transfer_guide' => 'advanced-reports::student-documents.transfer-guide',
+            'transfer_packet' => 'advanced-reports::student-documents.transfer-packet',
             'declaration_conclusion' => 'advanced-reports::student-documents.declaration-conclusion',
             'declaration_nada_consta' => 'advanced-reports::student-documents.declaration-nada-consta',
             default => 'advanced-reports::student-documents.declaration-enrollment',
@@ -281,6 +302,7 @@ class StudentDocumentsController extends Controller
         $title = match ($document) {
             'declaration_frequency' => 'Declaração de frequência',
             'transfer_guide' => 'Guia/Declaração de transferência',
+            'transfer_packet' => 'Comprovante de matrícula e declaração de transferência',
             'declaration_conclusion' => 'Declaração de conclusão',
             'declaration_nada_consta' => 'Declaração de escolaridade / Nada consta',
             default => 'Declaração de matrícula',
@@ -325,4 +347,3 @@ class StudentDocumentsController extends Controller
         ], str_replace(' ', '-', strtolower($title)) . '-lote.pdf');
     }
 }
-

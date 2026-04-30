@@ -107,14 +107,11 @@
         </div>
 
         <div class="diploma-footer-area">
-          @if(!empty($issuerName))
-            <div class="diploma-issuer">
-              <div class="line"><strong>{{ $issuerName }}</strong></div>
-              @if(!empty($schoolInep))
-                <div class="inep">INEP (escola): {{ $schoolInep }}</div>
-              @endif
-            </div>
-          @endif
+          @include('advanced-reports::pdf._issuer-signature', [
+            'issuerName' => $issuerName ?? null,
+            'schoolInep' => $schoolInep ?? null,
+            'variant' => 'diploma',
+          ])
 
           @include('advanced-reports::student-documents._footer', [
             'issuedAt' => $pIssuedAt,
@@ -148,14 +145,11 @@
         </div>
 
         <div class="diploma-footer-area">
-          @if(!empty($issuerName))
-            <div class="diploma-issuer">
-              <div class="line"><strong>{{ $issuerName }}</strong></div>
-              @if(!empty($schoolInep))
-                <div class="inep">INEP (escola): {{ $schoolInep }}</div>
-              @endif
-            </div>
-          @endif
+          @include('advanced-reports::pdf._issuer-signature', [
+            'issuerName' => $issuerName ?? null,
+            'schoolInep' => $schoolInep ?? null,
+            'variant' => 'diploma',
+          ])
 
           @include('advanced-reports::student-documents._footer', [
             'issuedAt' => $pIssuedAt,

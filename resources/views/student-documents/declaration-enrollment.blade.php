@@ -22,6 +22,12 @@
       <tr><th>Curso</th><td>{{ $matricula->curso }}</td></tr>
       <tr><th>Série</th><td>{{ $matricula->serie }}</td></tr>
       <tr><th>Turma</th><td>{{ $matricula->turma }}</td></tr>
+      @if(!empty($matricula->data_entrada_turma_br))
+        <tr><th>Início na turma</th><td>{{ $matricula->data_entrada_turma_br }}</td></tr>
+      @endif
+      @if(!empty($matricula->data_fim_turma_br))
+        <tr><th>Até (registro)</th><td>{{ $matricula->data_fim_turma_br }}</td></tr>
+      @endif
     </table>
   </div>
 

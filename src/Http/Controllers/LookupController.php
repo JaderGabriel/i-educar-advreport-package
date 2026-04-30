@@ -8,20 +8,27 @@ use Illuminate\Support\Str;
 
 class LookupController
 {
+    /**
+     * Origem em pmieducar.historico_escolar: o núcleo grava 1 no processamento
+     * (ProcessamentoApiController) e no cadastro manual (educar_historico_escolar_cad);
+     * NULL/0 aparecem em legados ou fluxos que não persistem origem numérica.
+     */
+    private function applyHistoricoEscolarOrigemNativo($query, string $alias = 'he'): void
+    {
+        $col = "{$alias}.origem";
+        $query->where(function ($w) use ($col) {
+            $w->whereNull($col)->orWhereIn($col, [0, 1]);
+        });
+    }
+
     private function historyNativeMetaQuery(int $alunoId)
     {
-        // “Rotina nativa”: histórico interno (origem = interno) vinculado a uma matrícula.
-        // Critério conservador:
-        // - ativo=1
-        // - origem interno (NULL/false/0)
-        // - ref_cod_matricula preenchido
+        // Rotina nativa: histórico no i-Educar (ativo, vinculado à matrícula quando existir).
         return DB::table('pmieducar.historico_escolar as he')
             ->where('he.ref_cod_aluno', $alunoId)
             ->where('he.ativo', 1)
             ->whereNotNull('he.ref_cod_matricula')
-            ->where(function ($w) {
-                $w->whereNull('he.origem')->orWhere('he.origem', 0);
-            })
+            ->tap(fn ($q) => $this->applyHistoricoEscolarOrigemNativo($q, 'he'))
             ->orderByDesc('he.ano')
             ->orderByDesc('he.sequencial');
     }
@@ -43,9 +50,7 @@ class LookupController
         $metaSub = DB::table('pmieducar.historico_escolar as he')
             ->where('he.ativo', 1)
             ->whereNotNull('he.ref_cod_matricula')
-            ->where(function ($w) {
-                $w->whereNull('he.origem')->orWhere('he.origem', 0);
-            })
+            ->tap(fn ($q) => $this->applyHistoricoEscolarOrigemNativo($q, 'he'))
             ->where('he.ref_cod_escola', $escolaId)
             ->where('he.ref_cod_instituicao', $instituicaoId)
             ->where('he.ano', $year)
@@ -248,10 +253,20 @@ class LookupController
             ->join('pmieducar.aluno as a', 'a.cod_aluno', '=', 'm.ref_cod_aluno')
             ->join('cadastro.pessoa as p', 'p.idpes', '=', 'a.ref_idpes')
             ->where('mt.ref_cod_turma', $turmaId)
-            ->where('mt.ativo', 1)
-            ->where('m.ativo', 1)
             ->where('m.dependencia', false)
             ->when($year, fn ($qq) => $qq->where('m.ano', $year));
+
+        // Transferência: a enturmação na turma de origem costuma ficar inativa (mt.ativo=0) e
+        // relatorio.view_situacao exige matricula.ativo=1 — não usar o join com a view aqui.
+        if ($document === 'transfer_guide') {
+            $q->where(function ($w) {
+                $w->where('m.aprovado', 4)
+                    ->orWhere('mt.transferido', true);
+            });
+        } else {
+            $q->where('mt.ativo', 1)
+                ->where('m.ativo', 1);
+        }
 
         if ($onlyWithHistory) {
             $q->whereExists(function ($sub) {
@@ -260,9 +275,7 @@ class LookupController
                     ->whereColumn('he.ref_cod_aluno', 'a.cod_aluno')
                     ->where('he.ativo', 1)
                     ->whereNotNull('he.ref_cod_matricula')
-                    ->where(function ($w) {
-                        $w->whereNull('he.origem')->orWhere('he.origem', 0);
-                    });
+                    ->tap(fn ($q) => $this->applyHistoricoEscolarOrigemNativo($q, 'he'));
             });
         }
 
@@ -272,12 +285,6 @@ class LookupController
                     ->on('vs.cod_turma', '=', 'mt.ref_cod_turma')
                     ->on('vs.sequencial', '=', 'mt.sequencial');
             })->whereIn('vs.cod_situacao', [1, 12, 13]);
-        } elseif ($document === 'transfer_guide') {
-            $q->join('relatorio.view_situacao as vs', function ($j) {
-                $j->on('vs.cod_matricula', '=', 'm.cod_matricula')
-                    ->on('vs.cod_turma', '=', 'mt.ref_cod_turma')
-                    ->on('vs.sequencial', '=', 'mt.sequencial');
-            })->where('vs.cod_situacao', 4);
         } elseif ($document === 'declaration_conclusion') {
             $q->join('relatorio.view_situacao as vs', function ($j) {
                 $j->on('vs.cod_matricula', '=', 'm.cod_matricula')
@@ -320,6 +327,29 @@ class LookupController
             'transfer_guide' => [4],
             default => null,
         };
+
+        if ($document === 'transfer_guide') {
+            $base = DB::table('pmieducar.matricula_turma as mt')
+                ->join('pmieducar.matricula as m', 'm.cod_matricula', '=', 'mt.ref_cod_matricula')
+                ->where('mt.ref_cod_turma', $turmaId)
+                ->where('m.dependencia', false)
+                ->when($year, fn ($qq) => $qq->where('m.ano', $year))
+                ->where(function ($w) {
+                    $w->where('m.aprovado', 4)
+                        ->orWhere('mt.transferido', true);
+                });
+
+            $eligible = (int) (clone $base)->distinct('m.cod_matricula')->count('m.cod_matricula');
+            $total = $eligible;
+
+            return response()->json([
+                'total' => $total,
+                'eligible' => $eligible,
+                'ineligible' => 0,
+                'eligible_statuses' => $eligibleStatuses,
+                'by_status' => [4 => $eligible],
+            ]);
+        }
 
         $base = DB::table('pmieducar.matricula_turma as mt')
             ->join('pmieducar.matricula as m', 'm.cod_matricula', '=', 'mt.ref_cod_matricula')
@@ -394,4 +424,3 @@ class LookupController
         ]);
     }
 }
-
