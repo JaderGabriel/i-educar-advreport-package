@@ -44,8 +44,8 @@ class MovementsReportController extends Controller
         $startDate = (string) $request->get('data_inicial', '');
         $endDate = (string) $request->get('data_final', '');
 
-        if (! $ano || $startDate === '' || $endDate === '') {
-            abort(422, 'Ano letivo, data inicial e data final são obrigatórios para gerar o PDF.');
+        if (! $ano || !$instituicaoId || $startDate === '' || $endDate === '') {
+            abort(422, 'Ano letivo, instituição, data inicial e data final são obrigatórios para gerar o PDF.');
         }
 
         $filterData = $filters->getFilters($ano, $instituicaoId, null, $courseIds ? $courseIds[0] : null);
@@ -136,8 +136,8 @@ class MovementsReportController extends Controller
         $startDate = (string) $request->get('data_inicial', '');
         $endDate = (string) $request->get('data_final', '');
 
-        if (! $ano || $startDate === '' || $endDate === '') {
-            abort(422, 'Ano letivo, data inicial e data final são obrigatórios para exportar Excel.');
+        if (! $ano || !$instituicaoId || $startDate === '' || $endDate === '') {
+            abort(422, 'Ano letivo, instituição, data inicial e data final são obrigatórios para exportar Excel.');
         }
 
         $data = $service->buildData($ano, $instituicaoId, $courseIds, $startDate, $endDate);

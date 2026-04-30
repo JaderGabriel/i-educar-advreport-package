@@ -24,11 +24,17 @@ class MovementsGeneralReportService
         string $startDate,
         string $endDate
     ): array {
+        // Query legacy exige instituição. Sem ela, não há como reproduzir a contagem corretamente.
+        if (empty($institutionId) || $institutionId < 1) {
+            return [];
+        }
+
         // Por ora delegamos para a view SQL existente (MovimentoGeralQueryFactory) via consulta bruta.
         // Isso garante resultados idênticos ao report legado enquanto evoluímos
         // para uma versão totalmente em Query Builder/Eloquent.
 
         $params = [
+            'instituicao' => $institutionId,
             'ano' => $year,
             'data_inicial' => $startDate,
             'data_final' => $endDate,

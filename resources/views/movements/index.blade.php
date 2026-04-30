@@ -26,9 +26,10 @@
         'heading' => 'Movimentações de matrícula',
         'pdfRoute' => route('advanced-reports.movements.pdf'),
         'excelRoute' => route('advanced-reports.movements.excel'),
-        'requiredFields' => ['ano', 'data_inicial', 'data_final'],
+        'requiredFields' => ['ano', 'ref_cod_instituicao', 'data_inicial', 'data_final'],
         'requiredFieldMessages' => [
             'ano' => 'Informe o ano letivo antes de exportar.',
+            'ref_cod_instituicao' => 'Informe a instituição antes de exportar.',
             'data_inicial' => 'Informe a data inicial do período.',
             'data_final' => 'Informe a data final do período.',
         ],
