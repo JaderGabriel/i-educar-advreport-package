@@ -22,7 +22,7 @@
       <strong>Prévia (exemplo)</strong>
       <button type="button" class="btn js-boletim-preview-close">Fechar</button>
     </div>
-    <iframe class="js-boletim-preview-iframe ar-modal__iframe"></iframe>
+    <div class="js-boletim-preview-pdf ar-modal__iframe ar-modal__pdfCanvasRoot" role="region" aria-label="Prévia do PDF"></div>
   </div>
 </div>
 
@@ -31,3 +31,5 @@
   'closeClass' => 'js-boletim-error-close',
   'textClass' => 'js-boletim-error-text',
 ])
+
+@include('advanced-reports::partials._pdf_preview_runtime')

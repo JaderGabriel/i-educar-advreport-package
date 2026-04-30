@@ -32,25 +32,37 @@
     <table>
         <thead>
         <tr>
+            <th style="width: 72px;">Matrícula</th>
             <th>Aluno(a)</th>
-            <th style="width: 90px;">Matrícula</th>
-            <th style="width: 140px;">Situação</th>
-            <th>Escola</th>
             <th>Curso</th>
-            <th>Série</th>
             <th>Turma</th>
+            <th style="width: 64px;">Turno</th>
+            <th style="width: 120px;">Situação</th>
+            <th>Componentes curriculares (turma)</th>
         </tr>
         </thead>
         <tbody>
         @foreach($rows as $r)
+            @php
+              $rawComp = (string) ($r['componentes'] ?? '');
+              $compParts = $rawComp !== '' ? preg_split('/\s*\|\s*/', $rawComp) : [];
+              $compColors = ['#b91c1c', '#1d4ed8', '#047857', '#a16207', '#7c3aed'];
+            @endphp
             <tr>
-                <td>{{ $r['aluno'] ?? '' }}</td>
                 <td>{{ $r['matricula_id'] ?? '' }}</td>
-                <td>{{ $r['situacao'] ?? '' }}</td>
-                <td>{{ $r['escola'] ?? '' }}</td>
+                <td>{{ $r['aluno'] ?? '' }}</td>
                 <td>{{ $r['curso'] ?? '' }}</td>
-                <td>{{ $r['serie'] ?? '' }}</td>
                 <td>{{ $r['turma'] ?? '' }}</td>
+                <td>{{ $r['turno'] ?? '' }}</td>
+                <td>{{ $r['situacao'] ?? '' }}</td>
+                <td style="font-size: 8px; line-height: 1.35;">
+                    @forelse($compParts as $i => $piece)
+                        @php($c = $compColors[$i % count($compColors)])
+                        <span style="color: {{ $c }};">{{ trim($piece) }}</span>@if(!$loop->last)<span style="color:#64748b;"> · </span>@endif
+                    @empty
+                        <span class="muted">—</span>
+                    @endforelse
+                </td>
             </tr>
         @endforeach
         </tbody>

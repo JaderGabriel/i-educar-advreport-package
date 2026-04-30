@@ -116,7 +116,7 @@
       }
 
       const modal = document.getElementById('advancedReportsBoletimPreviewModal');
-      const iframe = document.querySelector('.js-boletim-preview-iframe');
+      const pdfRoot = modal ? modal.querySelector('.js-boletim-preview-pdf') : null;
       const closeBtn = document.querySelector('.js-boletim-preview-close');
       const emitBtn = document.querySelector('.js-boletim-emit');
       const helpBtn = document.querySelector('.js-boletim-help');
@@ -159,7 +159,7 @@
       }
 
       function openPreview() {
-        if (!modal || !iframe || !form) return;
+        if (!modal || !pdfRoot || !form) return;
         const msg = requiredMessage();
         if (msg) {
           openError(msg);
@@ -168,13 +168,17 @@
         const params = new URLSearchParams(new FormData(form));
         params.set('preview', '1');
         const url = "{{ route('advanced-reports.boletim.pdf') }}" + "?" + params.toString();
-        iframe.src = url;
         modal.style.display = 'block';
+        if (window.AdvancedReportsPdfPreview) {
+          window.AdvancedReportsPdfPreview.open(pdfRoot, url);
+        }
       }
 
       function closePreview() {
-        if (!modal || !iframe) return;
-        iframe.src = 'about:blank';
+        if (!modal || !pdfRoot) return;
+        if (window.AdvancedReportsPdfPreview) {
+          window.AdvancedReportsPdfPreview.close(pdfRoot);
+        }
         modal.style.display = 'none';
       }
 

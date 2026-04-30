@@ -193,7 +193,7 @@
       }
 
       const modal = document.getElementById('advancedReportsSchoolHistoryPreviewModal');
-      const iframe = document.querySelector('.js-school-history-preview-iframe');
+      const pdfRoot = modal ? modal.querySelector('.js-school-history-preview-pdf') : null;
       const openBtn = document.querySelector('.js-school-history-help');
       const closeBtn = document.querySelector('.js-school-history-preview-close');
       const emitBtn = document.querySelector('.js-school-history-emit');
@@ -209,16 +209,21 @@
       }
 
       function openPreview() {
-        if (!modal || !iframe || !form) return;
+        if (!modal || !pdfRoot || !form) return;
         const params = new URLSearchParams(new FormData(form));
         params.set('preview', '1');
-        iframe.src = "{{ route('advanced-reports.school-history.pdf') }}" + "?" + params.toString();
+        const url = "{{ route('advanced-reports.school-history.pdf') }}" + "?" + params.toString();
         modal.style.display = 'block';
+        if (window.AdvancedReportsPdfPreview) {
+          window.AdvancedReportsPdfPreview.open(pdfRoot, url);
+        }
       }
 
       function closePreview() {
-        if (!modal || !iframe) return;
-        iframe.src = 'about:blank';
+        if (!modal || !pdfRoot) return;
+        if (window.AdvancedReportsPdfPreview) {
+          window.AdvancedReportsPdfPreview.close(pdfRoot);
+        }
         modal.style.display = 'none';
       }
 

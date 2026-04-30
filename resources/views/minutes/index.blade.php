@@ -33,14 +33,14 @@
     (function () {
       const form = document.getElementById('formcadastro');
       const modal = document.getElementById('advancedReportsMinutesPreviewModal');
-      const iframe = document.querySelector('.js-minutes-preview-iframe');
+      const pdfRoot = modal ? modal.querySelector('.js-minutes-preview-pdf') : null;
       const closeBtn = document.querySelector('.js-minutes-preview-close');
       const helpBtn = document.querySelector('.js-minutes-help');
       const emitBtn = document.querySelector('.js-minutes-emit');
       const errorModal = document.getElementById('advancedReportsMinutesErrorModal');
       const errorText = document.querySelector('.js-minutes-error-text');
       const errorClose = document.querySelector('.js-minutes-error-close');
-      if (!form || !modal || !iframe || !closeBtn) return;
+      if (!form || !modal || !pdfRoot || !closeBtn) return;
 
       function openError(message) {
         if (!errorModal || !errorText) {
@@ -81,7 +81,9 @@
       }
 
       function closeModal() {
-        iframe.src = 'about:blank';
+        if (window.AdvancedReportsPdfPreview) {
+          window.AdvancedReportsPdfPreview.close(pdfRoot);
+        }
         modal.style.display = 'none';
       }
 
@@ -95,8 +97,11 @@
           }
           const params = new URLSearchParams(new FormData(form));
           params.set('preview', '1');
-          iframe.src = "{{ route('advanced-reports.minutes.pdf') }}" + "?" + params.toString();
+          const url = "{{ route('advanced-reports.minutes.pdf') }}" + "?" + params.toString();
           modal.style.display = 'block';
+          if (window.AdvancedReportsPdfPreview) {
+            window.AdvancedReportsPdfPreview.open(pdfRoot, url);
+          }
         });
       }
 

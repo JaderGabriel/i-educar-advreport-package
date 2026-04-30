@@ -29,9 +29,11 @@
         <strong>Prévia (exemplo)</strong>
         <button type="button" class="btn js-vacancies-preview-close">Fechar</button>
       </div>
-      <iframe class="js-vacancies-preview-iframe ar-modal__iframe"></iframe>
+      <div class="js-vacancies-preview-pdf ar-modal__iframe ar-modal__pdfCanvasRoot" role="region" aria-label="Prévia do PDF"></div>
     </div>
   </div>
+
+  @include('advanced-reports::partials._pdf_preview_runtime')
 @endsection
 
 @push('scripts')
@@ -75,8 +77,8 @@
 
       function openPreview() {
         const modal = document.getElementById('advancedReportsVacanciesPreviewModal');
-        const iframe = document.querySelector('.js-vacancies-preview-iframe');
-        if (!modal || !iframe || !form) return;
+        const pdfRoot = modal ? modal.querySelector('.js-vacancies-preview-pdf') : null;
+        if (!modal || !pdfRoot || !form) return;
         const msg = requiredVacanciesMessage();
         if (msg) {
           openError(msg);
@@ -84,15 +86,20 @@
         }
         const params = new URLSearchParams(new FormData(form));
         params.set('preview', '1');
-        iframe.src = pdfBase + '?' + params.toString();
+        const url = pdfBase + '?' + params.toString();
         modal.style.display = 'block';
+        if (window.AdvancedReportsPdfPreview) {
+          window.AdvancedReportsPdfPreview.open(pdfRoot, url);
+        }
       }
 
       function closePreview() {
         const modal = document.getElementById('advancedReportsVacanciesPreviewModal');
-        const iframe = document.querySelector('.js-vacancies-preview-iframe');
-        if (!modal || !iframe) return;
-        iframe.src = 'about:blank';
+        const pdfRoot = modal ? modal.querySelector('.js-vacancies-preview-pdf') : null;
+        if (!modal || !pdfRoot) return;
+        if (window.AdvancedReportsPdfPreview) {
+          window.AdvancedReportsPdfPreview.close(pdfRoot);
+        }
         modal.style.display = 'none';
       }
 

@@ -37,7 +37,7 @@
         (function () {
           const form = document.getElementById('formcadastro');
           const modal = document.getElementById('advancedReportsDiplomasPreviewModal');
-          const iframe = document.querySelector('.js-diplomas-preview-iframe');
+          const pdfRoot = modal ? modal.querySelector('.js-diplomas-preview-pdf') : null;
           const closeBtn = document.querySelector('.js-diplomas-preview-close');
           const helpBtn = document.querySelector('.js-diplomas-help');
           const emitBtn = document.querySelector('.js-diplomas-emit');
@@ -51,7 +51,7 @@
           const errorModal = document.getElementById('advancedReportsDiplomasErrorModal');
           const errorText = document.querySelector('.js-diplomas-error-text');
           const errorClose = document.querySelector('.js-diplomas-error-close');
-          if (!form || !modal || !iframe) return;
+          if (!form || !modal || !pdfRoot) return;
 
           function openError(message) {
             if (!errorModal || !errorText) {
@@ -109,12 +109,16 @@
               openError(msg);
               return;
             }
-            iframe.src = previewUrl();
             modal.style.display = 'block';
+            if (window.AdvancedReportsPdfPreview) {
+              window.AdvancedReportsPdfPreview.open(pdfRoot, previewUrl());
+            }
           }
 
           function closeModal() {
-            iframe.src = 'about:blank';
+            if (window.AdvancedReportsPdfPreview) {
+              window.AdvancedReportsPdfPreview.close(pdfRoot);
+            }
             modal.style.display = 'none';
           }
 

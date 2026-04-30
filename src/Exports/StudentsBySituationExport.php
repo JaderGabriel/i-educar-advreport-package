@@ -10,9 +10,7 @@ class StudentsBySituationExport implements WithMultipleSheets
      * @param array<string,mixed> $data
      * @param array<int,string> $labels
      */
-    public function __construct(private readonly array $data, private readonly array $labels)
-    {
-    }
+    public function __construct(private readonly array $data, private readonly array $labels) {}
 
     public function sheets(): array
     {
@@ -31,20 +29,31 @@ class StudentsBySituationExport implements WithMultipleSheets
         $detailRows = [];
         foreach (($rows ?? []) as $r) {
             $detailRows[] = [
-                (string) ($r['aluno'] ?? ''),
                 (string) ($r['matricula_id'] ?? ''),
-                (string) ($r['situacao'] ?? ''),
-                (string) ($r['escola'] ?? ''),
+                (string) ($r['aluno'] ?? ''),
                 (string) ($r['curso'] ?? ''),
-                (string) ($r['serie'] ?? ''),
                 (string) ($r['turma'] ?? ''),
+                (string) ($r['turno'] ?? ''),
+                (string) ($r['situacao'] ?? ''),
+                (string) ($r['componentes'] ?? ''),
+                (string) ($r['escola'] ?? ''),
+                (string) ($r['serie'] ?? ''),
             ];
         }
 
         return [
             new SimpleArraySheet('Resumo', ['Situação', 'Total'], $summaryRows),
-            new SimpleArraySheet('Alunos', ['Aluno', 'Matrícula', 'Situação', 'Escola', 'Curso', 'Série', 'Turma'], $detailRows),
+            new SimpleArraySheet('Alunos', [
+                'Matrícula',
+                'Aluno',
+                'Curso',
+                'Turma',
+                'Turno',
+                'Situação',
+                'Componentes (turma)',
+                'Escola',
+                'Série',
+            ], $detailRows),
         ];
     }
 }
-

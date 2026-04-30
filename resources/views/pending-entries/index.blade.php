@@ -30,9 +30,11 @@
         <strong>Prévia (exemplo)</strong>
         <button type="button" class="btn js-pending-preview-close">Fechar</button>
       </div>
-      <iframe class="js-pending-preview-iframe ar-modal__iframe"></iframe>
+      <div class="js-pending-preview-pdf ar-modal__iframe ar-modal__pdfCanvasRoot" role="region" aria-label="Prévia do PDF"></div>
     </div>
   </div>
+
+  @include('advanced-reports::partials._pdf_preview_runtime')
 @endsection
 
 @push('scripts')
@@ -48,7 +50,7 @@
       }
 
       const modal = document.getElementById('advancedReportsPendingPreviewModal');
-      const iframe = document.querySelector('.js-pending-preview-iframe');
+      const pdfRoot = modal ? modal.querySelector('.js-pending-preview-pdf') : null;
       const closeBtn = document.querySelector('.js-pending-preview-close');
       const errorModal = document.getElementById('advancedReportsPendingErrorModal');
       const errorText = document.querySelector('.js-pending-error-text');
@@ -86,8 +88,10 @@
       }
 
       function closeModal() {
-        if (!iframe || !modal) return;
-        iframe.src = 'about:blank';
+        if (!pdfRoot || !modal) return;
+        if (window.AdvancedReportsPdfPreview) {
+          window.AdvancedReportsPdfPreview.close(pdfRoot);
+        }
         modal.style.display = 'none';
       }
 
@@ -122,7 +126,7 @@
       }
 
       const helpBtn = document.querySelector('.js-pending-help');
-      if (helpBtn && form && modal && iframe) {
+      if (helpBtn && form && modal && pdfRoot) {
         helpBtn.addEventListener('click', function (e) {
           e.preventDefault();
           const msg = requiredMessage();
@@ -132,8 +136,11 @@
           }
           const params = new URLSearchParams(new FormData(form));
           params.set('preview', '1');
-          iframe.src = pdfBase + '?' + params.toString();
+          const url = pdfBase + '?' + params.toString();
           modal.style.display = 'block';
+          if (window.AdvancedReportsPdfPreview) {
+            window.AdvancedReportsPdfPreview.open(pdfRoot, url);
+          }
         });
       }
 

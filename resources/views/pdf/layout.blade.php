@@ -30,6 +30,8 @@
       'municipality' => trim($__env->yieldContent('doc_municipality')) ?: ($municipality ?? null),
       'schoolName' => trim($__env->yieldContent('doc_school')) ?: ($schoolName ?? null),
       'contact' => trim($__env->yieldContent('doc_contact')) ?: ($contact ?? null),
+      'issuedAt' => $issuedAt ?? null,
+      'validationCode' => $validationCode ?? null,
     ])
 
     @php($disableFooter = trim($__env->yieldContent('disable_footer')) === '1')

@@ -47,9 +47,24 @@
         @if(!empty($year))
           <div>Ano: {{ $year }}</div>
         @endif
-        <div>Emitido em: {{ date('d/m/Y H:i') }}</div>
+        <div>Emitido em: {{ !empty($issuedAt) ? $issuedAt : date('d/m/Y H:i') }}</div>
+        @if(!empty($validationCode))
+          <div style="margin-top: 2px; font-size: 8px;">Código: <strong>{{ $validationCode }}</strong></div>
+        @endif
       </td>
     </tr>
   </table>
 </div>
+
+<script type="text/php">
+  if (isset($pdf)) {
+    $text = "Pág. {PAGE_NUM}/{PAGE_COUNT}";
+    $size = 7;
+    $font = $fontMetrics->get_font("DejaVu Sans", "normal");
+    $width = $fontMetrics->get_text_width($text, $font, $size);
+    $x = $pdf->get_width() - $width - 36;
+    $y = $pdf->get_height() - 52;
+    $pdf->page_text($x, $y, $text, $font, $size, [0.25, 0.25, 0.25]);
+  }
+</script>
 

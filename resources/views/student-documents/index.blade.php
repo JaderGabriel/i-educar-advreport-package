@@ -174,7 +174,7 @@
 
       // Ações (prévia/emissão)
       const modal = document.getElementById('advancedReportsStudentDocsPreviewModal');
-      const iframe = document.querySelector('.js-student-docs-preview-iframe');
+      const pdfRoot = modal ? modal.querySelector('.js-student-docs-preview-pdf') : null;
       const helpBtn = document.querySelector('.js-student-docs-help');
       const closeBtn = document.querySelector('.js-student-docs-preview-close');
       const emitBtn = document.querySelector('.js-student-docs-emit');
@@ -204,7 +204,7 @@
       }
 
       function openPreview() {
-        if (!modal || !iframe) return;
+        if (!modal || !pdfRoot) return;
         const msg = requiredMessage();
         if (msg) {
           openError(msg);
@@ -213,14 +213,18 @@
         const params = new URLSearchParams(new FormData(form));
         params.set('preview', '1');
         const url = "{{ route('advanced-reports.student-documents.pdf') }}" + "?" + params.toString();
-        if (!url || !modal || !iframe) return;
-        iframe.src = url;
+        if (!url) return;
         modal.style.display = 'block';
+        if (window.AdvancedReportsPdfPreview) {
+          window.AdvancedReportsPdfPreview.open(pdfRoot, url);
+        }
       }
 
       function closePreview() {
-        if (!modal || !iframe) return;
-        iframe.src = 'about:blank';
+        if (!modal || !pdfRoot) return;
+        if (window.AdvancedReportsPdfPreview) {
+          window.AdvancedReportsPdfPreview.close(pdfRoot);
+        }
         modal.style.display = 'none';
       }
 

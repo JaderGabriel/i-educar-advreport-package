@@ -114,3 +114,58 @@
     border: 0;
 }
 
+/* Prévia de PDF renderizada (PDF.js) — evita barra nativa de download/impressão do Chrome */
+.ar-modal__pdfCanvasRoot {
+    width: 100%;
+    height: calc(100% - 48px);
+    overflow: auto;
+    background: #f1f5f9;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.ar-pdf-preview-pages {
+    padding: 10px 10px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.ar-pdf-preview-pageWrap {
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+    background: #fff;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.ar-pdf-preview-page {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+.ar-pdf-preview-status {
+    padding: 16px;
+    color: #475569;
+    text-align: center;
+    font-size: 13px;
+}
+
+.ar-pdf-preview-status--error {
+    color: #991b1b;
+}
+
+.ar-pdf-preview-note {
+    color: #64748b;
+    font-size: 12px;
+    text-align: center;
+    max-width: 900px;
+}
+
+@media print {
+    .ar-modal {
+        display: none !important;
+    }
+}
+

@@ -41,11 +41,23 @@ class StudentsBySituationService
         ?int $situation = null,
         int $limit = 5000,
     ): array {
+        // Uma linha por matrícula: evita duplicar quando há mais de um vínculo em matricula_turma
+        // (ex.: remanejamentos); usa o vínculo ativo com maior sequencial.
         $base = DB::table('pmieducar.matricula as m')
             ->join('pmieducar.aluno as a', 'a.cod_aluno', '=', 'm.ref_cod_aluno')
             ->join('cadastro.pessoa as p', 'p.idpes', '=', 'a.ref_idpes')
-            ->leftJoin('pmieducar.matricula_turma as mt', 'mt.ref_cod_matricula', '=', 'm.cod_matricula')
+            ->join('pmieducar.matricula_turma as mt', function ($j) {
+                $j->on('mt.ref_cod_matricula', '=', 'm.cod_matricula')
+                    ->where('mt.ativo', 1)
+                    ->whereRaw('mt.sequencial = (
+                        SELECT MAX(mt2.sequencial)
+                        FROM pmieducar.matricula_turma mt2
+                        WHERE mt2.ref_cod_matricula = m.cod_matricula
+                          AND mt2.ativo = 1
+                    )');
+            })
             ->leftJoin('pmieducar.turma as t', 't.cod_turma', '=', 'mt.ref_cod_turma')
+            ->leftJoin('pmieducar.turma_turno as tt', 'tt.id', '=', 't.turma_turno_id')
             ->leftJoin('pmieducar.escola as e', 'e.cod_escola', '=', 'm.ref_ref_cod_escola')
             ->leftJoin('cadastro.pessoa as ep', 'ep.idpes', '=', 'e.ref_idpes')
             ->leftJoin('cadastro.juridica as ej', 'ej.idpes', '=', 'ep.idpes')
@@ -66,6 +78,12 @@ class StudentsBySituationService
             ->when($schoolClassId, fn ($q) => $q->where('t.cod_turma', $schoolClassId))
             ->when($situation, fn ($q) => $q->where('vs.cod_situacao', $situation));
 
+        $compByTurma = DB::table('modules.componente_curricular_turma as cct')
+            ->join('modules.componente_curricular as cc', 'cc.id', '=', 'cct.componente_curricular_id')
+            ->groupBy('cct.turma_id')
+            ->select('cct.turma_id')
+            ->selectRaw("string_agg(cc.nome::text, ' | ' ORDER BY cc.nome) as componentes");
+
         $summaryRows = (clone $base)
             ->selectRaw('vs.cod_situacao as situacao, COUNT(DISTINCT m.cod_matricula) as total')
             ->groupBy('vs.cod_situacao')
@@ -78,16 +96,21 @@ class StudentsBySituationService
         }
 
         $rows = (clone $base)
+            ->leftJoinSub($compByTurma, 'comp', function ($j) {
+                $j->on('comp.turma_id', '=', 't.cod_turma');
+            })
             ->selectRaw('m.cod_matricula as matricula_id')
             ->selectRaw('p.nome as aluno')
             ->selectRaw('COALESCE(ej.fantasia, ec.nm_escola, \'\') as escola')
             ->selectRaw('COALESCE(c.nm_curso, \'\') as curso')
             ->selectRaw('COALESCE(s.nm_serie, \'\') as serie')
             ->selectRaw('COALESCE(t.nm_turma, \'\') as turma')
+            ->selectRaw('COALESCE(tt.nome, \'\') as turno')
             ->selectRaw('vs.cod_situacao as situacao_id')
             ->selectRaw('vs.texto_situacao as situacao')
-            ->orderByRaw('COALESCE(ej.fantasia, ec.nm_escola, \'\')')
-            ->orderBy('p.nome')
+            ->selectRaw('COALESCE(comp.componentes, \'\') as componentes')
+            ->orderByRaw('LOWER(COALESCE(t.nm_turma, \'\'))')
+            ->orderByRaw('LOWER(p.nome)')
             ->limit($limit)
             ->get()
             ->map(fn ($r) => [
@@ -97,11 +120,12 @@ class StudentsBySituationService
                 'curso' => (string) $r->curso,
                 'serie' => (string) $r->serie,
                 'turma' => (string) $r->turma,
+                'turno' => (string) ($r->turno ?? ''),
                 'situacao_id' => (int) $r->situacao_id,
                 'situacao' => (string) $r->situacao,
+                'componentes' => (string) ($r->componentes ?? ''),
             ]);
 
         return compact('summary', 'rows');
     }
 }
-
