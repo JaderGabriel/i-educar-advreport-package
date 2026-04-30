@@ -110,7 +110,7 @@ class StudentsBySituationService
         // Disciplinas da turma: mesma lógica do relatório (view considera cct x série/escola).
         $compByTurma = DB::table('relatorio.view_componente_curricular as vcc')
             ->selectRaw('vcc.cod_turma as turma_id')
-            ->selectRaw("string_agg(DISTINCT vcc.nome::text, ' | ' ORDER BY vcc.nome) as componentes")
+            ->selectRaw("string_agg(DISTINCT vcc.nome::text, ' | ' ORDER BY vcc.nome::text) as componentes")
             ->groupBy('vcc.cod_turma');
 
         $rawRows = (clone $base)
