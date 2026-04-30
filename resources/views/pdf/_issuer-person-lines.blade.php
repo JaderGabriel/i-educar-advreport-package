@@ -22,18 +22,9 @@
       INEP: {{ $issuerPersonInep }}
     </div>
   @endif
-  @if(!empty($issuerMatriculaFuncional) || !empty($issuerPersonIdpes))
+  @if(!empty($issuerMatriculaFuncional))
     <div class="muted issuer-person-matricula" style="font-size: 10px; margin-top: 2px;">
-      MATRÍCULA:
-      @if(!empty($issuerMatriculaFuncional))
-        {{ $issuerMatriculaFuncional }}
-      @endif
-      @if(!empty($issuerMatriculaFuncional) && !empty($issuerPersonIdpes))
-        /
-      @endif
-      @if(!empty($issuerPersonIdpes))
-        {{ $issuerPersonIdpes }}
-      @endif
+      Matrícula interna: {{ $issuerMatriculaFuncional }}
     </div>
   @endif
 @endif

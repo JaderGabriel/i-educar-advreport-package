@@ -35,12 +35,10 @@ class IssuerSignatureDetails
             ->where('ref_cod_pessoa_fj', $idpes)
             ->selectRaw('matricula_interna')
             ->selectRaw('matricula_new')
-            ->selectRaw('matricula')
             ->first();
 
         $matriculaInterna = $func?->matricula_interna ?? null;
         $matriculaNew = $func?->matricula_new ?? null;
-        $matriculaLegacy = $func?->matricula ?? null;
 
         // Preferir matrícula interna cadastrada na base (portal.funcionario.matricula_interna).
         // "matricula" costuma refletir credencial/identificação antiga de login em algumas instalações.
@@ -49,8 +47,6 @@ class IssuerSignatureDetails
             $matriculaStr = trim((string) $matriculaInterna);
         } elseif ($matriculaNew !== null && trim((string) $matriculaNew) !== '') {
             $matriculaStr = trim((string) $matriculaNew);
-        } elseif ($matriculaLegacy !== null && trim((string) $matriculaLegacy) !== '') {
-            $matriculaStr = trim((string) $matriculaLegacy);
         }
 
         return [
