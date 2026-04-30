@@ -11,26 +11,20 @@
 
 @section('content')
   @include('advanced-reports::partials.filters', [
-      'route' => match ($type ?? '') {
-        'individual' => route('advanced-reports.student-forms.individual.index'),
-        'media_authorization' => route('advanced-reports.student-forms.media-authorization.index'),
-        default => route('advanced-reports.student-forms.enrollment.index'),
-      },
+      'route' => route('advanced-reports.communications.index', ['slug' => $slug]),
       'cursos' => $cursos,
       'cursoId' => $cursoId ?? null,
+      'definition' => $definition ?? [],
+      'slug' => $slug,
       'requireCourse' => true,
       'requireSchool' => true,
       'withGrade' => true,
       'withSchoolClass' => true,
       'withCharts' => false,
-      'actionsView' => 'advanced-reports::student-forms._actions',
-      'explainTitle' => 'Fichas (Documentos do aluno)',
-      'explainText' => match ($type ?? '') {
-        'individual' => 'Ficha individual: emissão em lote; assinaturas do(a) secretário(a) escolar e do(a) diretor(a) quando configurados na escola.',
-        'media_authorization' => 'Termo de autorização de uso de imagem e voz: emissão em lote; assinaturas do responsável legal e do emissor.',
-        default => 'Ficha de matrícula: dados cadastrais e da matrícula para conferência; assinaturas do responsável e do emissor. O termo de imagem/voz é emitido separadamente (menu Termo de Autorização).',
-      } . ' Se selecionar matrículas, emite apenas as selecionadas; se não selecionar, emite em lote pelo filtro (limitado a 200).',
-      'extraRowsView' => 'advanced-reports::student-forms._extra-filters-rows',
+      'actionsView' => 'advanced-reports::communications._actions',
+      'explainTitle' => 'Comunicados oficiais — ' . (($definition ?? [])['title'] ?? $slug),
+      'explainText' => 'Preencha os campos do comunicado (texto sugerido pode ser editado). Use os filtros e, se desejar emissão personalizada por estudante, selecione matrículas na lista (lote de até 200). Sem seleção, é gerado um comunicado coletivo conforme turma/curso. A prévia (?) não grava validação.',
+      'extraRowsView' => 'advanced-reports::communications._communications-extra-rows',
   ])
 @endsection
 
@@ -38,24 +32,24 @@
   <script>
     (function () {
       const turmaSelect = document.getElementById('ref_cod_turma');
-      const studentsSelect = document.getElementById('studentFormsStudentsSelect');
-      const matriculaHidden = document.getElementById('studentFormsMatriculaId');
-      const filterInput = document.querySelector('.js-student-forms-student-filter');
-      const countEl = document.querySelector('.js-student-forms-selected-count');
-      const clearBtn = document.querySelector('.js-student-forms-clear-selected');
-      const emitBtn = document.querySelector('.js-student-forms-emit');
-      const previewBtn = document.querySelector('.js-student-forms-preview');
-      const pdfRoot = document.querySelector('.js-student-forms-preview-pdf');
-      const modal = document.getElementById('advancedReportsStudentFormsPreviewModal');
-      const closeBtn = document.querySelector('.js-student-forms-preview-close');
+      const studentsSelect = document.getElementById('communicationsStudentsSelect');
+      const matriculaHidden = document.getElementById('communicationsMatriculaId');
+      const filterInput = document.querySelector('.js-communications-student-filter');
+      const countEl = document.querySelector('.js-communications-selected-count');
+      const clearBtn = document.querySelector('.js-communications-clear-selected');
+      const emitBtn = document.querySelector('.js-communications-emit');
+      const previewBtn = document.querySelector('.js-communications-preview');
+      const pdfRoot = document.querySelector('.js-communications-preview-pdf');
+      const modal = document.getElementById('communicationsPreviewModal');
+      const closeBtn = document.querySelector('.js-communications-preview-close');
       const form = document.getElementById('formcadastro');
-      const errorModal = document.getElementById('advancedReportsStudentFormsErrorModal');
-      const errorText = document.querySelector('.js-student-forms-error-text');
-      const errorClose = document.querySelector('.js-student-forms-error-close');
+      const errorModal = document.getElementById('communicationsErrorModal');
+      const errorText = document.querySelector('.js-communications-error-text');
+      const errorClose = document.querySelector('.js-communications-error-close');
 
       if (!turmaSelect || !studentsSelect || !matriculaHidden || !form) return;
 
-      const actionsRoot = document.getElementById('studentFormsActionsRoot');
+      const actionsRoot = document.getElementById('communicationsActionsRoot');
       const pdfBase = actionsRoot ? actionsRoot.getAttribute('data-pdf-route') : null;
 
       async function loadStudentsByClass(turmaId) {
@@ -194,7 +188,8 @@
       }
 
       if (clearBtn) {
-        clearBtn.addEventListener('click', function () {
+        clearBtn.addEventListener('click', function (e) {
+          e.preventDefault();
           Array.from(studentsSelect.options || []).forEach(function (o) { o.selected = false; });
           updateSelectedCount();
         });
@@ -225,4 +220,3 @@
     })();
   </script>
 @endpush
-

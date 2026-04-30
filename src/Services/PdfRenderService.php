@@ -43,5 +43,30 @@ class PdfRenderService
             'Content-Disposition' => $disposition . '; filename="' . $filename . '"',
         ]);
     }
+
+    /**
+     * Renderiza PDF em memória (ex.: montagem de ZIP com vários documentos).
+     *
+     * @param  array<string,mixed>  $data
+     */
+    public function renderToString(
+        string $view,
+        array $data,
+        string $paper = 'a4',
+        string $orientation = 'portrait',
+    ): string {
+        $html = $this->views->make($view, $data)->render();
+
+        $options = new Options();
+        $options->set('isRemoteEnabled', true);
+        $options->set('isHtml5ParserEnabled', true);
+
+        $dompdf = new Dompdf($options);
+        $dompdf->setPaper($paper, $orientation);
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->render();
+
+        return $dompdf->output();
+    }
 }
 

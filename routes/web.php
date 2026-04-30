@@ -121,10 +121,13 @@ Route::middleware([
     Route::get('/relatorios-avancados/vagas-turmas/excel', [VacanciesBySchoolClassController::class, 'excel'])
         ->name('advanced-reports.vacancies.excel');
 
-    // Comunicados oficiais (modelos — item 8.6, exceto ocorrências)
-    Route::get('/relatorios-avancados/comunicados/{slug}', [CommunicationsController::class, 'show'])
+    // Comunicados oficiais (PDF + lote — item 8.6, exceto ocorrências)
+    Route::get('/relatorios-avancados/comunicados/{slug}', [CommunicationsController::class, 'index'])
         ->where('slug', '(convocacao|reuniao|advertencia|comunicado-geral)')
-        ->name('advanced-reports.communications.show');
+        ->name('advanced-reports.communications.index');
+    Route::get('/relatorios-avancados/comunicados/{slug}/pdf', [CommunicationsController::class, 'pdf'])
+        ->where('slug', '(convocacao|reuniao|advertencia|comunicado-geral)')
+        ->name('advanced-reports.communications.pdf');
 
     Route::get('/relatorios-avancados/atas', [MinutesController::class, 'index'])
         ->name('advanced-reports.minutes.index');
@@ -173,5 +176,10 @@ Route::middleware([
         ->name('advanced-reports.student-forms.enrollment.index');
     Route::get('/relatorios-avancados/fichas/ficha-matricula/pdf', [StudentFormsController::class, 'enrollmentPdf'])
         ->name('advanced-reports.student-forms.enrollment.pdf');
+
+    Route::get('/relatorios-avancados/fichas/termo-autorizacao', [StudentFormsController::class, 'mediaAuthorizationIndex'])
+        ->name('advanced-reports.student-forms.media-authorization.index');
+    Route::get('/relatorios-avancados/fichas/termo-autorizacao/pdf', [StudentFormsController::class, 'mediaAuthorizationPdf'])
+        ->name('advanced-reports.student-forms.media-authorization.pdf');
 });
 

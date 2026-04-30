@@ -24,8 +24,8 @@
       'requireTurma' => true,
       'actionsView' => 'advanced-reports::diary-mirror._actions',
       'explainTitle' => 'Espelho de diário (chamada)',
-      'explainText' => 'Modelo de impressão do diário/chamada por turma e período. No preenchimento manual: presença = “•” e falta = “F”.',
-      'explainDictionary' => 'Período (datas) = intervalo de dias exibidos no espelho. A grade é gerada com alunos ativos na turma e colunas para cada dia.',
+      'explainText' => 'Modelo de impressão do diário/chamada por turma e período, com colunas apenas em dias úteis (segunda a sexta). No preenchimento manual: presença = “•” e falta = “F”. Se houver mais de um docente/componente na turma, o download vem em ZIP com um PDF por docente.',
+      'explainDictionary' => 'Período (datas) = intervalo analisado; o quadro usa dias úteis (sem fins de semana), exclui também dias não letivos do calendário escolar da escola quando estiverem vinculados à turma, e inclui “dia extra letivo” (tipo E) se cadastrado. Pode continuar em páginas seguintes para não cortar colunas ou linhas. Cabeçalho e assinatura referem-se ao componente curricular e ao(a) professor(a).',
   ])
 
   <div id="advancedReportsDiaryMirrorPreviewModal" class="ar-modal">

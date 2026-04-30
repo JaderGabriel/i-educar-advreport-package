@@ -17,6 +17,12 @@
         'issuerName' => $issuerName ?? null,
         'schoolInep' => $schoolInep ?? null,
       ])
+    @elseif(($type ?? '') === 'media_authorization')
+      @include('advanced-reports::student-forms._termo-autorizacao-imagem-voz-inner', [
+        'matricula' => $m,
+        'issuerName' => $issuerName ?? null,
+        'schoolInep' => $schoolInep ?? null,
+      ])
     @else
       @include('advanced-reports::student-forms._ficha-individual-inner', [
         'matricula' => $m,

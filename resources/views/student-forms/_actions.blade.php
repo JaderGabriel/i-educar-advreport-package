@@ -1,7 +1,9 @@
 @php
-  $pdfRoute = ($type ?? '') === 'individual'
-    ? route('advanced-reports.student-forms.individual.pdf')
-    : route('advanced-reports.student-forms.enrollment.pdf');
+  $pdfRoute = match ($type ?? '') {
+    'individual' => route('advanced-reports.student-forms.individual.pdf'),
+    'media_authorization' => route('advanced-reports.student-forms.media-authorization.pdf'),
+    default => route('advanced-reports.student-forms.enrollment.pdf'),
+  };
 @endphp
 
 <div class="ar-actions" id="studentFormsActionsRoot" data-pdf-route="{{ $pdfRoute }}">

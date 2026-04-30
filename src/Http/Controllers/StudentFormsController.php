@@ -17,24 +17,40 @@ use Symfony\Component\HttpFoundation\Response;
 
 class StudentFormsController extends Controller
 {
+    private const TYPE_INDIVIDUAL = 'individual';
+
+    private const TYPE_ENROLLMENT = 'enrollment';
+
+    private const TYPE_MEDIA_AUTHORIZATION = 'media_authorization';
+
     public function individualIndex(Request $request, AdvancedReportsFilterService $filters): View
     {
-        return $this->index($request, $filters, 'individual');
+        return $this->index($request, $filters, self::TYPE_INDIVIDUAL);
     }
 
     public function enrollmentIndex(Request $request, AdvancedReportsFilterService $filters): View
     {
-        return $this->index($request, $filters, 'enrollment');
+        return $this->index($request, $filters, self::TYPE_ENROLLMENT);
+    }
+
+    public function mediaAuthorizationIndex(Request $request, AdvancedReportsFilterService $filters): View
+    {
+        return $this->index($request, $filters, self::TYPE_MEDIA_AUTHORIZATION);
     }
 
     public function individualPdf(Request $request): Response
     {
-        return $this->pdf($request, 'individual');
+        return $this->pdf($request, self::TYPE_INDIVIDUAL);
     }
 
     public function enrollmentPdf(Request $request): Response
     {
-        return $this->pdf($request, 'enrollment');
+        return $this->pdf($request, self::TYPE_ENROLLMENT);
+    }
+
+    public function mediaAuthorizationPdf(Request $request): Response
+    {
+        return $this->pdf($request, self::TYPE_MEDIA_AUTHORIZATION);
     }
 
     private function index(Request $request, AdvancedReportsFilterService $filters, string $type): View
@@ -63,6 +79,8 @@ class StudentFormsController extends Controller
 
     private function pdf(Request $request, string $type): Response
     {
+        $meta = $this->typeMeta($type);
+
         if ($request->boolean('preview')) {
             $fake = (object) [
                 'matricula_id' => 12345,
@@ -79,23 +97,44 @@ class StudentFormsController extends Controller
                 'matricula_aprovado' => 4,
                 'data_entrada_turma_br' => '10/02/' . date('Y'),
                 'data_fim_turma_br' => '28/04/' . date('Y'),
+                'nome_social_aluno' => '',
+                'data_nascimento_br' => '01/01/2010',
+                'sexo_desc' => 'Feminino',
+                'naturalidade_txt' => 'Município Exemplo / UF',
+                'nacionalidade_desc' => 'Brasileira',
+                'aluno_email' => 'email@exemplo.gov.br',
+                'telefone_principal' => '(11) 99999-0000',
+                'aluno_inep' => '123456789012',
+                'nis_formatado' => '123.45678.90-1',
+                'cpf_formatado' => '000.000.000-00',
+                'rg_completo' => '12.345.678-9 SSP / UF',
+                'nm_pai' => 'Nome do Pai (Exemplo)',
+                'nm_mae' => 'Nome da Mãe (Exemplo)',
+                'tipo_responsavel' => 'm',
+                'tipo_responsavel_desc' => 'Mãe',
+                'responsavel_legal_nome' => 'Nome da Mãe (Exemplo)',
+                'emancipado' => false,
+                'data_matricula_br' => '05/02/' . date('Y'),
+                'situacao_matricula_txt' => 'Transferido',
+                'turno_enturmacao' => 'Matutino',
+                'semestre' => '—',
+                'dependencia' => false,
+                'ultima_matricula_flag' => true,
+                'formando' => false,
+                'observacao_matricula' => '',
+                'responsavel_exibicao' => 'Responsável legal (Exemplo)',
             ];
 
-            $title = $type === 'individual' ? 'Ficha individual' : 'Ficha de matrícula';
-            $view = $type === 'individual'
-                ? 'advanced-reports::student-forms.ficha-individual'
-                : 'advanced-reports::student-forms.ficha-matricula';
-
             $extra = [];
-            if ($type === 'individual') {
+            if ($type === self::TYPE_INDIVIDUAL) {
                 $extra['disciplinas'] = [
                     ['nome' => 'Língua Portuguesa', 'nota' => '8,0', 'faltas' => 2, 'carga_horaria' => '200h'],
                     ['nome' => 'Matemática', 'nota' => '9,0', 'faltas' => 0, 'carga_horaria' => '200h'],
                 ];
             }
 
-            return app(PdfRenderService::class)->download($view, [
-                'title' => $title,
+            return app(PdfRenderService::class)->download($meta['view_single'], [
+                'title' => $meta['title'],
                 'matricula' => $fake,
                 'issuedAt' => now()->format('d/m/Y H:i'),
                 'validationCode' => 'EXEMPLO',
@@ -129,55 +168,6 @@ class StudentFormsController extends Controller
             abort(422, 'Informe ao menos ano, escola e curso (alunos são opcionais).');
         }
 
-        $mtPriorizada = <<<'SQL'
-(
-  SELECT DISTINCT ON (mtz.ref_cod_matricula)
-    mtz.ref_cod_matricula,
-    mtz.ref_cod_turma,
-    mtz.data_enturmacao,
-    mtz.data_exclusao
-  FROM pmieducar.matricula_turma mtz
-  ORDER BY mtz.ref_cod_matricula,
-    (CASE WHEN mtz.transferido IS TRUE THEN 1 ELSE 0 END) DESC,
-    mtz.sequencial DESC
-) as mt
-SQL;
-
-        $loadMatricula = static function (int $id) use ($mtPriorizada) {
-            return DB::table('pmieducar.matricula as m')
-                ->join('pmieducar.aluno as a', 'a.cod_aluno', '=', 'm.ref_cod_aluno')
-                ->join('cadastro.pessoa as p', 'p.idpes', '=', 'a.ref_idpes')
-                ->leftJoin('pmieducar.escola as e', 'e.cod_escola', '=', 'm.ref_ref_cod_escola')
-                ->leftJoin('cadastro.pessoa as ep', 'ep.idpes', '=', 'e.ref_idpes')
-                ->leftJoin('cadastro.juridica as ej', 'ej.idpes', '=', 'ep.idpes')
-                ->leftJoin('pmieducar.escola_complemento as ec', 'ec.ref_cod_escola', '=', 'e.cod_escola')
-                ->leftJoin('pmieducar.instituicao as i', 'i.cod_instituicao', '=', 'e.ref_cod_instituicao')
-                ->leftJoin('pmieducar.curso as c', 'c.cod_curso', '=', 'm.ref_cod_curso')
-                ->leftJoin('pmieducar.serie as s', 's.cod_serie', '=', 'm.ref_ref_cod_serie')
-                ->leftJoin(DB::raw($mtPriorizada), 'mt.ref_cod_matricula', '=', 'm.cod_matricula')
-                ->leftJoin('pmieducar.turma as t', 't.cod_turma', '=', 'mt.ref_cod_turma')
-                ->selectRaw('m.cod_matricula as matricula_id')
-                ->selectRaw('a.cod_aluno as aluno_id')
-                ->selectRaw('m.ano as ano_letivo')
-                ->selectRaw('m.aprovado as matricula_aprovado')
-                ->selectRaw('p.nome as aluno_nome')
-                ->selectRaw('e.ref_cod_instituicao as instituicao_id')
-                ->selectRaw('e.cod_escola as escola_id')
-                ->selectRaw('i.nm_instituicao as instituicao')
-                ->selectRaw('COALESCE(ej.fantasia, ec.nm_escola, \'\') as escola')
-                ->selectRaw('c.nm_curso as curso')
-                ->selectRaw('s.nm_serie as serie')
-                ->selectRaw('t.nm_turma as turma')
-                ->selectRaw("to_char(mt.data_enturmacao::date, 'DD/MM/YYYY') as data_entrada_turma_br")
-                ->selectRaw("to_char(COALESCE(mt.data_exclusao::date, m.data_cancel::date), 'DD/MM/YYYY') as data_fim_turma_br")
-                ->where('m.cod_matricula', $id)
-                ->first();
-        };
-
-        $issuedAt = now();
-        $issuedAtHuman = $issuedAt->format('d/m/Y H:i');
-        $issuedAtIso = DocumentSigningService::issuedAtForMac($issuedAt);
-
         $idsToEmit = [];
         if ($matriculaId) {
             $idsToEmit = [$matriculaId];
@@ -208,13 +198,15 @@ SQL;
 
         $items = [];
         foreach ($idsToEmit as $id) {
-            $matricula = $loadMatricula($id);
+            $matricula = $this->loadMatriculaRow($id);
             if (!$matricula) {
                 continue;
             }
 
+            $this->enrichMatriculaRow($matricula);
+
             $extra = [];
-            if ($type === 'individual') {
+            if ($type === self::TYPE_INDIVIDUAL) {
                 $alunoId = (int) ($matricula->aluno_id ?? 0);
                 $extra['disciplinas'] = $this->disciplinesForMatricula($alunoId, $id, (int) ($matricula->ano_letivo ?? 0));
             }
@@ -254,6 +246,10 @@ SQL;
             'count' => count($items),
         ];
 
+        $issuedAt = now();
+        $issuedAtHuman = $issuedAt->format('d/m/Y H:i');
+        $issuedAtIso = DocumentSigningService::issuedAtForMac($issuedAt);
+
         $signing = app(DocumentSigningService::class);
         $code = $signing->generateCode(8);
         $validationUrl = route('advanced-reports.documents.validate', ['code' => $code]);
@@ -261,11 +257,11 @@ SQL;
         $payloadToStore = array_merge($payload, [
             'validation_url' => $validationUrl,
         ]);
-        $mac = $signing->mac($code, "student_form:$type", $issuedAtIso, $payloadToStore);
+        $mac = $signing->mac($code, $meta['doc_type'], $issuedAtIso, $payloadToStore);
 
         AdvancedReportsDocument::query()->create([
             'code' => $code,
-            'type' => "student_form:$type",
+            'type' => $meta['doc_type'],
             'issued_at' => $issuedAt,
             'issued_by_user_id' => auth()->id(),
             'issued_ip' => $request->ip(),
@@ -275,14 +271,12 @@ SQL;
             'payload' => $payloadToStore,
         ]);
 
-        $title = $type === 'individual' ? 'Ficha individual' : 'Ficha de matrícula';
-
         $issuerName = auth()->user()?->name;
         $issuerRole = null;
         $cityUf = null;
 
         $authorities = null;
-        if ($type === 'individual' && !empty($first->escola_id)) {
+        if ($type === self::TYPE_INDIVIDUAL && !empty($first->escola_id)) {
             $authorities = [
                 'secretary' => ['idpes' => null, 'name' => null, 'inep' => null, 'matricula_interna' => null],
                 'director' => ['idpes' => null, 'name' => null, 'inep' => null, 'matricula_interna' => null],
@@ -323,15 +317,13 @@ SQL;
             }
         }
 
-        $viewSingle = $type === 'individual'
-            ? 'advanced-reports::student-forms.ficha-individual'
-            : 'advanced-reports::student-forms.ficha-matricula';
+        $viewSingle = $meta['view_single'];
 
         if (count($items) === 1) {
             $one = $items[0];
 
             return app(PdfRenderService::class)->download($viewSingle, [
-                'title' => $title,
+                'title' => $meta['title'],
                 'matricula' => $one['matricula'],
                 'issuedAt' => $issuedAtHuman,
                 'validationCode' => $code,
@@ -346,11 +338,11 @@ SQL;
                 'schoolName' => $header['schoolName'] ?? null,
                 'contact' => $header['contact'] ?? null,
                 'authorities' => $authorities,
-            ], str_replace(' ', '-', strtolower($title)) . '-' . (int) ($one['matricula_id'] ?? 0) . '.pdf');
+            ], str_replace(' ', '-', strtolower($meta['title'])) . '-' . (int) ($one['matricula_id'] ?? 0) . '.pdf');
         }
 
         return app(PdfRenderService::class)->download('advanced-reports::student-forms.pdf-batch', [
-            'title' => $title,
+            'title' => $meta['title'],
             'type' => $type,
             'items' => $items,
             'issuedAt' => $issuedAtHuman,
@@ -365,7 +357,217 @@ SQL;
             'schoolName' => $header['schoolName'] ?? null,
             'contact' => $header['contact'] ?? null,
             'authorities' => $authorities,
-        ], str_replace(' ', '-', strtolower($title)) . '-lote.pdf');
+        ], str_replace(' ', '-', strtolower($meta['title'])) . '-lote.pdf');
+    }
+
+    /**
+     * @return array{title: string, doc_type: string, view_single: string}
+     */
+    private function typeMeta(string $type): array
+    {
+        return match ($type) {
+            self::TYPE_INDIVIDUAL => [
+                'title' => 'Ficha individual',
+                'doc_type' => 'student_form:individual',
+                'view_single' => 'advanced-reports::student-forms.ficha-individual',
+            ],
+            self::TYPE_ENROLLMENT => [
+                'title' => 'Ficha de matrícula',
+                'doc_type' => 'student_form:enrollment',
+                'view_single' => 'advanced-reports::student-forms.ficha-matricula',
+            ],
+            self::TYPE_MEDIA_AUTHORIZATION => [
+                'title' => 'Termo de autorização de uso de imagem e voz',
+                'doc_type' => 'student_form:media_authorization',
+                'view_single' => 'advanced-reports::student-forms.termo-autorizacao-imagem-voz',
+            ],
+            default => throw new \InvalidArgumentException('Tipo de ficha inválido.'),
+        };
+    }
+
+    private function loadMatriculaRow(int $id): ?object
+    {
+        $mtPriorizada = <<<'SQL'
+(
+  SELECT DISTINCT ON (mtz.ref_cod_matricula)
+    mtz.ref_cod_matricula,
+    mtz.ref_cod_turma,
+    mtz.data_enturmacao,
+    mtz.data_exclusao,
+    mtz.turno_id
+  FROM pmieducar.matricula_turma mtz
+  ORDER BY mtz.ref_cod_matricula,
+    (CASE WHEN mtz.transferido IS TRUE THEN 1 ELSE 0 END) DESC,
+    mtz.sequencial DESC
+) as mt
+SQL;
+
+        $row = DB::table('pmieducar.matricula as m')
+            ->join('pmieducar.aluno as a', 'a.cod_aluno', '=', 'm.ref_cod_aluno')
+            ->join('cadastro.pessoa as p', 'p.idpes', '=', 'a.ref_idpes')
+            ->leftJoin('pmieducar.escola as e', 'e.cod_escola', '=', 'm.ref_ref_cod_escola')
+            ->leftJoin('cadastro.pessoa as ep', 'ep.idpes', '=', 'e.ref_idpes')
+            ->leftJoin('cadastro.juridica as ej', 'ej.idpes', '=', 'ep.idpes')
+            ->leftJoin('pmieducar.escola_complemento as ec', 'ec.ref_cod_escola', '=', 'e.cod_escola')
+            ->leftJoin('pmieducar.instituicao as i', 'i.cod_instituicao', '=', 'e.ref_cod_instituicao')
+            ->leftJoin('pmieducar.curso as c', 'c.cod_curso', '=', 'm.ref_cod_curso')
+            ->leftJoin('pmieducar.serie as s', 's.cod_serie', '=', 'm.ref_ref_cod_serie')
+            ->leftJoin(DB::raw($mtPriorizada), 'mt.ref_cod_matricula', '=', 'm.cod_matricula')
+            ->leftJoin('pmieducar.turma as t', 't.cod_turma', '=', 'mt.ref_cod_turma')
+            ->leftJoin('cadastro.fisica as fi', 'fi.idpes', '=', 'a.ref_idpes')
+            ->leftJoin('public.municipio as munnasc', 'munnasc.idmun', '=', 'fi.idmun_nascimento')
+            ->leftJoin('cadastro.pessoa as presp', 'presp.idpes', '=', 'fi.idpes_responsavel')
+            ->leftJoin('cadastro.documento as doc', 'doc.idpes', '=', 'a.ref_idpes')
+            ->leftJoin('modules.educacenso_cod_aluno as eca', 'eca.cod_aluno', '=', 'a.cod_aluno')
+            ->leftJoin('pmieducar.turma_turno as tturno', 'tturno.id', '=', 'mt.turno_id')
+            ->selectRaw('m.cod_matricula as matricula_id')
+            ->selectRaw('a.cod_aluno as aluno_id')
+            ->selectRaw('m.ano as ano_letivo')
+            ->selectRaw('m.aprovado as matricula_aprovado')
+            ->selectRaw('p.nome as aluno_nome')
+            ->selectRaw('p.email as aluno_email')
+            ->selectRaw('e.ref_cod_instituicao as instituicao_id')
+            ->selectRaw('e.cod_escola as escola_id')
+            ->selectRaw('i.nm_instituicao as instituicao')
+            ->selectRaw('COALESCE(ej.fantasia, ec.nm_escola, \'\') as escola')
+            ->selectRaw('c.nm_curso as curso')
+            ->selectRaw('s.nm_serie as serie')
+            ->selectRaw('t.nm_turma as turma')
+            ->selectRaw("to_char(mt.data_enturmacao::date, 'DD/MM/YYYY') as data_entrada_turma_br")
+            ->selectRaw("to_char(COALESCE(mt.data_exclusao::date, m.data_cancel::date), 'DD/MM/YYYY') as data_fim_turma_br")
+            ->selectRaw('fi.nome_social as nome_social_aluno')
+            ->selectRaw("to_char(fi.data_nasc::date, 'DD/MM/YYYY') as data_nascimento_br")
+            ->selectRaw('fi.sexo as sexo_cadastro')
+            ->selectRaw('fi.nacionalidade as nacionalidade_cod')
+            ->selectRaw('fi.nis_pis_pasep as nis_num')
+            ->selectRaw('fi.cpf as cpf_num')
+            ->selectRaw('fi.idpes_responsavel as idpes_responsavel')
+            ->selectRaw('a.nm_pai as nm_pai')
+            ->selectRaw('a.nm_mae as nm_mae')
+            ->selectRaw('a.tipo_responsavel as tipo_responsavel')
+            ->selectRaw('a.emancipado as emancipado')
+            ->selectRaw('TRIM(BOTH FROM presp.nome) as responsavel_legal_nome')
+            ->selectRaw('doc.rg as rg_num')
+            ->selectRaw('doc.sigla_uf_exp_rg as rg_uf')
+            ->selectRaw('doc.data_exp_rg as data_exp_rg')
+            ->selectRaw('eca.cod_aluno_inep as aluno_inep')
+            ->selectRaw('tturno.nome as turno_enturmacao')
+            ->selectRaw("NULLIF(TRIM(BOTH FROM CONCAT(munnasc.nome, CASE WHEN munnasc.sigla_uf IS NOT NULL AND TRIM(BOTH FROM munnasc.sigla_uf) <> '' THEN ' / ' || munnasc.sigla_uf ELSE '' END)), '') as naturalidade_txt")
+            ->selectRaw('m.observacao as observacao_matricula')
+            ->selectRaw("to_char(m.data_matricula::date, 'DD/MM/YYYY') as data_matricula_br")
+            ->selectRaw('m.semestre as semestre')
+            ->selectRaw('m.dependencia as dependencia')
+            ->selectRaw('m.ultima_matricula as ultima_matricula_flag')
+            ->selectRaw('m.formando as formando')
+            ->selectRaw("(select trim(both ' ' from concat('(', fp.ddd::text, ') ', to_char(fp.fone, 'FM99999999999'))) from cadastro.fone_pessoa fp where fp.idpes = p.idpes order by fp.tipo asc limit 1) as telefone_principal")
+            ->where('m.cod_matricula', $id)
+            ->first();
+
+        return $row;
+    }
+
+    private function enrichMatriculaRow(object $m): void
+    {
+        $m->sexo_desc = match (strtoupper(trim((string) ($m->sexo_cadastro ?? '')))) {
+            'M' => 'Masculino',
+            'F' => 'Feminino',
+            default => null,
+        };
+
+        $m->nacionalidade_desc = match ((int) ($m->nacionalidade_cod ?? 0)) {
+            1 => 'Brasileira',
+            2 => 'Naturalizado brasileiro',
+            3 => 'Estrangeira',
+            default => null,
+        };
+
+        $m->cpf_formatado = $this->formatCpfDigits($m->cpf_num ?? null);
+        $m->nis_formatado = $this->formatNisDigits($m->nis_num ?? null);
+
+        $rg = trim((string) ($m->rg_num ?? ''));
+        $ufRg = trim((string) ($m->rg_uf ?? ''));
+        $m->rg_completo = $rg !== '' ? ($rg . ($ufRg !== '' ? ' / ' . $ufRg : '')) : null;
+
+        $tipo = strtolower(trim((string) ($m->tipo_responsavel ?? '')));
+        $m->tipo_responsavel_desc = match ($tipo) {
+            'p' => 'Pai',
+            'm' => 'Mãe',
+            'a' => 'O(a) próprio(a) estudante',
+            'o' => 'Outra pessoa',
+            '' => null,
+            default => 'Outro (' . $tipo . ')',
+        };
+
+        $m->emancipado = filter_var($m->emancipado ?? false, FILTER_VALIDATE_BOOLEAN);
+
+        $m->dependencia = filter_var($m->dependencia ?? false, FILTER_VALIDATE_BOOLEAN);
+        $m->ultima_matricula_flag = (int) ($m->ultima_matricula_flag ?? 0) === 1;
+        $m->formando = filter_var($m->formando ?? false, FILTER_VALIDATE_BOOLEAN);
+
+        $m->situacao_matricula_txt = $this->matriculaSituationLabel((int) ($m->matricula_aprovado ?? 0));
+
+        $m->responsavel_exibicao = $this->deriveResponsavelExibicao($m);
+    }
+
+    private function deriveResponsavelExibicao(object $m): string
+    {
+        $nomeResp = trim((string) ($m->responsavel_legal_nome ?? ''));
+        if ($nomeResp !== '') {
+            return $nomeResp;
+        }
+
+        $tipo = strtolower(trim((string) ($m->tipo_responsavel ?? '')));
+        if ($tipo === 'a' && trim((string) ($m->aluno_nome ?? '')) !== '') {
+            return trim((string) $m->aluno_nome);
+        }
+        if ($tipo === 'p' && trim((string) ($m->nm_pai ?? '')) !== '') {
+            return trim((string) $m->nm_pai);
+        }
+        if ($tipo === 'm' && trim((string) ($m->nm_mae ?? '')) !== '') {
+            return trim((string) $m->nm_mae);
+        }
+
+        return '';
+    }
+
+    private function matriculaSituationLabel(int $aprovado): ?string
+    {
+        if (class_exists(\App\Models\RegistrationStatus::class)) {
+            /** @var array<int, string> $map */
+            $map = \App\Models\RegistrationStatus::getRegistrationAndEnrollmentStatus();
+
+            return $map[$aprovado] ?? ('Código ' . $aprovado);
+        }
+
+        return $aprovado > 0 ? ('Código ' . $aprovado) : null;
+    }
+
+    private function formatCpfDigits(mixed $cpf): ?string
+    {
+        if ($cpf === null || $cpf === '') {
+            return null;
+        }
+        $digits = preg_replace('/\D/', '', (string) $cpf);
+        if ($digits === '' || strlen($digits) > 11) {
+            return null;
+        }
+        $digits = str_pad($digits, 11, '0', STR_PAD_LEFT);
+
+        return substr($digits, 0, 3) . '.' . substr($digits, 3, 3) . '.' . substr($digits, 6, 3) . '-' . substr($digits, 9, 2);
+    }
+
+    private function formatNisDigits(mixed $nis): ?string
+    {
+        if ($nis === null || $nis === '') {
+            return null;
+        }
+        $digits = preg_replace('/\D/', '', (string) $nis);
+        if ($digits === '' || strlen($digits) > 11) {
+            return null;
+        }
+        $digits = str_pad($digits, 11, '0', STR_PAD_LEFT);
+
+        return substr($digits, 0, 3) . '.' . substr($digits, 3, 5) . '.' . substr($digits, 8, 2) . '-' . substr($digits, 10, 1);
     }
 
     /**
@@ -377,7 +579,6 @@ SQL;
             return [];
         }
 
-        // Busca disciplinas do histórico escolar mais recente da matrícula, caindo para o ano letivo
         $history = DB::table('pmieducar.historico_escolar as h')
             ->where('h.ref_cod_aluno', $alunoId)
             ->where('h.ativo', 1)
@@ -415,4 +616,3 @@ SQL;
             ->all();
     }
 }
-

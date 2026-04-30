@@ -184,16 +184,18 @@ Ao emitir PDF, o pacote retorna o arquivo com `Content-Disposition: inline`, abr
 - **Ficha individual (UI)**: `/relatorios-avancados/fichas/ficha-individual`
 - **Ficha individual (PDF)**: `/relatorios-avancados/fichas/ficha-individual/pdf` (em lote por filtros ou matrículas selecionadas; prévia com `preview=1` não grava validação)
 - **Ficha de matrícula (UI)**: `/relatorios-avancados/fichas/ficha-matricula`
-- **Ficha de matrícula (PDF)**: `/relatorios-avancados/fichas/ficha-matricula/pdf`
-- **Objetivo**: ficha pedagógica/resumo (individual) e ficha para conferência/assinatura (matrícula), com cabeçalho/rodapé do pacote.
+- **Ficha de matrícula (PDF)**: `/relatorios-avancados/fichas/ficha-matricula/pdf` (dados cadastrais, matrícula/turma e assinaturas em duas colunas: responsável e emissor)
+- **Termo de Autorização (UI)**: `/relatorios-avancados/fichas/termo-autorizacao` (uso de imagem e voz; menu **Termo de Autorização**)
+- **Termo de Autorização (PDF)**: `/relatorios-avancados/fichas/termo-autorizacao/pdf`
+- **Objetivo**: ficha pedagógica/resumo (individual); ficha de matrícula para conferência de dados do i-Educar; termo de imagem/voz como documento à parte; cabeçalho/rodapé do pacote e QR de validação nos PDFs finais.
 
 ### 4.2) Comunicados (Escola → Documentos — menu **Comunicados**)
 
-- **Convocações**: `/relatorios-avancados/comunicados/convocacao`
-- **Reuniões**: `/relatorios-avancados/comunicados/reuniao`
-- **Advertências**: `/relatorios-avancados/comunicados/advertencia`
-- **Comunicado geral**: `/relatorios-avancados/comunicados/comunicado-geral`
-- **Objetivo**: modelos de comunicado oficial (roadmap; telas placeholder até emissão PDF parametrizada).
+- **Convocações (UI + PDF)**: `/relatorios-avancados/comunicados/convocacao` — PDF: `/relatorios-avancados/comunicados/convocacao/pdf`
+- **Reuniões**: `/relatorios-avancados/comunicados/reuniao` — PDF: `.../reuniao/pdf`
+- **Advertências**: `/relatorios-avancados/comunicados/advertencia` — PDF: `.../advertencia/pdf`
+- **Comunicado geral**: `/relatorios-avancados/comunicados/comunicado-geral` — PDF: `.../comunicado-geral/pdf`
+- **Objetivo**: textos sugeridos editáveis, cabeçalho/rodapé e QR de validação; **lote** por seleção de matrículas (uma página por estudante) ou **um comunicado coletivo** sem seleção (até 200 matrículas no lote). Prévia: `preview=1` (não grava documento).
 
 ### 5) Boletim do aluno (PDF)
 

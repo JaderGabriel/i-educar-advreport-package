@@ -31,29 +31,42 @@ class AdvancedReportsDocument extends Model
     public function publicSummary(): array
     {
         $p = is_array($this->payload) ? $this->payload : [];
+        $typeStr = (string) ($this->type ?? '');
 
-        $typeHuman = match ((string) ($this->type ?? '')) {
-            'boletim' => 'Boletim do aluno',
-            'boletim_batch' => 'Boletim do aluno (lote)',
-            'historico' => 'Histórico escolar',
-            'declaration_enrollment' => 'Declaração de matrícula',
-            'declaration_frequency' => 'Declaração de frequência',
-            'declaration_conclusion' => 'Declaração de conclusão',
-            'transfer_guide' => 'Guia/Declaração de transferência',
-            'transfer_packet' => 'Comprovante de matrícula + declaração de transferência',
-            'approval_packet' => 'Declaração de matrícula + declaração de conclusão (ficha individual)',
-            'student_form:individual' => 'Ficha individual',
-            'student_form:enrollment' => 'Ficha de matrícula',
-            'declaration_nada_consta' => 'Declaração de escolaridade / Nada consta',
-            'vacancies_by_school_class' => 'Vagas por turma',
-            'students_by_situation' => 'Alunos por situação',
-            'movements_general' => 'Relatório de movimentações (geral)',
-            'diary_mirror' => 'Espelho de diário (chamada)',
-            'diploma' => 'Diploma (modelo)',
-            'certificate' => 'Certificado (modelo)',
-            'declaration' => 'Declaração (modelo)',
-            default => (string) ($this->type ?? ''),
-        };
+        if (str_starts_with($typeStr, 'communication:')) {
+            $slug = substr($typeStr, strlen('communication:'));
+            $typeHuman = match ($slug) {
+                'convocacao' => 'Comunicado — Convocação',
+                'reuniao' => 'Comunicado — Reunião',
+                'advertencia' => 'Comunicado — Advertência',
+                'comunicado-geral' => 'Comunicado geral',
+                default => 'Comunicado oficial',
+            };
+        } else {
+            $typeHuman = match ($typeStr) {
+                'boletim' => 'Boletim do aluno',
+                'boletim_batch' => 'Boletim do aluno (lote)',
+                'historico' => 'Histórico escolar',
+                'declaration_enrollment' => 'Declaração de matrícula',
+                'declaration_frequency' => 'Declaração de frequência',
+                'declaration_conclusion' => 'Declaração de conclusão',
+                'transfer_guide' => 'Guia/Declaração de transferência',
+                'transfer_packet' => 'Comprovante de matrícula + declaração de transferência',
+                'approval_packet' => 'Declaração de matrícula + declaração de conclusão (ficha individual)',
+                'student_form:individual' => 'Ficha individual',
+                'student_form:enrollment' => 'Ficha de matrícula',
+                'student_form:media_authorization' => 'Termo de autorização de uso de imagem e voz',
+                'declaration_nada_consta' => 'Declaração de escolaridade / Nada consta',
+                'vacancies_by_school_class' => 'Vagas por turma',
+                'students_by_situation' => 'Alunos por situação',
+                'movements_general' => 'Relatório de movimentações (geral)',
+                'diary_mirror' => 'Espelho de diário (chamada)',
+                'diploma' => 'Diploma (modelo)',
+                'certificate' => 'Certificado (modelo)',
+                'declaration' => 'Declaração (modelo)',
+                default => $typeStr,
+            };
+        }
 
         $summary = [
             'Tipo' => $typeHuman,
@@ -66,8 +79,13 @@ class AdvancedReportsDocument extends Model
             'Matrícula (ref.)' => (string) ($p['enrollment'] ?? ''),
         ];
 
+        if (str_starts_with($typeStr, 'communication:')) {
+            $summary['Referência'] = (string) ($p['ref'] ?? '');
+            $summary['Páginas (lote)'] = (string) ($p['count'] ?? '');
+        }
+
         // Livro/Folha/Registro: somente para histórico escolar
-        if ((string) ($this->type ?? '') === 'historico') {
+        if ($typeStr === 'historico') {
             $book = $p['book'] ?? null;
             $page = $p['page'] ?? null;
             $record = $p['record'] ?? null;
@@ -75,6 +93,17 @@ class AdvancedReportsDocument extends Model
             $summary['Livro/Folha/Registro'] = trim(
                 (string) ($book ?? '-') . ' / ' . (string) ($page ?? '-') . ' / ' . (string) ($record ?? '-')
             );
+        }
+
+        if ($typeStr === 'diary_mirror') {
+            $summary['Turma (ref.)'] = (string) ($p['turma_id'] ?? '');
+            $summary['Componente curricular'] = (string) ($p['componente'] ?? '');
+            $summary['Professor(a)'] = (string) ($p['docente'] ?? '');
+            if (!empty($p['batch_id'])) {
+                $summary['Pacote (ZIP)'] = trim(
+                    (string) ($p['batch_index'] ?? '') . ' de ' . (string) ($p['batch_total'] ?? '')
+                );
+            }
         }
 
         // Remove chaves vazias (sem expor payload completo)
