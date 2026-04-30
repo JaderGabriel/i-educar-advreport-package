@@ -7,7 +7,7 @@
 
 @push('styles')
   <style>
-    @page { size: A4 landscape; margin: 0; }
+    @page { size: A4 landscape; margin: 8mm; }
     * { box-sizing: border-box; }
     html, body {
       margin: 0;
@@ -18,13 +18,10 @@
       print-color-adjust: exact;
     }
     .diploma-sheet {
-      width: 297mm;
-      height: 210mm;
-      max-width: 100%;
+      width: 100%;
       margin: 0;
-      padding: 10mm 12mm 12mm 12mm;
+      padding: 0;
       position: relative;
-      overflow: hidden;
       page-break-inside: avoid;
     }
     .diploma-page-break-after {
@@ -33,11 +30,8 @@
     .diploma-frame {
       position: relative;
       z-index: 1;
-      height: 100%;
-      padding: 6mm 8mm 5mm 8mm;
+      padding: 8mm 10mm;
       border: 3px double #6b4c1b;
-      outline: 1px solid #2c1810;
-      outline-offset: 2mm;
       background: #fffef8;
     }
     .diploma-badge {
@@ -116,23 +110,7 @@
       color: #374151;
       min-height: 14px;
     }
-    .diploma-footer {
-      position: absolute;
-      left: 14mm;
-      right: 14mm;
-      bottom: 8mm;
-      font-family: DejaVu Sans, sans-serif;
-      font-size: 8px;
-      color: #374151;
-      border-top: 1px dashed #b8a88a;
-      padding-top: 2mm;
-    }
-    .diploma-footer table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    .diploma-footer td { vertical-align: top; word-break: break-word; }
-    .diploma-footer .qr { width: 64px; height: 64px; border: 1px solid #d1c4b0; padding: 2px; background: #fff; }
+    .diploma-footer-inline { margin-top: 8mm; }
     .diploma-verso .diploma-frame {
       background: #fffef8;
     }
@@ -263,28 +241,21 @@
             </div>
           </div>
 
-          <div class="diploma-footer">
-            <table>
-              <tr>
-                <td>
-                  <div><strong>Emissão</strong>: {{ $pIssuedAt }}</div>
-                  @if(!empty($pCode))
-                    <div><strong>Código de validação</strong>: {{ $pCode }}</div>
-                  @endif
-                  @if(!empty($pUrl))
-                    <div style="word-break: break-all;"><strong>Validação</strong>: {{ $pUrl }}</div>
-                  @endif
-                  @if(!empty($schoolInep))
-                    <div><strong>INEP (escola)</strong>: {{ $schoolInep }}</div>
-                  @endif
-                </td>
-                <td style="width: 72px; text-align: right;">
-                  @if(!empty($pQr))
-                    <img class="qr" src="{{ $pQr }}" alt="QR">
-                  @endif
-                </td>
-              </tr>
-            </table>
+          <div class="diploma-footer-inline">
+            @include('advanced-reports::student-documents._footer', [
+              'footerInline' => true,
+              'issuedAt' => $pIssuedAt,
+              'validationCode' => $pCode,
+              'validationUrl' => $pUrl,
+              'qrDataUri' => $pQr,
+              'issuerName' => $issuerName ?? null,
+              'issuerRole' => null,
+              'cityUf' => null,
+              'book' => null,
+              'page' => null,
+              'record' => null,
+              'matriculaInternaAluno' => $matriculaId ?? null,
+            ])
           </div>
         </div>
       </div>
@@ -318,22 +289,21 @@
             </div>
           </div>
 
-          <div class="diploma-footer">
-            <table>
-              <tr>
-                <td>
-                  <div><strong>Emissão</strong>: {{ $pIssuedAt }}</div>
-                  @if(!empty($pCode))
-                    <div><strong>Código de validação</strong>: {{ $pCode }}</div>
-                  @endif
-                </td>
-                <td style="width: 72px; text-align: right;">
-                  @if(!empty($pQr))
-                    <img class="qr" src="{{ $pQr }}" alt="QR">
-                  @endif
-                </td>
-              </tr>
-            </table>
+          <div class="diploma-footer-inline">
+            @include('advanced-reports::student-documents._footer', [
+              'footerInline' => true,
+              'issuedAt' => $pIssuedAt,
+              'validationCode' => $pCode,
+              'validationUrl' => $pUrl,
+              'qrDataUri' => $pQr,
+              'issuerName' => $issuerName ?? null,
+              'issuerRole' => null,
+              'cityUf' => null,
+              'book' => null,
+              'page' => null,
+              'record' => null,
+              'matriculaInternaAluno' => $matriculaId ?? null,
+            ])
           </div>
         </div>
       </div>

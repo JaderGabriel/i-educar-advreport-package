@@ -14,32 +14,32 @@ Pacote de **Relatórios e Documentos** para o i-Educar, com emissão em **PDF** 
 ## Instalação (plug-and-play)
 
 1. Garanta o pacote em `packages/buriti/i-educar-advanced-reports-package`.
-2. Ative via plug-and-play:
+1. Ative via plug-and-play:
 
 ```bash
 composer plug-and-play
 php artisan package:discover --ansi
 ```
 
-3. Rode migrations:
+1. Rode migrations:
 
 ```bash
 php artisan migrate --force
 ```
 
-4. Publique os assets (CSS) do pacote:
+1. Publique os assets (CSS) do pacote:
 
 ```bash
 php artisan vendor:publish --tag=advanced-reports-assets
 ```
 
-5. (Opcional) Rode o checklist de deploy do pacote (testes + dicas):
+1. (Opcional) Rode o checklist de deploy do pacote (testes + dicas):
 
 ```bash
 php artisan advanced-reports:deploy-check
 ```
 
-6. Limpe caches (importante para o menu aparecer):
+1. Limpe caches (importante para o menu aparecer):
 
 ```bash
 php artisan optimize:clear
@@ -57,32 +57,32 @@ php artisan advanced-reports:flush-menus
 Para ambientes onde o pacote **já está instalado** e você está apenas **atualizando a versão**:
 
 1. Atualize o código do pacote no diretório `packages/buriti/i-educar-advanced-reports-package`.
-2. Refaça o plug-and-play e descubra providers (se necessário):
+1. Refaça o plug-and-play e descubra providers (se necessário):
 
 ```bash
 composer plug-and-play
 php artisan package:discover --ansi
 ```
 
-3. Rode **apenas as migrations do pacote** (recomendado em updates):
+1. Rode **apenas as migrations do pacote** (recomendado em updates):
 
 ```bash
 php artisan migrate --path=packages/buriti/i-educar-advanced-reports-package/database/migrations --force
 ```
 
-4. Republique os assets (CSS) do pacote com `--force` (recomendado em updates):
+1. Republique os assets (CSS) do pacote com `--force` (recomendado em updates):
 
 ```bash
 php artisan vendor:publish --tag=advanced-reports-assets --force
 ```
 
-5. (Opcional) Rode o checklist de deploy do pacote (testes + dicas):
+1. (Opcional) Rode o checklist de deploy do pacote (testes + dicas):
 
 ```bash
 php artisan advanced-reports:deploy-check
 ```
 
-6. Limpe caches e o cache de menus:
+1. Limpe caches e o cache de menus:
 
 ```bash
 php artisan optimize:clear
@@ -163,9 +163,10 @@ Ao emitir PDF, o pacote retorna o arquivo com `Content-Disposition: inline`, abr
 - **PDF**: `/relatorios-avancados/diplomas/pdf`
 - **Objetivo**: emitir modelos “print-friendly” sem depender de Jasper.
 - **Documentos**:
-  - Diploma (**sem rodapé**)
-  - Certificado (**com rodapé + QR Code**)
-  - Declaração (**com rodapé + QR Code**)
+  - Diploma (**com rodapé padronizado + QR Code**)
+  - Certificado (**com rodapé padronizado + QR Code**)
+  - Declaração (**com rodapé padronizado + QR Code**)
+  - Observação: os modelos usam CSS “safe” para Dompdf (sem altura fixa/overflow/rodapé absoluto), evitando corte de texto e páginas em branco.
 
 ### 4) Documentos oficiais do aluno (PDF)
 

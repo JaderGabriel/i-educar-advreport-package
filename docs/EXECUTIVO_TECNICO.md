@@ -84,9 +84,15 @@ Implementados (com PDF/Excel e opção de gráficos):
 ### 4.3 Modelos de documentos (com validação)
 
 - `/relatorios-avancados/diplomas` → gera PDF com:
-  - **Diploma** (cabeçalho oficial, **sem rodapé**)
+  - **Diploma** (cabeçalho oficial + **rodapé com dados + QR Code**)
   - **Certificado** (cabeçalho + **rodapé com dados + QR Code**)
   - **Declaração** (cabeçalho + **rodapé com dados + QR Code**)
+
+Notas técnicas:
+
+- Layouts foram ajustados para evitar problemas comuns do Dompdf:
+  - evitar `height` fixo em mm com `overflow: hidden`;
+  - evitar rodapé “fixo/absoluto” que pode forçar páginas em branco por overflow.
 
 Validação pública:
 

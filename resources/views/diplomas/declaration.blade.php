@@ -15,31 +15,10 @@
       border: 1px solid #e5e7eb;
       padding: 18px 18px;
       box-sizing: border-box;
-      position: relative;
-      min-height: 100%;
     }
     h1 { font-size: 18px; margin: 0 0 10px; text-align: center; }
     .body { font-size: 12px; line-height: 1.6; text-align: justify; }
-    .sign { position: absolute; left: 18px; right: 18px; bottom: 130px; display: flex; justify-content: space-between; gap: 18px; }
-    .sig { width: 45%; text-align: center; font-size: 11px; }
-    .line { border-top: 1px solid #111827; margin-top: 38px; padding-top: 4px; }
-    .doc-meta {
-      position: absolute;
-      left: 18px;
-      right: 18px;
-      bottom: 18px;
-      border: 1px dashed #cbd5e1;
-      padding: 10px;
-      font-size: 10px;
-      color: #374151;
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
-      background: #fff;
-    }
     .code { font-family: DejaVu Sans, Arial, sans-serif; }
-    .qr { width: 78px; height: 78px; border: 1px solid #e5e7eb; padding: 4px; background: #fff; }
   </style>
 
   <div class="page">
@@ -59,50 +38,40 @@
       @endif
     </div>
 
-    <div class="sign">
-      <div class="sig">
-        <div class="line">
-          <div><strong>Secretaria</strong></div>
-          <div>{{ $secretaryName ?: '' }}</div>
-          @if(!empty($schoolInep))
-            <div style="margin-top:4px;font-size:10px;">INEP (escola): {{ $schoolInep }}</div>
-          @endif
-        </div>
-      </div>
-      <div class="sig">
-        <div class="line">
-          <div><strong>Direção</strong></div>
-          <div>{{ $directorName ?: '' }}</div>
-          @if(!empty($schoolInep))
-            <div style="margin-top:4px;font-size:10px;">INEP (escola): {{ $schoolInep }}</div>
-          @endif
-        </div>
-      </div>
-    </div>
+    @include('advanced-reports::student-documents._authority-signatures', [
+      'authorities' => [
+        'secretary' => [
+          'name' => $secretaryName ?? '',
+          'inep' => $secretaryInep ?? null,
+          'matricula_interna' => $secretaryMatriculaInterna ?? null,
+        ],
+        'director' => [
+          'name' => $directorName ?? '',
+          'inep' => $directorInep ?? null,
+          'matricula_interna' => $directorMatriculaInterna ?? null,
+        ],
+      ],
+    ])
 
-    <div class="doc-meta">
-      <div style="flex: 1; min-width: 220px;">
-        <div><strong>Emissão</strong>: {{ $issuedAt ?? date('d/m/Y H:i') }}</div>
-        @if(!empty($issuerName) || !empty($issuerRole))
-          <div><strong>Emissor</strong>: {{ trim(($issuerName ?? '') . ' ' . (!empty($issuerRole) ? ('(' . $issuerRole . ')') : '')) }}</div>
-          <div style="margin-top: 4px;">
-            @include('advanced-reports::pdf._issuer-person-lines')
-          </div>
-        @endif
-        @if(!empty($cityUf))
-          <div><strong>Cidade/UF</strong>: {{ $cityUf }}</div>
-        @endif
-        <div class="code"><strong>Código</strong>: {{ $validationCode ?? '__________' }}</div>
-        @if(!empty($validationUrl))
-          <div class="code"><strong>Validação</strong>: {{ $validationUrl }}</div>
-        @endif
-      </div>
-      <div style="min-width: 92px; text-align: right;">
-        @if(!empty($qrDataUri))
-          <img class="qr" src="{{ $qrDataUri }}" alt="QR Code validação">
-        @endif
-      </div>
-    </div>
+    @include('advanced-reports::pdf._issuer-signature', [
+      'issuerName' => $issuerName ?? null,
+      'schoolInep' => $schoolInep ?? null,
+    ])
+
+    @include('advanced-reports::student-documents._footer', [
+      'footerInline' => true,
+      'issuedAt' => $issuedAt ?? date('d/m/Y H:i'),
+      'validationCode' => $validationCode ?? '__________',
+      'validationUrl' => $validationUrl ?? '',
+      'qrDataUri' => $qrDataUri ?? null,
+      'issuerName' => $issuerName ?? null,
+      'issuerRole' => $issuerRole ?? null,
+      'cityUf' => $cityUf ?? null,
+      'book' => null,
+      'page' => null,
+      'record' => null,
+      'matriculaInternaAluno' => $enrollment ?? null,
+    ])
   </div>
 @endsection
 

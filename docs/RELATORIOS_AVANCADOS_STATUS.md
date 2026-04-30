@@ -20,6 +20,7 @@
 - [x] PDF
 - [x] Excel
 - [x] Autocomplete de usuário (lookup)
+  - [x] Entrada no menu “Escola → Relatórios” após Indicadores (ajuste de ordem/compatibilidade)
 
 ### Avaliação e frequência (Pedagógico)
 
@@ -159,6 +160,7 @@
 - [x] Menu criado
 - [x] Prévia em modal na UI
 - [x] Certificado/Declaração com cabeçalho oficial e rodapé profissional
+- [x] Diploma ajustado para o mesmo padrão (sem cortes/páginas em branco)
 
 ### Atas e registros formais
 

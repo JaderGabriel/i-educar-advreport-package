@@ -4,7 +4,7 @@
 
 @push('styles')
   <style>
-    @page { size: A4 landscape; margin: 0; }
+    @page { size: A4 landscape; margin: 8mm; }
     * { box-sizing: border-box; }
     html, body {
       margin: 0;
@@ -15,22 +15,16 @@
       print-color-adjust: exact;
     }
     .cert-sheet {
-      width: 297mm;
-      height: 210mm;
-      max-width: 100%;
+      width: 100%;
       margin: 0;
-      padding: 10mm 12mm 12mm 12mm;
+      padding: 0;
       position: relative;
-      overflow: hidden;
       page-break-inside: avoid;
     }
     .cert-frame {
       position: relative;
-      height: 100%;
-      padding: 7mm 9mm 6mm 9mm;
+      padding: 8mm 10mm;
       border: 3px double #6b4c1b;
-      outline: 1px solid #2c1810;
-      outline-offset: 2mm;
       background: #fffef8;
     }
     .cert-entity {
@@ -83,20 +77,7 @@
     }
     .cert-signatures .role { font-weight: 700; font-size: 13px; margin-bottom: 1mm; }
     .cert-signatures .name { font-size: 12px; color: #374151; min-height: 14px; }
-    .cert-footer {
-      position: absolute;
-      left: 14mm;
-      right: 14mm;
-      bottom: 8mm;
-      font-family: DejaVu Sans, sans-serif;
-      font-size: 8px;
-      color: #374151;
-      border-top: 1px dashed #b8a88a;
-      padding-top: 2mm;
-    }
-    .cert-footer table { width: 100%; border-collapse: collapse; }
-    .cert-footer td { vertical-align: top; word-break: break-word; }
-    .cert-footer .qr { width: 64px; height: 64px; border: 1px solid #d1c4b0; padding: 2px; background: #fff; }
+    .cert-footer-inline { margin-top: 10mm; }
   </style>
 @endpush
 
@@ -156,28 +137,21 @@
         </div>
       </div>
 
-      <div class="cert-footer">
-        <table>
-          <tr>
-            <td>
-              <div><strong>Emissão</strong>: {{ $issuedAt ?? date('d/m/Y H:i') }}</div>
-              @if(!empty($issuerName))
-                <div><strong>Responsável pela emissão (sistema)</strong>: {{ $issuerName }}</div>
-              @endif
-              @if(!empty($validationCode))
-                <div><strong>Código de validação</strong>: {{ $validationCode }}</div>
-              @endif
-              @if(!empty($validationUrl))
-                <div style="word-break: break-all;"><strong>Validação</strong>: {{ $validationUrl }}</div>
-              @endif
-            </td>
-            <td style="width: 72px; text-align: right;">
-              @if(!empty($qrDataUri))
-                <img class="qr" src="{{ $qrDataUri }}" alt="QR">
-              @endif
-            </td>
-          </tr>
-        </table>
+      <div class="cert-footer-inline">
+        @include('advanced-reports::student-documents._footer', [
+          'footerInline' => true,
+          'issuedAt' => $issuedAt ?? date('d/m/Y H:i'),
+          'validationCode' => $validationCode ?? '',
+          'validationUrl' => $validationUrl ?? '',
+          'qrDataUri' => $qrDataUri ?? null,
+          'issuerName' => $issuerName ?? null,
+          'issuerRole' => null,
+          'cityUf' => null,
+          'book' => null,
+          'page' => null,
+          'record' => null,
+          'matriculaInternaAluno' => $enrollment ?? null,
+        ])
       </div>
     </div>
   </div>
