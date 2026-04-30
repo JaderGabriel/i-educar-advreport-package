@@ -2,13 +2,17 @@
 
 @section('doc_title', 'Alunos por situação')
 @section('doc_subtitle', 'Matrículas por situação (resumo + listagem)')
-@section('doc_year', (string) ($year ?? ''))
+@section('doc_year')
+    {{ (string) ($year ?? '') }}
+@endsection
 @section('formal_header', '1')
 
 @section('content')
-    @php($summary = $data['summary'] ?? [])
-    @php($rows = $data['rows'] ?? collect())
-    @php($labels = $labels ?? [])
+    @php
+        $summary = $data['summary'] ?? [];
+        $rows = $data['rows'] ?? collect();
+        $labels = $labels ?? [];
+    @endphp
 
     <h1>ALUNOS POR SITUAÇÃO</h1>
     <p class="muted">Ano letivo: <strong>{{ $year ?? '' }}</strong></p>
@@ -57,8 +61,7 @@
                 <td>{{ $r['situacao'] ?? '' }}</td>
                 <td style="font-size: 8px; line-height: 1.35;">
                     @forelse($compParts as $i => $piece)
-                        @php($c = $compColors[$i % count($compColors)])
-                        <span style="color: {{ $c }};">{{ trim($piece) }}</span>@if(!$loop->last)<span style="color:#64748b;"> · </span>@endif
+                        <span style="color: {{ $compColors[$i % count($compColors)] }};">{{ trim($piece) }}</span>@if(!$loop->last)<span style="color:#64748b;"> · </span>@endif
                     @empty
                         <span class="muted">—</span>
                     @endforelse
