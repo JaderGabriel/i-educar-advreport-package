@@ -21,11 +21,14 @@
             <table class="tablecadastro" width="100%" border="0" cellpadding="2" cellspacing="0" role="presentation">
                 <tbody>
                 <tr>
-                    <td class="formmdtd" valign="top"><span class="form">Período</span></td>
                     <td class="formmdtd" valign="top">
-                        <input class="geral" type="date" name="date_start" value="{{ request('date_start') }}" style="width: 160px;">
+                        <span class="form">Período</span>
+                        <span class="campo_obrigatorio">*</span>
+                    </td>
+                    <td class="formmdtd" valign="top">
+                        <input class="geral obrigatorio" type="date" name="date_start" value="{{ request('date_start') }}" style="width: 160px;">
                         <span style="margin: 0 6px;">até</span>
-                        <input class="geral" type="date" name="date_end" value="{{ request('date_end') }}" style="width: 160px;">
+                        <input class="geral obrigatorio" type="date" name="date_end" value="{{ request('date_end') }}" style="width: 160px;">
                     </td>
                 </tr>
 
@@ -88,9 +91,9 @@
                 </div>
 
                 <div class="ar-actions__group">
-                    <button type="button" class="btn-green ar-btn ar-btn--secondary js-audit-emit-pdf" {{ !(request('date_start') && request('date_end')) ? 'disabled' : '' }}>Emitir PDF (final)</button>
-                    <button type="button" class="btn ar-btn ar-btn--ghost js-audit-help" title="Ver prévia (exemplo)" aria-label="Ver prévia (exemplo)" {{ !(request('date_start') && request('date_end')) ? 'disabled' : '' }}>?</button>
-                    <button type="button" class="btn ar-btn ar-btn--secondary js-audit-excel" {{ !(request('date_start') && request('date_end')) ? 'disabled' : '' }}>Exportar Excel</button>
+                    <button type="button" class="btn-green ar-btn ar-btn--secondary js-audit-emit-pdf">Emitir PDF (final)</button>
+                    <button type="button" class="btn ar-btn ar-btn--ghost js-audit-help" title="Ver prévia (exemplo)" aria-label="Ver prévia (exemplo)">?</button>
+                    <button type="button" class="btn ar-btn ar-btn--secondary js-audit-excel">Exportar Excel</button>
                 </div>
             </div>
         </form>
@@ -193,6 +196,12 @@
         </div>
     </div>
 
+    @include('advanced-reports::partials._emit-error-modal', [
+        'modalId' => 'advancedReportsAuditErrorModal',
+        'closeClass' => 'js-audit-err-close',
+        'textClass' => 'js-audit-err-text',
+    ])
+
     @include('advanced-reports::partials._pdf_preview_runtime')
 @endsection
 
@@ -208,10 +217,48 @@
             const excelBtn = document.querySelector('.js-audit-excel');
             const pdfBase = "{{ route('advanced-reports.audit.users.pdf') }}";
             const excelBase = "{{ route('advanced-reports.audit.users.excel') }}";
+            const errModal = document.getElementById('advancedReportsAuditErrorModal');
+            const errText = document.querySelector('.js-audit-err-text');
+            const errClose = document.querySelector('.js-audit-err-close');
+
+            function val(name) {
+                const el = form ? form.querySelector('[name="' + name + '"]') : null;
+                return el && 'value' in el ? String(el.value || '').trim() : '';
+            }
+
+            function validateRequired() {
+                if (!val('date_start')) return 'Informe a data inicial.';
+                if (!val('date_end')) return 'Informe a data final.';
+                return null;
+            }
+
+            function openErr(message) {
+                if (!errModal || !errText) {
+                    window.alert(message);
+                    return;
+                }
+                errText.textContent = message;
+                errModal.style.display = 'block';
+            }
+
+            function closeErr() {
+                if (!errModal) return;
+                errModal.style.display = 'none';
+            }
+
+            if (errClose) errClose.addEventListener('click', function (e) { e.preventDefault(); closeErr(); });
+            if (errModal) errModal.addEventListener('click', function (e) { if (e.target === errModal) closeErr(); });
 
             function buildQuery() {
                 if (!form) return '';
                 return new URLSearchParams(new FormData(form)).toString();
+            }
+
+            function syncButtons() {
+                const ok = !validateRequired();
+                if (emitPdf) emitPdf.disabled = !ok;
+                if (excelBtn) excelBtn.disabled = !ok;
+                if (helpBtn) helpBtn.disabled = !ok;
             }
 
             function closeModal() {
@@ -222,9 +269,20 @@
                 modal.style.display = 'none';
             }
 
+            if (form) {
+                form.addEventListener('input', syncButtons);
+                form.addEventListener('change', syncButtons);
+            }
+            syncButtons();
+
             if (emitPdf) {
                 emitPdf.addEventListener('click', function (e) {
                     e.preventDefault();
+                    const msg = validateRequired();
+                    if (msg) {
+                        openErr(msg);
+                        return;
+                    }
                     const q = buildQuery();
                     if (!q) return;
                     window.open(pdfBase + '?' + q, '_blank');
@@ -234,6 +292,11 @@
             if (excelBtn) {
                 excelBtn.addEventListener('click', function (e) {
                     e.preventDefault();
+                    const msg = validateRequired();
+                    if (msg) {
+                        openErr(msg);
+                        return;
+                    }
                     const q = buildQuery();
                     if (!q) return;
                     window.open(excelBase + '?' + q, '_blank');
@@ -243,6 +306,11 @@
             if (form && modal && pdfRoot && helpBtn && closeBtn) {
                 helpBtn.addEventListener('click', function (e) {
                     e.preventDefault();
+                    const msg = validateRequired();
+                    if (msg) {
+                        openErr(msg);
+                        return;
+                    }
                     const params = new URLSearchParams(new FormData(form));
                     params.set('preview', '1');
                     const url = pdfBase + '?' + params.toString();
