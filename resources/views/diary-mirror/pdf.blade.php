@@ -50,9 +50,9 @@
     </div>
   </div>
 
-  @foreach($pages as $pageIndex => $page)
-    @php($days = $page['days'] ?? [])
-    @php($students = collect($page['students'] ?? []))
+  @foreach($pages as $pageIndex => $mirrorPage)
+    @php($days = $mirrorPage['days'] ?? [])
+    @php($students = collect($mirrorPage['students'] ?? []))
     <div @if($pageIndex > 0) style="page-break-before: always;" @endif>
     <p class="mirror-page-tag">Página {{ $pageIndex + 1 }} de {{ $totalPages }} @if(count($days) > 0) — {{ count($days) }} dia(s) nesta página @endif</p>
 

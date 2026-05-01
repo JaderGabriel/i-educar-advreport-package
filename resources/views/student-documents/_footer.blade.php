@@ -3,6 +3,12 @@
   $book = $book ?? null;
   $page = $page ?? null;
   $record = $record ?? null;
+  foreach (['book', 'page', 'record'] as $__k) {
+      $__v = ${$__k};
+      if ($__v !== null && ! is_scalar($__v)) {
+          ${$__k} = null;
+      }
+  }
 @endphp
 <div @class(['ar-official-footer' => ! $footerInline]) style="border-top: 1px dashed #cbd5e1; padding-top: 10px; font-size: 10px; color: #374151; background: #fff; @if($footerInline) position: relative; margin-top: 22px; clear: both; @endif">
   <table style="width:100%; border-collapse: collapse; margin:0;">

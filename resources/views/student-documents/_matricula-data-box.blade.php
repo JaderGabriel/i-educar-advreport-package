@@ -1,4 +1,4 @@
-<?php
+@php
 $m = $matricula;
 $showInstituicao = $showInstituicao ?? true;
 $compactTwoCol = $compactTwoCol ?? false;
@@ -20,7 +20,7 @@ if (!empty($m->data_entrada_turma_br)) {
 if (!empty($m->data_fim_turma_br)) {
     $pairs[] = [$saidaLabel ?? 'Até (registro)', $m->data_fim_turma_br];
 }
-?>
+@endphp
 <div class="box">
   @if($compactTwoCol)
     <table class="fm-kv2" style="width:100%; border-collapse:collapse; font-size:9px;">
