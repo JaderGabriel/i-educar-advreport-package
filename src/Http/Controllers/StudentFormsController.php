@@ -5,6 +5,7 @@ namespace iEducar\Packages\AdvancedReports\Http\Controllers;
 use App\Http\Controllers\Controller;
 use iEducar\Packages\AdvancedReports\Models\AdvancedReportsDocument;
 use iEducar\Packages\AdvancedReports\Services\AdvancedReportsFilterService;
+use iEducar\Packages\AdvancedReports\Services\BoletimService;
 use iEducar\Packages\AdvancedReports\Services\DocumentSigningService;
 use iEducar\Packages\AdvancedReports\Services\IssuerSignatureDetails;
 use iEducar\Packages\AdvancedReports\Services\OfficialHeaderService;
@@ -127,9 +128,37 @@ class StudentFormsController extends Controller
 
             $extra = [];
             if ($type === self::TYPE_INDIVIDUAL) {
-                $extra['disciplinas'] = [
-                    ['nome' => 'Língua Portuguesa', 'nota' => '8,0', 'faltas' => 2, 'carga_horaria' => '200h'],
-                    ['nome' => 'Matemática', 'nota' => '9,0', 'faltas' => 0, 'carga_horaria' => '200h'],
+                $extra['desempenho_boletim'] = [
+                    'etapas_count' => 4,
+                    'frequencia' => 94.5,
+                    'rows' => [
+                        [
+                            'id' => 1,
+                            'nome' => 'Língua Portuguesa',
+                            'media_final' => '8,0',
+                            'faltas_total_anual' => 6,
+                            'etapas' => [
+                                '1' => ['nota' => '7,5', 'faltas' => 2, 'faltas_pct' => null],
+                                '2' => ['nota' => '8,0', 'faltas' => 1, 'faltas_pct' => null],
+                                '3' => ['nota' => '8,0', 'faltas' => 0, 'faltas_pct' => null],
+                                '4' => ['nota' => '8,5', 'faltas' => 1, 'faltas_pct' => null],
+                                'Rc' => ['nota' => '—', 'faltas' => 2, 'faltas_pct' => null],
+                            ],
+                        ],
+                        [
+                            'id' => 2,
+                            'nome' => 'Matemática',
+                            'media_final' => '9,0',
+                            'faltas_total_anual' => 0,
+                            'etapas' => [
+                                '1' => ['nota' => '8,5', 'faltas' => 0, 'faltas_pct' => null],
+                                '2' => ['nota' => '9,0', 'faltas' => 0, 'faltas_pct' => null],
+                                '3' => ['nota' => '9,0', 'faltas' => 0, 'faltas_pct' => null],
+                                '4' => ['nota' => '9,5', 'faltas' => 0, 'faltas_pct' => null],
+                                'Rc' => ['nota' => '—', 'faltas' => 0, 'faltas_pct' => null],
+                            ],
+                        ],
+                    ],
                 ];
             }
 
@@ -207,8 +236,11 @@ class StudentFormsController extends Controller
 
             $extra = [];
             if ($type === self::TYPE_INDIVIDUAL) {
-                $alunoId = (int) ($matricula->aluno_id ?? 0);
-                $extra['disciplinas'] = $this->disciplinesForMatricula($alunoId, $id, (int) ($matricula->ano_letivo ?? 0));
+                $extra['desempenho_boletim'] = $this->buildDesempenhoBoletimForFicha($id);
+                if ($extra['desempenho_boletim'] === null) {
+                    $alunoId = (int) ($matricula->aluno_id ?? 0);
+                    $extra['disciplinas'] = $this->disciplinesForMatricula($alunoId, $id, (int) ($matricula->ano_letivo ?? 0));
+                }
             }
 
             $items[] = [
@@ -568,6 +600,70 @@ SQL;
         $digits = str_pad($digits, 11, '0', STR_PAD_LEFT);
 
         return substr($digits, 0, 3) . '.' . substr($digits, 3, 5) . '.' . substr($digits, 8, 2) . '-' . substr($digits, 10, 1);
+    }
+
+    /**
+     * Mesma lógica do boletim (etapas, recuperação “Rc”, faltas por período) + média final consolidada.
+     *
+     * @return array{etapas_count: int, frequencia: mixed, rows: list<array<string, mixed>>}|null
+     */
+    private function buildDesempenhoBoletimForFicha(int $matriculaId): ?array
+    {
+        try {
+            /** @var array{etapas_count?: int, frequencia?: mixed, rows?: list<array<string, mixed>>, matricula?: array<string, mixed>} $data */
+            $data = app(BoletimService::class)->build($matriculaId, null);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return null;
+        }
+
+        $rows = $data['rows'] ?? [];
+        if ($rows === []) {
+            return null;
+        }
+
+        $notaAlunoId = (int) (DB::table('modules.nota_aluno')
+            ->where('matricula_id', $matriculaId)
+            ->orderByDesc('id')
+            ->value('id') ?? 0);
+
+        $mediasFinais = [];
+        if ($notaAlunoId > 0) {
+            foreach (DB::table('modules.nota_componente_curricular_media')
+                ->where('nota_aluno_id', $notaAlunoId)
+                ->get(['componente_curricular_id', 'media_arredondada', 'media']) as $m) {
+                $cid = (int) $m->componente_curricular_id;
+                $arred = trim((string) ($m->media_arredondada ?? ''));
+                $mediasFinais[$cid] = $arred !== '' ? $arred : $this->formatNotaBoletimCell($m->media);
+            }
+        }
+
+        foreach ($rows as $k => $row) {
+            $cid = (int) ($row['id'] ?? 0);
+            $rows[$k]['media_final'] = $mediasFinais[$cid] ?? null;
+
+            $sumFaltas = 0;
+            foreach ($row['etapas'] ?? [] as $etapaKey => $cell) {
+                if ($etapaKey === 'Rc') {
+                    continue;
+                }
+                if (is_array($cell) && array_key_exists('faltas', $cell) && $cell['faltas'] !== null) {
+                    $sumFaltas += (int) $cell['faltas'];
+                }
+            }
+            $rcCell = is_array($row['etapas'] ?? null) ? ($row['etapas']['Rc'] ?? null) : null;
+            if (is_array($rcCell) && array_key_exists('faltas', $rcCell) && $rcCell['faltas'] !== null) {
+                $sumFaltas += (int) $rcCell['faltas'];
+            }
+            $rows[$k]['faltas_total_anual'] = $sumFaltas > 0 ? $sumFaltas : null;
+        }
+
+        return [
+            'etapas_count' => (int) ($data['etapas_count'] ?? 0),
+            'frequencia' => $data['frequencia'] ?? null,
+            'rows' => $rows,
+        ];
     }
 
     /**
