@@ -17,7 +17,10 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CommunicationsController extends Controller
 {
-    public function index(Request $request, AdvancedReportsFilterService $filters, string $slug): View
+    /**
+     * Tela do comunicado (filtros + formulário) para um slug do catálogo.
+     */
+    public function show(Request $request, AdvancedReportsFilterService $filters, string $slug): View
     {
         CommunicationCatalog::assertSlug($slug);
 
@@ -44,6 +47,12 @@ class CommunicationsController extends Controller
             'cursoId' => $cursoId,
             ...$filterData,
         ]);
+    }
+
+    /** @deprecated Use {@see show}; mantido para compatibilidade com rotas/código antigo. */
+    public function index(Request $request, AdvancedReportsFilterService $filters, string $slug): View
+    {
+        return $this->show($request, $filters, $slug);
     }
 
     public function pdf(Request $request, string $slug): Response

@@ -571,48 +571,193 @@ SQL;
     }
 
     /**
+     * Disciplinas com nota/falta/carga para a ficha individual.
+     * 1) Preferência: histórico escolar oficial (`historico_escolar` + `historico_disciplinas`).
+     * 2) Se não houver histórico ou linhas de disciplina: lançamentos do diário (turma/série + médias e faltas).
+     *
      * @return list<array{nome: string, nota: mixed, faltas: mixed, carga_horaria: mixed}>
      */
     private function disciplinesForMatricula(int $alunoId, int $matriculaId, int $anoLetivo): array
     {
-        if ($alunoId <= 0 || $matriculaId <= 0 || $anoLetivo <= 0) {
+        if ($matriculaId <= 0) {
             return [];
         }
 
-        $history = DB::table('pmieducar.historico_escolar as h')
-            ->where('h.ref_cod_aluno', $alunoId)
-            ->where('h.ativo', 1)
-            ->where('h.ref_cod_matricula', $matriculaId)
-            ->orderByDesc('h.sequencial')
-            ->first();
-
-        if (!$history) {
+        if ($alunoId > 0 && $anoLetivo > 0) {
             $history = DB::table('pmieducar.historico_escolar as h')
                 ->where('h.ref_cod_aluno', $alunoId)
                 ->where('h.ativo', 1)
-                ->where('h.ano', $anoLetivo)
+                ->where('h.ref_cod_matricula', $matriculaId)
                 ->orderByDesc('h.sequencial')
                 ->first();
+
+            if (!$history) {
+                $history = DB::table('pmieducar.historico_escolar as h')
+                    ->where('h.ref_cod_aluno', $alunoId)
+                    ->where('h.ativo', 1)
+                    ->where('h.ano', $anoLetivo)
+                    ->orderByDesc('h.sequencial')
+                    ->first();
+            }
+
+            if ($history) {
+                $fromHistory = DB::table('pmieducar.historico_disciplinas as d')
+                    ->where('d.ref_ref_cod_aluno', $alunoId)
+                    ->where('d.ref_sequencial', (int) $history->sequencial)
+                    ->orderByRaw('COALESCE(d.ordenamento, 999999) ASC')
+                    ->orderBy('d.nm_disciplina')
+                    ->get()
+                    ->map(static function ($d): array {
+                        return [
+                            'nome' => (string) ($d->nm_disciplina ?? ''),
+                            'nota' => $d->nota ?? '—',
+                            'faltas' => $d->faltas ?? null,
+                            'carga_horaria' => $d->carga_horaria_disciplina ?? null,
+                        ];
+                    })
+                    ->all();
+
+                if ($fromHistory !== []) {
+                    return $fromHistory;
+                }
+            }
         }
 
-        if (!$history) {
+        return $this->disciplinesFromDiarioLancamentos($matriculaId);
+    }
+
+    /**
+     * Componentes da turma (ou grade escola/série) com média em {@see modules.nota_componente_curricular_media}
+     * e total de faltas em {@see modules.falta_componente_curricular}.
+     *
+     * @return list<array{nome: string, nota: mixed, faltas: mixed, carga_horaria: mixed}>
+     */
+    private function disciplinesFromDiarioLancamentos(int $matriculaId): array
+    {
+        $turmaId = $this->activeTurmaIdForMatricula($matriculaId);
+
+        $meta = DB::table('pmieducar.matricula as m')
+            ->where('m.cod_matricula', $matriculaId)
+            ->selectRaw('m.ref_ref_cod_serie as serie_id')
+            ->selectRaw('m.ref_ref_cod_escola as escola_id')
+            ->first();
+
+        $serieId = (int) ($meta->serie_id ?? 0);
+        $escolaId = (int) ($meta->escola_id ?? 0);
+
+        $componentRows = collect();
+        if ($turmaId > 0) {
+            $componentRows = DB::table('modules.componente_curricular_turma as cct')
+                ->join('modules.componente_curricular as cc', 'cc.id', '=', 'cct.componente_curricular_id')
+                ->where('cct.turma_id', $turmaId)
+                ->orderBy('cc.nome')
+                ->get(['cct.componente_curricular_id', 'cc.nome', 'cct.carga_horaria']);
+        }
+
+        if ($componentRows->isEmpty() && $serieId > 0 && $escolaId > 0) {
+            $componentRows = DB::table('pmieducar.escola_serie_disciplina as esd')
+                ->join('modules.componente_curricular as cc', 'cc.id', '=', 'esd.ref_cod_disciplina')
+                ->where('esd.ref_ref_cod_serie', $serieId)
+                ->where('esd.ref_ref_cod_escola', $escolaId)
+                ->where('esd.ativo', 1)
+                ->orderBy('cc.nome')
+                ->get(['esd.ref_cod_disciplina as componente_curricular_id', 'cc.nome', 'esd.carga_horaria']);
+        }
+
+        if ($componentRows->isEmpty()) {
             return [];
         }
 
-        return DB::table('pmieducar.historico_escolar_disciplina as d')
-            ->where('d.ref_ref_cod_aluno', $alunoId)
-            ->where('d.ref_sequencial', (int) $history->sequencial)
-            ->orderByRaw('COALESCE(d.ordenamento, 999999) ASC')
-            ->orderBy('d.nm_disciplina')
-            ->get()
-            ->map(static function ($d): array {
-                return [
-                    'nome' => (string) ($d->nm_disciplina ?? ''),
-                    'nota' => $d->nota ?? '—',
-                    'faltas' => $d->faltas ?? null,
-                    'carga_horaria' => $d->carga_horaria_disciplina ?? null,
-                ];
-            })
-            ->all();
+        $notaAlunoId = (int) (DB::table('modules.nota_aluno')
+            ->where('matricula_id', $matriculaId)
+            ->orderByDesc('id')
+            ->value('id') ?? 0);
+
+        $medias = [];
+        if ($notaAlunoId > 0) {
+            foreach (DB::table('modules.nota_componente_curricular_media')
+                ->where('nota_aluno_id', $notaAlunoId)
+                ->get(['componente_curricular_id', 'media_arredondada', 'media']) as $m) {
+                $cid = (int) $m->componente_curricular_id;
+                $arred = trim((string) ($m->media_arredondada ?? ''));
+                if ($arred !== '') {
+                    $medias[$cid] = $arred;
+
+                    continue;
+                }
+                $medias[$cid] = $this->formatNotaBoletimCell($m->media);
+            }
+        }
+
+        $faltaAlunoId = (int) (DB::table('modules.falta_aluno')
+            ->where('matricula_id', $matriculaId)
+            ->orderByDesc('id')
+            ->value('id') ?? 0);
+
+        $faltasSum = [];
+        if ($faltaAlunoId > 0) {
+            foreach (DB::table('modules.falta_componente_curricular')
+                ->selectRaw('componente_curricular_id, COALESCE(SUM(quantidade), 0)::int as total')
+                ->where('falta_aluno_id', $faltaAlunoId)
+                ->groupBy('componente_curricular_id')
+                ->get() as $r) {
+                $faltasSum[(int) $r->componente_curricular_id] = (int) $r->total;
+            }
+        }
+
+        $out = [];
+        foreach ($componentRows as $c) {
+            $cid = (int) $c->componente_curricular_id;
+            $ch = $c->carga_horaria;
+            $out[] = [
+                'nome' => (string) $c->nome,
+                'nota' => $medias[$cid] ?? '—',
+                'faltas' => array_key_exists($cid, $faltasSum) ? $faltasSum[$cid] : null,
+                'carga_horaria' => $this->formatCargaHorariaFicha($ch),
+            ];
+        }
+
+        return $out;
+    }
+
+    private function activeTurmaIdForMatricula(int $matriculaId): int
+    {
+        $row = DB::selectOne(
+            'SELECT mt.ref_cod_turma
+             FROM pmieducar.matricula_turma mt
+             WHERE mt.ref_cod_matricula = ? AND mt.ativo = 1
+             ORDER BY (CASE WHEN mt.transferido IS TRUE THEN 1 ELSE 0 END) DESC, mt.sequencial DESC
+             LIMIT 1',
+            [$matriculaId]
+        );
+
+        return (int) ($row->ref_cod_turma ?? 0);
+    }
+
+    private function formatNotaBoletimCell(mixed $media): ?string
+    {
+        if ($media === null || $media === '') {
+            return null;
+        }
+        if (is_numeric($media)) {
+            return str_replace('.', ',', (string) round((float) $media, 1));
+        }
+
+        return (string) $media;
+    }
+
+    private function formatCargaHorariaFicha(mixed $ch): mixed
+    {
+        if ($ch === null || $ch === '') {
+            return null;
+        }
+        if (is_numeric($ch)) {
+            $n = (float) $ch;
+            $s = fmod($n, 1.0) === 0.0 ? (string) (int) $n : rtrim(rtrim(sprintf('%.1f', $n), '0'), '.');
+
+            return $s . 'h';
+        }
+
+        return (string) $ch;
     }
 }

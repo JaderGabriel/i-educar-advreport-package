@@ -122,7 +122,7 @@ Route::middleware([
         ->name('advanced-reports.vacancies.excel');
 
     // Comunicados oficiais (PDF + lote — item 8.6, exceto ocorrências)
-    Route::get('/relatorios-avancados/comunicados/{slug}', [CommunicationsController::class, 'index'])
+    Route::get('/relatorios-avancados/comunicados/{slug}', [CommunicationsController::class, 'show'])
         ->where('slug', '(convocacao|reuniao|advertencia|comunicado-geral)')
         ->name('advanced-reports.communications.index');
     Route::get('/relatorios-avancados/comunicados/{slug}/pdf', [CommunicationsController::class, 'pdf'])

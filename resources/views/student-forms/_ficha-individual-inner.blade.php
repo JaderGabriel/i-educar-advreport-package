@@ -7,7 +7,7 @@
 ])
 
 <div class="box" style="margin-top: 12px;">
-  <strong>Desempenho (referência: histórico escolar)</strong>
+  <strong>Desempenho</strong> <span class="muted" style="font-weight: normal;">(histórico escolar oficial, se existir; caso contrário, médias e faltas do diário de classe)</span>
   <table style="margin-top: 8px;">
     <thead>
     <tr>
