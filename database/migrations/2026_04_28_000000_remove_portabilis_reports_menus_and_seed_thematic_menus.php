@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
  * - NÃO remove os nós padrão "Escola → Relatórios/Documentos" (old 21126/21127), apenas remove
  *   os submenus clássicos criados pelo i-educar-reports-package (Portabilis).
  * - Remove também a árvore antiga "Relatórios Avançados" deste pacote, para aderir aos menus temáticos.
+ * - NÃO remove olds 999970–999974: pertencem ao pacote i-educar-chamados-package.
  */
 return new class extends Migration
 {
@@ -43,10 +44,11 @@ return new class extends Migration
 
     /**
      * Olds da árvore antiga do advanced reports (faixa 999960+).
+     * ATENÇÃO: 999970–999974 pertencem ao pacote chamados e NÃO devem ser removidos aqui.
      */
     private array $advancedLegacyOlds = [
         999960, 999961, 999962, 999963, 999964, 999965, 999966, 999967, 999968, 999969,
-        999970, 999971, 999972, 999973, 999974, 999975,
+        999975,
         999980, 999981, 999982, 999983,
     ];
 
