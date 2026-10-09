@@ -90,7 +90,6 @@ class StudentsBySituationService
             ->leftJoin('pmieducar.escola as e', 'e.cod_escola', '=', 'm.ref_ref_cod_escola')
             ->leftJoin('cadastro.pessoa as ep', 'ep.idpes', '=', 'e.ref_idpes')
             ->leftJoin('cadastro.juridica as ej', 'ej.idpes', '=', 'ep.idpes')
-            ->leftJoin('pmieducar.escola_complemento as ec', 'ec.ref_cod_escola', '=', 'e.cod_escola')
             ->leftJoin('pmieducar.curso as c', 'c.cod_curso', '=', 'm.ref_cod_curso')
             ->leftJoin('pmieducar.serie as s', 's.cod_serie', '=', 'm.ref_ref_cod_serie')
             ->join('relatorio.view_situacao as vs', function ($j) {
@@ -119,7 +118,7 @@ class StudentsBySituationService
             })
             ->selectRaw('m.cod_matricula as matricula_id')
             ->selectRaw('p.nome as aluno')
-            ->selectRaw('COALESCE(ej.fantasia, ec.nm_escola, \'\') as escola')
+            ->selectRaw('COALESCE(ej.fantasia, ep.nome, \'\') as escola')
             ->selectRaw('COALESCE(c.nm_curso, \'\') as curso')
             ->selectRaw('COALESCE(s.nm_serie, \'\') as serie')
             ->selectRaw('COALESCE(t.nm_turma, \'\') as turma')

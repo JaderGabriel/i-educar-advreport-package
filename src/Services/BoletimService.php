@@ -31,7 +31,6 @@ class BoletimService
             ->leftJoin('pmieducar.escola as e', 'e.cod_escola', '=', 'm.ref_ref_cod_escola')
             ->leftJoin('cadastro.pessoa as ep', 'ep.idpes', '=', 'e.ref_idpes')
             ->leftJoin('cadastro.juridica as ej', 'ej.idpes', '=', 'ep.idpes')
-            ->leftJoin('pmieducar.escola_complemento as ec', 'ec.ref_cod_escola', '=', 'e.cod_escola')
             ->leftJoin('pmieducar.curso as c', 'c.cod_curso', '=', 'm.ref_cod_curso')
             ->leftJoin('pmieducar.serie as s', 's.cod_serie', '=', 'm.ref_ref_cod_serie')
             ->leftJoin('pmieducar.matricula_turma as mt', function ($join) {
@@ -46,7 +45,7 @@ class BoletimService
             ->selectRaw('m.ref_ref_cod_escola as escola_id')
             ->selectRaw('p.nome as aluno_nome')
             ->selectRaw('f.data_nasc as aluno_nascimento')
-            ->selectRaw('COALESCE(ej.fantasia, ec.nm_escola, \'\') as escola')
+            ->selectRaw('COALESCE(ej.fantasia, ep.nome, \'\') as escola')
             ->selectRaw('c.nm_curso as curso')
             ->selectRaw('s.nm_serie as serie')
             ->selectRaw('t.nm_turma as turma')

@@ -29,9 +29,8 @@ class VacanciesBySchoolClassController extends Controller
             ? DB::table('pmieducar.escola as e')
                 ->leftJoin('cadastro.pessoa as p', 'p.idpes', '=', 'e.ref_idpes')
                 ->leftJoin('cadastro.juridica as j', 'j.idpes', '=', 'p.idpes')
-                ->leftJoin('pmieducar.escola_complemento as ec', 'ec.ref_cod_escola', '=', 'e.cod_escola')
                 ->where('e.cod_escola', $escolaId)
-                ->selectRaw('COALESCE(j.fantasia, ec.nm_escola) as nome')
+                ->selectRaw('COALESCE(j.fantasia, p.nome) as nome')
                 ->value('nome')
             : null;
 

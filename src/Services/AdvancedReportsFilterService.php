@@ -27,13 +27,12 @@ class AdvancedReportsFilterService
             $escolas = DB::table('pmieducar.escola as escola')
                 ->leftJoin('cadastro.pessoa as pessoa', 'escola.ref_idpes', '=', 'pessoa.idpes')
                 ->leftJoin('cadastro.juridica as juridica', 'juridica.idpes', '=', 'pessoa.idpes')
-                ->leftJoin('pmieducar.escola_complemento as complemento', 'complemento.ref_cod_escola', '=', 'escola.cod_escola')
                 ->where('escola.ref_cod_instituicao', $institutionId)
                 ->where('escola.ativo', 1)
-                ->orderByRaw('COALESCE(juridica.fantasia, complemento.nm_escola)')
+                ->orderByRaw('COALESCE(juridica.fantasia, pessoa.nome)')
                 ->get([
                     'escola.cod_escola',
-                    DB::raw('COALESCE(juridica.fantasia, complemento.nm_escola) as nome'),
+                    DB::raw('COALESCE(juridica.fantasia, pessoa.nome) as nome'),
                 ]);
         }
 

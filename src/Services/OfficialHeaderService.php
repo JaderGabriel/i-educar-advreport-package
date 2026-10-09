@@ -20,19 +20,16 @@ class OfficialHeaderService
 
         $school = null;
         if ($schoolId) {
-            $school = DB::table('pmieducar.escola as e')
-                ->leftJoin('pmieducar.escola_complemento as ec', 'ec.ref_cod_escola', '=', 'e.cod_escola')
-                ->leftJoin('cadastro.pessoa as ep', 'ep.idpes', '=', 'e.ref_idpes')
-                ->leftJoin('cadastro.juridica as ej', 'ej.idpes', '=', 'ep.idpes')
-                ->selectRaw('e.cod_escola as id')
-                ->selectRaw('COALESCE(ej.fantasia, ec.nm_escola, \'\') as name')
-                ->selectRaw('ec.logradouro as street')
-                ->selectRaw('ec.numero as number')
-                ->selectRaw('ec.bairro as neighborhood')
-                ->selectRaw('ec.municipio as city')
-                ->selectRaw('ec.cep as zip')
-                ->selectRaw('ec.email as email')
-                ->where('e.cod_escola', $schoolId)
+            $school = DB::table('relatorio.view_dados_escola as v')
+                ->selectRaw('v.cod_escola as id')
+                ->selectRaw('COALESCE(v.nome, \'\') as name')
+                ->selectRaw('v.logradouro as street')
+                ->selectRaw('v.numero as number')
+                ->selectRaw('v.bairro as neighborhood')
+                ->selectRaw('v.municipio as city')
+                ->selectRaw('v.cep as zip')
+                ->selectRaw('v.email as email')
+                ->where('v.cod_escola', $schoolId)
                 ->first();
         }
 

@@ -283,9 +283,8 @@ class CommunicationsController extends Controller
         $escola = DB::table('pmieducar.escola as e')
             ->leftJoin('cadastro.pessoa as ep', 'ep.idpes', '=', 'e.ref_idpes')
             ->leftJoin('cadastro.juridica as ej', 'ej.idpes', '=', 'ep.idpes')
-            ->leftJoin('pmieducar.escola_complemento as ec', 'ec.ref_cod_escola', '=', 'e.cod_escola')
             ->where('e.cod_escola', $escolaId)
-            ->selectRaw('COALESCE(ej.fantasia, ec.nm_escola, \'\') as escola_nome')
+            ->selectRaw('COALESCE(ej.fantasia, ep.nome, \'\') as escola_nome')
             ->first();
 
         $curso = DB::table('pmieducar.curso')->where('cod_curso', $cursoId)->value('nm_curso');
