@@ -23,7 +23,7 @@ class EnsureAdvancedReportsMenu
 
         // Usa o menu "Escola" como raiz visual para Relatórios Avançados
         $schoolMenu = Menu::query()->where('process', Process::MENU_SCHOOL)->first();
-        $ancestors = $schoolMenu ? $schoolMenu->ancestors()->pluck('id')->all() : [];
+        $ancestors = $schoolMenu ? Menu::getMenuAncestors($schoolMenu) : [];
 
         if ($schoolMenu) {
             View::share([
