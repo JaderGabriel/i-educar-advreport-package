@@ -29,14 +29,16 @@ class OfficialHeaderService
                 ->selectRaw('v.municipio as city')
                 ->selectRaw('v.cep as zip')
                 ->selectRaw('v.email as email')
+                ->selectRaw('v.telefone_ddd')
+                ->selectRaw('v.telefone')
+                ->selectRaw('v.celular_ddd')
+                ->selectRaw('v.celular')
                 ->where('v.cod_escola', $schoolId)
                 ->first();
         }
 
-        $phone = null;
-        if ($schoolId) {
-            $phone = DB::selectOne('SELECT relatorio.get_telefone_escola(?) as fone', [$schoolId])?->fone ?? null;
-        }
+        $phone = $this->telefone($school?->telefone_ddd, $school?->telefone)
+            ?? $this->telefone($school?->celular_ddd, $school?->celular);
 
         $addressParts = [];
         if (!empty($school?->street)) {
@@ -72,6 +74,23 @@ class OfficialHeaderService
             'schoolName' => !empty($school?->name) ? (string) $school->name : null,
             'contact' => !empty($contactParts) ? implode(' • ', $contactParts) : null,
         ];
+    }
+
+    private function telefone(mixed $ddd, mixed $numero): ?string
+    {
+        $numero = trim((string) $numero);
+
+        if ($numero === '') {
+            return null;
+        }
+
+        $ddd = trim((string) $ddd);
+
+        if ($ddd !== '' && $ddd !== '0') {
+            return '(' . $ddd . ') ' . $numero;
+        }
+
+        return $numero;
     }
 }
 
