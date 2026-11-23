@@ -1,0 +1,30 @@
+name: Mirror to i-Educar org
+
+on:
+  push:
+  delete:
+  create:
+
+concurrency:
+  group: mirror-to-org
+  cancel-in-progress: true
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Mirror repository
+        env:
+          ORG_MIRROR_TOKEN: ${{ secrets.ORG_MIRROR_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${ORG_MIRROR_TOKEN:-}" ]; then
+            echo "Configure o secret ORG_MIRROR_TOKEN (PAT com write em i-Educar/i-educar-advreport-package)."
+            exit 1
+          fi
+          git clone --mirror "https://github.com/JaderGabriel/i-educar-advreport-package.git" repo.git
+          cd repo.git
+          git remote add org "https://x-access-token:${ORG_MIRROR_TOKEN}@github.com/i-Educar/i-educar-advreport-package.git"
+          git push --mirror org
