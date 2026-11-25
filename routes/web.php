@@ -21,6 +21,7 @@ use iEducar\Packages\AdvancedReports\Http\Controllers\AuditUsersReportController
 use iEducar\Packages\AdvancedReports\Http\Controllers\IndicatorsPlaceholderController;
 use iEducar\Packages\AdvancedReports\Http\Controllers\StudentFormsController;
 use iEducar\Packages\AdvancedReports\Http\Controllers\CommunicationsController;
+use iEducar\Packages\AdvancedReports\Http\Controllers\CatalogController;
 use Illuminate\Support\Facades\Route;
 
 // Validação pública (sem login)
@@ -39,6 +40,9 @@ Route::middleware([
     'ieducar.checkresetpassword',
     'ieducar.advanced-reports.menu',
 ])->group(function () {
+    Route::get('/relatorios-avancados', [CatalogController::class, 'index'])
+        ->name('advanced-reports.catalog.index');
+
     Route::get('/relatorios-avancados/api/matriculas', [LookupController::class, 'matriculas'])
         ->name('advanced-reports.lookup.matriculas');
     Route::get('/relatorios-avancados/api/alunos', [LookupController::class, 'alunos'])

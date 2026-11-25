@@ -36,9 +36,13 @@ class AdvancedReportsProvider extends ServiceProvider
         // Middleware para garantir menu lateral/superior nas rotas do pacote
         $this->app['router']->aliasMiddleware('ieducar.advanced-reports.menu', EnsureAdvancedReportsMenu::class);
 
-        // Publicação de assets (CSS) do pacote
+        // Publicação de assets (CSS) e config do pacote
         $this->publishes([
             __DIR__ . '/../../resources/assets/css/advanced-reports.css' => public_path('css/advanced-reports.css'),
         ], 'advanced-reports-assets');
+
+        $this->publishes([
+            __DIR__ . '/../../config/advanced-reports.php' => config_path('advanced-reports.php'),
+        ], 'advanced-reports-config');
     }
 }

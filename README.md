@@ -10,6 +10,13 @@ Pacote de **Relatórios e Documentos** para o i-Educar, com emissão em **PDF** 
   - **PDF** com tabelas e (quando aplicável) **gráficos no próprio PDF**;
   - **Excel** para dados tabulares de análise.
   - **Validação pública de documentos** (sem login) via **QR Code** e código de autenticação.
+- Expor um **catálogo de cobertura para editais** em `/relatorios-avancados` (menus Escola → Relatórios → Catálogo).
+
+## Versão
+
+Pacote atual: **2.12.1** (compatível com i-Educar 2.10–2.12).
+
+Espelho na organização: [i-Educar/i-educar-advreport-package](https://github.com/i-Educar/i-educar-advreport-package).
 
 ## Instalação (plug-and-play)
 
